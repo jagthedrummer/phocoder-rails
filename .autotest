@@ -1,0 +1,43 @@
+#!/bin/ruby
+#require 'redgreen'
+require 'autotest/timestamp'
+ 
+#module Autotest::GnomeNotify
+#  def self.notify title, msg, img
+#    system "notify-send '#{title}' '#{msg}' -i #{img} -t 3000"
+#  end
+# 
+#  Autotest.add_hook :ran_command do |at|
+#    image_root = "~/.autotest_images"
+#    results = [at.results].flatten.join("\n")
+#    results.gsub!(/\\e\[\d+m/,'')
+#    output = results.slice(/(\d+)\sexamples?,\s(\d+)\sfailures?/)
+#    puts output.inspect
+#    if output
+#      if $~[2].to_i > 0
+#        notify "FAIL", "#{output}", "#{image_root}/fail.png"
+#      else
+#        notify "Pass", "#{output}", "#{image_root}/pass.png"
+#      end
+#    end
+#  end
+ 
+
+  Autotest.add_hook :initialize do |autotest|
+    #autotest.add_mapping(%r%^spec/(requests)/.*rb$%) do|filename, _|
+    #  filename
+    #end
+    #autotest.add_mapping(%r%^spec/.*spec\.rb$%) do|filename, _|
+    #  filename
+    #end
+
+    autotest.add_exception(%r%spec/dummy/app%)
+    autotest.add_exception(%r%spec/dummy/lib%)
+    autotest.add_exception(%r%spec/dummy/config%)
+    autotest.add_exception(%r%spec/dummy/log%)
+
+  end 
+
+#end
+
+
