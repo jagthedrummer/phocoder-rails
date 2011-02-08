@@ -12,6 +12,14 @@ module ActsAsPhocodable
   
   mattr_accessor :storeage_mode
   self.storeage_mode = "local"
+  
+  # The config file that tells phocoder where to find
+  # config options.
+  mattr_accessor :config_file
+  self.config_file = "config/phocodable.yml"
+  
+  
+  
   #def self.storeage_mode
   #  @@storeage_mode
   #end
@@ -24,12 +32,16 @@ module ActsAsPhocodable
     after_save :save_local_file
     before_destroy :remove_local_file#,:destroy_thumbnails,:remove_s3_file
     
+    
     cattr_accessor :phocoder_options
     cattr_accessor :phocoder_thumbnails
     self.phocoder_options = options
     self.phocoder_thumbnails = options[:thumbnails]
     has_many   :thumbnails, :class_name => self
     belongs_to  :parent, :class_name => self
+    
+    #just a writer, the reader is below
+    cattr_accessor :phocodable_configuration
   end
   
   
@@ -39,7 +51,24 @@ module ActsAsPhocodable
   end
   
   
+  def read_phocodable_configuration
+    config_path =  File.join(::Rails.root.to_s, ActsAsPhocodable.config_file)
+    puts "looking for a config in #{config_path}"
+    self.phocodable_configuration =  YAML.load(ERB.new(File.read(config_path)).result)[::Rails.env.to_s].symbolize_keys
+  end
+  
+  def config
+    return phocodable_configuration if !phocodable_configuration.blank?
+    self.read_phocodable_configuration
+  end
+  
+  
   module InstanceMethods
+  
+    def phocodable_config
+      puts "looking for config!"
+      self.class.config
+    end
   
     def phocodable?
       true

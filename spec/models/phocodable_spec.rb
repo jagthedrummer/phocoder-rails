@@ -57,6 +57,9 @@ describe ActsAsPhocodable do
 #    }
   end
   
+  
+  
+  
   it "should default into local mode" do 
     ActsAsPhocodable.storeage_mode.should == "local"
   end
@@ -66,6 +69,33 @@ describe ActsAsPhocodable do
     ActsAsPhocodable.storeage_mode.should == "offline"
   end
   
+  
+  it "should default to the normal config file" do 
+    ActsAsPhocodable.config_file.should == "config/phocodable.yml"
+  end
+  
+  it "should take a new config file" do 
+    ActsAsPhocodable.config_file = "new_config/phocodable.yml"
+    ActsAsPhocodable.config_file.should == "new_config/phocodable.yml"
+    #reset it so we don't screw up other tests
+    ActsAsPhocodable.config_file = "config/phocodable.yml"
+    ActsAsPhocodable.config_file.should == "config/phocodable.yml"
+  end
+  
+    
+  it "should read the config file" do
+    ActsAsPhocodable.config_file == "config/phocodable.yml"
+    iu = ImageUpload.new
+    iu.phocodable_config.should_not be_nil
+  end
+  
+  
+  it "should read actual configs" do
+    iu = ImageUpload.new()
+    iu.phocodable_config[:base_url].should == "http://photoapi.chaos.webapeel.com/"
+  end
+  
+  
   it "should return some thumbnail options" do
     ImageUpload.phocoder_thumbnails.should_not be_nil
     ImageUpload.phocoder_thumbnails.size.should == 2
@@ -74,6 +104,7 @@ describe ActsAsPhocodable do
   it "should return attributes for a specific thumbnail" do
     ImageUpload.thumbnail_attributes_for("small").should_not be_nil
   end
+  
   
   
   it "should be phocodable" do

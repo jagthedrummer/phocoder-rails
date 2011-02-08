@@ -21,7 +21,7 @@ describe PhocoderHelper do
     
     after(:each) do
       #set it back to the default
-      ActsAsPhocodable.offline_mode = false
+      ActsAsPhocodable.storeage_mode = "local"
       @image.destroy
     end
     
