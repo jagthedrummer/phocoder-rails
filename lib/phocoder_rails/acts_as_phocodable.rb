@@ -51,6 +51,7 @@ module ActsAsPhocodable
     return if @saved_file.blank?
     FileUtils.mkdir_p local_dir
     FileUtils.cp @saved_file.tempfile.path, local_path
+    FileUtils.chmod 0755, local_path
     self.phocoder_status = "local"
     self.upload_host = %x{hostname}.strip
     @saved_file = nil
@@ -89,7 +90,7 @@ module ActsAsPhocodable
   
   def sanitize_filename(filename)
     return unless filename
-    returning filename.strip do |name|
+    filename.strip.tap do |name|
       # NOTE: File.basename doesn't work right with Windows paths on Unix
       # get only the filename, not the whole path
       name.gsub! /^.*(\\|\/)/, ''
