@@ -9,12 +9,13 @@ class CreateImageUploads < ActiveRecord::Migration
       t.integer  "phocoder_job_id"
       t.integer  "phocoder_input_id"
       t.integer  "phocoder_output_id"
+      t.string   "phocoder_status"
       t.integer  "width"
       t.integer  "height"
       t.integer  "file_size"
       t.string   "thumbnail"
       t.integer  "parent_id"
-      t.string   "status"
+      
       t.string   "upload_host"
     end
   end
