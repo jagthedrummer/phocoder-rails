@@ -27,15 +27,16 @@ require 'autotest/timestamp'
     #autotest.add_mapping(%r%^spec/(requests)/.*rb$%) do|filename, _|
     #  filename
     #end
-    #autotest.add_mapping(%r%^spec/.*spec\.rb$%) do|filename, _|
-    #  filename
-    #end
+    autotest.add_mapping(%r%^spec/.*rb$%) do|filename, _|
+      filename
+    end
 
     autotest.add_exception(%r%spec/dummy/app%)
     autotest.add_exception(%r%spec/dummy/lib%)
     autotest.add_exception(%r%spec/dummy/config%)
     autotest.add_exception(%r%spec/dummy/log%)
-
+    autotest.add_exception(%r%spec/dummy/public%)
+    autotest.add_exception(%r%\.git%)
   end 
 
 #end
