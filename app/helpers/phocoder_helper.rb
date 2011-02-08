@@ -10,7 +10,14 @@ module PhocoderHelper
   #for now we'll assume that a thumbnail is needed
   #some files aren't displayable in a native way (NEF etc...)
   def phocoder_thumbnail(image_upload,thumbnail="small")
+    
+    #get the details about this particular thumbnail size
     thumbnail_atts = ImageUpload.thumbnail_attributes_for thumbnail
+    
+    if ActsAsPhocodable.offline_mode
+      return offline_phocoder_thumbnail(image_upload,thumbnail_atts)
+    end
+    
     if thumbnail_atts.blank?
       return "<div class='error'>'#{thumbnail}' is not a valid thumbnail size for ImageUploads</div>".html_safe
     end
@@ -20,6 +27,17 @@ module PhocoderHelper
     end
     image_tag thumb.s3_url, :size=>"#{thumb.width}x#{thumb.height}"
   end
+  
+  def offline_phocoder_thumbnail(photo,thumbnail_atts)
+    if thumbnail_atts.blank?
+      image_tag photo.local_url
+    else
+      #implement handling for a certain size
+      image_tag photo.local_url, :width => thumbnail_atts[:width]
+    end
+    
+  end
+  
   
   def pending_phocoder_thumbnail(photo,thumbnail,thumbnail_atts,spinner='waiting')
     random = ActiveSupport::SecureRandom.hex(16)

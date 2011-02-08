@@ -35,6 +35,7 @@ require 'autotest/timestamp'
     autotest.add_exception(%r%spec/dummy/lib%)
     autotest.add_exception(%r%spec/dummy/config%)
     autotest.add_exception(%r%spec/dummy/log%)
+    autotest.add_exception(%r%spec/dummy/public%)
     autotest.add_exception(%r%\.git%)
   end 
 

@@ -1,10 +1,35 @@
 module ActsAsPhocodable
-  def acts_as_phocodable
+  
+  
+  
+  # To work in offline mode you might put
+  # a line like this in an initializer
+  # ActsAsPhocodable.offline_mode = true
+  mattr_writer :offline_mode
+  self.offline_mode = false
+  def self.offline_mode
+    @@offline_mode
+  end
+  
+  
+  def acts_as_phocodable(options = { })
     #has_many :reviews, :as=>:reviewable, :dependent=>:destroy
     include InstanceMethods
     attr_reader :saved_file
     after_save :save_local_file
     before_destroy :remove_local_file#,:destroy_thumbnails,:remove_s3_file
+    
+    cattr_accessor :phocoder_options
+    cattr_accessor :phocoder_thumbnails
+    self.phocoder_options = options
+    self.phocoder_thumbnails = options[:thumbnails]
+    
+  end
+  
+  
+  def thumbnail_attributes_for(thumbnail = "small")
+    atts = self.phocoder_thumbnails.select{|atts| atts[:label] == thumbnail }
+    atts.first
   end
   
   

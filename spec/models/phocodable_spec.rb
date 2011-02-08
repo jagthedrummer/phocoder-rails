@@ -39,6 +39,9 @@ include ActionDispatch::TestProcess
 
 describe ActsAsPhocodable do
   
+  # the ImageUpload class in the dummy app
+  # is wired up with acts_as_phocodable
+  
   #before(:all){ TestMigration.up }
   #after(:all){ TestMigration.up }
   before(:each) do
@@ -52,6 +55,24 @@ describe ActsAsPhocodable do
     @attr = {
       :file => fixture_file_upload(fixture_path + '/big_eye_tiny.jpg','image/jpeg')
     }
+  end
+  
+  it "should default into online mode" do 
+    ActsAsPhocodable.offline_mode.should_not be_true
+  end
+ 
+  it "should be able to go into offline mode" do
+    ActsAsPhocodable.offline_mode = true 
+    ActsAsPhocodable.offline_mode.should be_true
+  end
+  
+  it "should return some thumbnail options" do
+    ImageUpload.phocoder_thumbnails.should_not be_nil
+    ImageUpload.phocoder_thumbnails.size.should == 2
+  end
+  
+  it "should return attributes for a specific thumbnail" do
+    ImageUpload.thumbnail_attributes_for("small").should_not be_nil
   end
   
   
