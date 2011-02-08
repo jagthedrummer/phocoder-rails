@@ -12,10 +12,12 @@ module PhocoderHelper
   def phocoder_thumbnail(image_upload,thumbnail="small")
     
     #get the details about this particular thumbnail size
-    thumbnail_atts = ImageUpload.thumbnail_attributes_for thumbnail
+    thumbnail_atts = image_upload.class.thumbnail_attributes_for thumbnail
     
     if ActsAsPhocodable.offline_mode
       return offline_phocoder_thumbnail(image_upload,thumbnail_atts)
+    else
+      return "<div class='notice'>Online mode is coming soon!</div>"
     end
     
     if thumbnail_atts.blank?

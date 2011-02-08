@@ -23,7 +23,8 @@ module ActsAsPhocodable
     cattr_accessor :phocoder_thumbnails
     self.phocoder_options = options
     self.phocoder_thumbnails = options[:thumbnails]
-    
+    has_many   :thumbnails, :class_name => self
+    belongs_to  :parent, :class_name => self
   end
   
   
@@ -50,7 +51,7 @@ module ActsAsPhocodable
     return if @saved_file.blank?
     FileUtils.mkdir_p local_dir
     FileUtils.cp @saved_file.tempfile.path, local_path
-    self.status = "local"
+    self.phocoder_status = "local"
     self.upload_host = %x{hostname}.strip
     @saved_file = nil
     @saved_a_new_file = true
