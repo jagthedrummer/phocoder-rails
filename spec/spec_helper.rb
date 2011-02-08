@@ -19,7 +19,8 @@ Rails.backtrace_cleaner.remove_silencers!
 
 
 # Run any available migration
-ActiveRecord::Migrator.migrate File.expand_path("../dummy/db/migrate/", __FILE__)
+# need to move this into a before block
+# ActiveRecord::Migrator.migrate File.expand_path("../dummy/db/migrate/", __FILE__)
 
 # Load support files
 Dir["#{File.dirname(__FILE__)}/support/**/*.rb"].each { |f| require f }
@@ -32,14 +33,28 @@ RSpec.configure do |config|
   # methods or matchers
   require 'rspec/expectations'
   config.include RSpec::Matchers
-
+  
   # == Mock Framework
   config.mock_with :rspec
   
   
+  config.before(:all){
+    
+    #change this if sqlite is unavailable
+    dbconfig = {
+      :adapter => 'sqlite3',
+      :database => ':memory:'
+    }
+    
+    ::ActiveRecord::Base.establish_connection(dbconfig)
+    ::ActiveRecord::Migration.verbose = false
+    
+    ::ActiveRecord::Migrator.migrate File.expand_path("../dummy/db/migrate/", __FILE__)
+  }
   
-  
-  
+  config.after(:all){
+    ::ActiveRecord::Migrator.down File.expand_path("../dummy/db/migrate/", __FILE__)
+  }
 end
 
 def fixture_path
