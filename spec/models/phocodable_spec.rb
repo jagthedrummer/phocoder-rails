@@ -57,13 +57,13 @@ describe ActsAsPhocodable do
 #    }
   end
   
-  it "should default into online mode" do 
-    ActsAsPhocodable.offline_mode.should_not be_true
+  it "should default into local mode" do 
+    ActsAsPhocodable.storeage_mode.should == "local"
   end
  
   it "should be able to go into offline mode" do
-    ActsAsPhocodable.offline_mode = true 
-    ActsAsPhocodable.offline_mode.should be_true
+    ActsAsPhocodable.storeage_mode = "offline" 
+    ActsAsPhocodable.storeage_mode.should == "offline"
   end
   
   it "should return some thumbnail options" do

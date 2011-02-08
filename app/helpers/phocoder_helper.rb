@@ -14,7 +14,7 @@ module PhocoderHelper
     #get the details about this particular thumbnail size
     thumbnail_atts = image_upload.class.thumbnail_attributes_for thumbnail
     
-    if ActsAsPhocodable.offline_mode
+    if ActsAsPhocodable.storeage_mode == "offline"
       return offline_phocoder_thumbnail(image_upload,thumbnail_atts)
     else
       return "<div class='notice'>Online mode is coming soon!</div>"
@@ -28,6 +28,7 @@ module PhocoderHelper
       return pending_phocoder_thumbnail(image_upload,thumbnail,thumbnail_atts)
     end
     image_tag thumb.s3_url, :size=>"#{thumb.width}x#{thumb.height}"
+    
   end
   
   def offline_phocoder_thumbnail(photo,thumbnail_atts)

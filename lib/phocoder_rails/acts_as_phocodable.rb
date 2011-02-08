@@ -2,14 +2,19 @@ module ActsAsPhocodable
   
   
   
-  # To work in offline mode you might put
-  # a line like this in an initializer
-  # ActsAsPhocodable.offline_mode = true
-  mattr_writer :offline_mode
-  self.offline_mode = false
-  def self.offline_mode
-    @@offline_mode
-  end
+  # Storeage mode controls how uploads are handled.
+  # Valid options are:
+  #     offline : For development mode with no net connection.  No processing.
+  #     local : To store images locally but use Phocoder for processing.
+  #     s3 : Store image in S3 and use Phocoder for processing.
+  # Set this options either in evnironment.rb or
+  # in environments/development.rb etc...
+  
+  mattr_accessor :storeage_mode
+  self.storeage_mode = "local"
+  #def self.storeage_mode
+  #  @@storeage_mode
+  #end
   
   
   def acts_as_phocodable(options = { })

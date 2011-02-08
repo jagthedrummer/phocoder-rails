@@ -9,7 +9,7 @@ describe PhocoderHelper do
   describe "phcoder_thumbnail for offline_mode" do
     
     before(:each) do
-      ActsAsPhocodable.offline_mode = true
+      ActsAsPhocodable.storeage_mode = "offline"
       @attr = {
         :file => ActionDispatch::Http::UploadedFile.new(
           :tempfile=> Rack::Test::UploadedFile.new(fixture_path + '/big_eye_tiny.jpg', 'image/jpeg'),

@@ -32,6 +32,7 @@ require 'autotest/timestamp'
     end
 
     autotest.add_exception(%r%spec/dummy/app%)
+    autotest.add_exception(%r%spec/dummy/db%)
     autotest.add_exception(%r%spec/dummy/lib%)
     autotest.add_exception(%r%spec/dummy/config%)
     autotest.add_exception(%r%spec/dummy/log%)

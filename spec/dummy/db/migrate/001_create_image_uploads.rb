@@ -1,5 +1,7 @@
 #dummy migration for testing.
-class CreateImageUploads < ActiveRecord::Migration
+#require 'active_record'
+
+class CreateImageUploads < ::ActiveRecord::Migration
   def self.up
     create_table :image_uploads, :force => true do |t|
       t.string   "filename"
