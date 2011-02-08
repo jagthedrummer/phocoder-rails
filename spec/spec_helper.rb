@@ -17,6 +17,7 @@ Rails.backtrace_cleaner.remove_silencers!
 #Capybara.default_driver   = :rack_test
 #Capybara.default_selector = :css
 
+
 # Run any available migration
 ActiveRecord::Migrator.migrate File.expand_path("../dummy/db/migrate/", __FILE__)
 
@@ -24,6 +25,9 @@ ActiveRecord::Migrator.migrate File.expand_path("../dummy/db/migrate/", __FILE__
 Dir["#{File.dirname(__FILE__)}/support/**/*.rb"].each { |f| require f }
 
 RSpec.configure do |config|
+  
+  
+  
   # Remove this line if you don't want RSpec's should and should_not
   # methods or matchers
   require 'rspec/expectations'
@@ -31,4 +35,13 @@ RSpec.configure do |config|
 
   # == Mock Framework
   config.mock_with :rspec
+  
+  
+  
+  
+  
+end
+
+def fixture_path
+  "#{File.dirname(__FILE__)}/fixtures"
 end
