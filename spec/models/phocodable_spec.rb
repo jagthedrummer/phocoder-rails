@@ -45,16 +45,16 @@ describe ActsAsPhocodable do
   #before(:all){ TestMigration.up }
   #after(:all){ TestMigration.up }
   before(:each) do
-    #    @attr = {
-    #    :file => ActionDispatch::Http::UploadedFile.new(
-    #      :tempfile=> Rack::Test::UploadedFile.new(fixture_path + '/big_eye_tiny.jpg', 'image/jpeg'),
-    #      :filename=>"big_eye_tiny.jpg"
-    #    ) 
-    #    }
+        @attr = {
+        :file => ActionDispatch::Http::UploadedFile.new(
+          :tempfile=> Rack::Test::UploadedFile.new(fixture_path + '/big_eye_tiny.jpg', 'image/jpeg'),
+          :filename=>"big_eye_tiny.jpg"
+        ) 
+        }
     
-    @attr = {
-      :file => fixture_file_upload(fixture_path + '/big_eye_tiny.jpg','image/jpeg')
-    }
+#    @attr = {
+#      :file => fixture_file_upload(fixture_path + '/big_eye_tiny.jpg','image/jpeg')
+#    }
   end
   
   it "should default into online mode" do 

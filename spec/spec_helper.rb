@@ -4,6 +4,7 @@ ENV["RAILS_ENV"] = "test"
 require File.expand_path("../dummy/config/environment.rb",  __FILE__)
 require "rspec/rails"
 
+
 ActionMailer::Base.delivery_method = :test
 ActionMailer::Base.perform_deliveries = true
 ActionMailer::Base.default_url_options[:host] = "test.com"
@@ -36,7 +37,8 @@ RSpec.configure do |config|
   
   # == Mock Framework
   config.mock_with :rspec
-  
+
+  config.fixture_path = "#{File.dirname(__FILE__)}/fixtures"
   
   config.before(:all){
     
@@ -57,6 +59,3 @@ RSpec.configure do |config|
   }
 end
 
-def fixture_path
-  "#{File.dirname(__FILE__)}/fixtures"
-end

@@ -49,7 +49,7 @@ module ActsAsPhocodable
     def save_local_file
     return if @saved_file.blank?
     FileUtils.mkdir_p local_dir
-    FileUtils.cp @saved_file.path, local_path
+    FileUtils.cp @saved_file.tempfile.path, local_path
     self.status = "local"
     self.upload_host = %x{hostname}.strip
     @saved_file = nil

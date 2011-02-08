@@ -11,8 +11,11 @@ describe PhocoderHelper do
     before(:each) do
       ActsAsPhocodable.offline_mode = true
       @attr = {
-        :file => fixture_file_upload(fixture_path + '/big_eye_tiny.jpg','image/jpeg')
-      }
+        :file => ActionDispatch::Http::UploadedFile.new(
+          :tempfile=> Rack::Test::UploadedFile.new(fixture_path + '/big_eye_tiny.jpg', 'image/jpeg'),
+          :filename=>"big_eye_tiny.jpg"
+        ) 
+        }
       @image = ImageUpload.create(@attr)
     end
     

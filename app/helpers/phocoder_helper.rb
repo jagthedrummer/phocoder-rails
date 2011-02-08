@@ -31,9 +31,13 @@ module PhocoderHelper
   def offline_phocoder_thumbnail(photo,thumbnail_atts)
     if thumbnail_atts.blank?
       image_tag photo.local_url
-    else
+    elsif thumbnail_atts[:aspect_mode].blank? or thumbnail_atts[:aspect_mode] == "preserve" 
       #implement handling for a certain size
       image_tag photo.local_url, :width => thumbnail_atts[:width]
+    elsif thumbnail_atts[:aspect_mode] == "stretch" 
+      image_tag photo.local_url, :width => thumbnail_atts[:width],:height => thumbnail_atts[:height]
+    elsif thumbnail_atts[:aspect_mode] == "pad" or thumbnail_atts[:aspect_mode] == "crop"
+      "<div style='overflow:hidden;background:#ccc;width:#{thumbnail_atts[:width]}px;height:#{thumbnail_atts[:height]}px'>#{image_tag(photo.local_url,:width => thumbnail_atts[:width])}</div>".html_safe
     end
     
   end
