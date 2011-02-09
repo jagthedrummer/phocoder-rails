@@ -13,23 +13,32 @@ module PhocoderHelper
     
     #get the details about this particular thumbnail size
     thumbnail_atts = image_upload.class.thumbnail_attributes_for thumbnail
-    
-    if ActsAsPhocodable.storeage_mode == "offline"
+    if ActsAsPhocodable.storeage_mode == "offline" and (thumbnail.nil? or !thumbnail_atts.blank?)
       return offline_phocoder_thumbnail(image_upload,thumbnail_atts)
-    else
-      return "<div class='notice'>Online mode is coming soon!</div>"
+    elsif thumbnail.nil? and image_upload.phocoder_status == "ready"
+      return image_tag image_upload.public_url, :size=>"#{image_upload.width}x#{image_upload.height}"
+    elsif thumbnail_atts.blank?
+      return error_div("'#{thumbnail}' is not a valid thumbnail size for ImageUploads")
+    elsif image_upload.phocoder_status != "ready"
+      return pending_phocoder_thumbnail(image_upload,thumbnail,thumbnail_atts)
+    #else
+    #  return "<div class='notice'>Online mode is coming soon!</div>"
     end
     
-    if thumbnail_atts.blank?
-      return "<div class='error'>'#{thumbnail}' is not a valid thumbnail size for ImageUploads</div>".html_safe
-    end
     thumb = image_upload.thumbnail_for(thumbnail)
-    if thumb.blank? or thumb.width.blank?
+    if thumb.blank? or thumb.phocoder_status != "ready"
+      #this happens if the main image has been notified, but not this thumbnail
       return pending_phocoder_thumbnail(image_upload,thumbnail,thumbnail_atts)
     end
-    image_tag thumb.s3_url, :size=>"#{thumb.width}x#{thumb.height}"
+    image_tag thumb.public_url, :size=>"#{thumb.width}x#{thumb.height}"
     
   end
+  
+  def error_div(msg)
+    %[<div style="border:1px solid red;background:#fee;padding:10px;">#{msg}</div>].html_safe
+  end
+  
+  
   
   def offline_phocoder_thumbnail(photo,thumbnail_atts)
     if thumbnail_atts.blank?

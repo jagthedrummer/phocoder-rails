@@ -1,42 +1,93 @@
 require File.expand_path(File.dirname(__FILE__) + '/../spec_helper')
 
 describe PhocoderHelper do
-    
+  
+  before(:each) do
+    @attr = {
+      :file => ActionDispatch::Http::UploadedFile.new(
+                                                      :tempfile=> Rack::Test::UploadedFile.new(fixture_path + '/big_eye_tiny.jpg', 'image/jpeg'),
+      :filename=>"big_eye_tiny.jpg"
+      ) 
+    }
+    @image = ImageUpload.create(@attr)
+  end
+  
+  after(:each) do
+    @image.destroy
+  end
+  
+  
   it "should return a preview_reload_timeout" do
     preview_reload_timeout.should == 1000
   end
   
-  describe "phcoder_thumbnail for offline_mode" do
-    
+  describe "phcoder_thumbnail for offline mode" do
+  
     before(:each) do
       ActsAsPhocodable.storeage_mode = "offline"
-      @attr = {
-        :file => ActionDispatch::Http::UploadedFile.new(
-          :tempfile=> Rack::Test::UploadedFile.new(fixture_path + '/big_eye_tiny.jpg', 'image/jpeg'),
-          :filename=>"big_eye_tiny.jpg"
-        ) 
-        }
-      @image = ImageUpload.create(@attr)
     end
     
     after(:each) do
       #set it back to the default
       ActsAsPhocodable.storeage_mode = "local"
-      @image.destroy
     end
     
-    it "should return a local url with no size for a nil thumbnail" do
+    it "should return an img with a local url with no size for a nil thumbnail" do
       phocoder_thumbnail(@image,nil).should match(@image.local_url)
       phocoder_thumbnail(@image,nil).should_not match("width")
     end
-    
-    it "should return a local url with a width for a known thumbnail" do
+  
+    it "should return an img with a local url and a width for a known thumbnail" do
       phocoder_thumbnail(@image,"small").should match(@image.local_url)
       phocoder_thumbnail(@image,"small").should match("width")
     end
     
+    it "should return an error for an unknown thumbnail name" do
+      phocoder_thumbnail(@image,"smallish-thing").should match("red")
+    end
+
   end
-  
-  
-  
+
+
+  describe "phcoder_thumbnail for local mode before processing" do
+
+    it "should return a self updading 'pending' img" do
+      phocoder_thumbnail(@image,"small").should match("text/javascript")
+    end
+
+    it "should return an error for an unknown thumbnail name" do
+      phocoder_thumbnail(@image,"smallish-thing").should match("red")
+    end
+
+  end
+
+  describe "phcoder_thumbnail for local mode after processing" do
+    before(:each) do
+      ActsAsPhocodable.storeage_mode = "local"
+      @thumb = ImageUpload.create(@attr.merge :parent_id=>@image.id,:thumbnail=>"small")
+      @thumb.save
+      #set the main image to ready, but not the thumb
+      @image.phocoder_status = "ready"
+      @image.save
+    end
+    after(:each) do
+      @thumb.destroy
+    end
+    
+    it "should return a local url for a nil thumbnail" do
+      phocoder_thumbnail(@image,nil).should match(@image.public_url)
+    end
+    
+    it "should return a pending img for a known thumbnail that is not ready" do
+      phocoder_thumbnail(@image,"small").should match("text/javascript")
+    end
+    
+    it "should return a local url for a known thumbnail" do
+      @thumb.phocoder_status = "ready"
+      @thumb.save
+      phocoder_thumbnail(@image,"small").should match(@thumb.public_url)
+    end
+    
+  end
+
 end
