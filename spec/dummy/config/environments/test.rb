@@ -32,4 +32,8 @@ Dummy::Application.configure do
 
   # Print deprecation notices to the stderr
   config.active_support.deprecation = :stderr
+  
+  config.acts_as_phocodable.storage_mode = "s3"
+  config.acts_as_phocodable.config_file = "config/phocodable.yml"
+  
 end

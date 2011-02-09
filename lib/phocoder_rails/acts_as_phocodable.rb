@@ -213,7 +213,7 @@ module ActsAsPhocodable
       if ActsAsPhocodable.storeage_mode == "local" or ActsAsPhocodable.storeage_mode == "offline" 
         ActsAsPhocodable.base_url + local_url
       else
-      "Hmm... we need to get you a decent URL.  Thx - ActsAsPhocodable"
+        "Hmm... we need to get you a decent URL.  Thx - ActsAsPhocodable"
       end
     end
     
