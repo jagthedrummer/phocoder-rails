@@ -6,7 +6,7 @@ class PhocoderController < ApplicationController
     logger.debug "the params = #{params.to_json}"
     @image_upload = ImageUpload.update_from_phocoder(params)
     respond_to do |format|
-      format.html
+      format.html  { render :json => {} }
       format.json  { render :json => {} }
       format.xml  { render :xml => {} }
     end

@@ -3,6 +3,13 @@ require File.expand_path(File.dirname(__FILE__) + '/../spec_helper')
 describe PhocoderHelper do
   
   before(:each) do
+    Phocoder::Job.stub!(:create).and_return(mock(Phocoder::Response,:body=>{
+      "job"=>{
+        "id"=>1,
+        "inputs"=>["id"=>1],
+        "thumbnails"=>[]
+      }
+      }))
     @attr = {
       :file => ActionDispatch::Http::UploadedFile.new(
                                                       :tempfile=> Rack::Test::UploadedFile.new(fixture_path + '/big_eye_tiny.jpg', 'image/jpeg'),
@@ -64,8 +71,9 @@ describe PhocoderHelper do
   describe "phcoder_thumbnail for local mode after processing" do
     before(:each) do
       ActsAsPhocodable.storeage_mode = "local"
+      
       @thumb = ImageUpload.create(@attr.merge :parent_id=>@image.id,:thumbnail=>"small")
-      @thumb.save
+      @thumb.save 
       #set the main image to ready, but not the thumb
       @image.phocoder_status = "ready"
       @image.save
@@ -83,8 +91,12 @@ describe PhocoderHelper do
     end
     
     it "should return a local url for a known thumbnail" do
+      #act like we've already been updated from phocoder
       @thumb.phocoder_status = "ready"
       @thumb.save
+      puts "@image.phocoder_status = #{@image.phocoder_status}"
+      puts "@thumb.phocoder_status = #{@thumb.phocoder_status}"
+      
       phocoder_thumbnail(@image,"small").should match(@thumb.public_url)
     end
     

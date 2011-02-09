@@ -69,6 +69,18 @@ describe ActsAsPhocodable do
     ActsAsPhocodable.storeage_mode.should == "offline"
   end
   
+  it "should default into automatic processing mode" do 
+    ActsAsPhocodable.processing_mode.should == "automatic"
+  end
+  
+  
+  it "should be able to go into offline mode" do
+    ActsAsPhocodable.processing_mode = "resque" 
+    ActsAsPhocodable.processing_mode.should == "resque"
+    #reset for later tests
+    ActsAsPhocodable.processing_mode = "automatic" 
+  end
+  
   it "should default to the url in the config" do 
     ActsAsPhocodable.base_url.should == "http://actsasphocodableexample.chaos.webapeel.com"
   end
@@ -162,9 +174,7 @@ describe ActsAsPhocodable do
   
   it "should call phocoder" do
     iu = ImageUpload.new(@attr)
-    iu.save
-    expected_local_path = File.expand_path(File.join(File.dirname(File.expand_path(__FILE__)),'..','dummy','public','ImageUpload',iu.id.to_s,iu.filename))
-    File.exists?(expected_local_path).should be_true
+    
     Phocoder::Job.stub!(:create).and_return(mock(Phocoder::Response,:body=>{
       "job"=>{
         "id"=>1,
@@ -172,7 +182,10 @@ describe ActsAsPhocodable do
         "thumbnails"=>[{"label"=>"small","filename"=>"small-test-file.jpg","id"=>1}]
       }
     }))
-    iu.phocode
+    iu.save
+    expected_local_path = File.expand_path(File.join(File.dirname(File.expand_path(__FILE__)),'..','dummy','public','ImageUpload',iu.id.to_s,iu.filename))
+    File.exists?(expected_local_path).should be_true
+    #iu.phocode
     ImageUpload.count.should == 2 #it should have created a thumbnail record
     iu.destroy
     ImageUpload.count.should == 0
@@ -181,6 +194,13 @@ describe ActsAsPhocodable do
   
   it "should update parent images from phocoder" do
     iu = ImageUpload.new(@attr.merge :phocoder_input_id=>1)
+    Phocoder::Job.stub!(:create).and_return(mock(Phocoder::Response,:body=>{
+      "job"=>{
+        "id"=>1,
+        "inputs"=>["id"=>1],
+        "thumbnails"=>[{"label"=>"small","filename"=>"small-test-file.jpg","id"=>1}]
+      }
+    }))
     iu.save
     ImageUpload.update_from_phocoder({:input=>{:id=>1,:width=>10,:height=>20,:file_size=>30}})
     iu.reload

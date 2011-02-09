@@ -13,6 +13,15 @@ module ActsAsPhocodable
   mattr_accessor :storeage_mode
   self.storeage_mode = "local"
   
+  
+  # Processing mode controls when images get sent to phocoder
+  # Valid options are:
+  #   automatic : Send to phocoder as soon as the file is stored.
+  #               With 'local' storage mode, this submits the job
+  #               to phocoder while the user is still waiting.
+  mattr_accessor :processing_mode
+  self.processing_mode = "automatic"
+  
   # This is used as the base address for phocoder notifications.
   # When storeage_mode == "local" this is also used to point
   # phocoder at the file.  
@@ -47,6 +56,8 @@ module ActsAsPhocodable
     self.phocoder_thumbnails = options[:thumbnails]
     has_many   :thumbnails, :class_name => "::#{base_class.name}",:foreign_key => "parent_id"
     belongs_to  :parent, :class_name => "::#{base_class.name}" ,:foreign_key => "parent_id"
+    
+    scope :top_level, where({:parent_id=>nil})
     
     #just a writer, the reader is below
     cattr_accessor :phocodable_configuration
@@ -89,6 +100,12 @@ module ActsAsPhocodable
   def apply_phocodable_configuration
     if self.phocodable_configuration[:base_url]
       ActsAsPhocodable.base_url = phocodable_configuration[:base_url]
+    end
+    if self.phocodable_configuration[:storeage_mode]
+      ActsAsPhocodable.storeage_mode = phocodable_configuration[:storeage_mode]
+    end
+    if self.phocodable_configuration[:processing_mode]
+      ActsAsPhocodable.processing_mode = phocodable_configuration[:processing_mode]
     end
     if self.phocodable_configuration[:phocoder_url]
       ::Phocoder.base_url = phocodable_configuration[:phocoder_url]
@@ -195,6 +212,9 @@ module ActsAsPhocodable
       @saved_file = nil
       @saved_a_new_file = true
       self.save
+      if ActsAsPhocodable.processing_mode == "automatic"
+        self.phocode
+      end
     end
     
     def remove_local_file

@@ -20,6 +20,7 @@ module PhocoderHelper
     elsif thumbnail_atts.blank?
       return error_div("'#{thumbnail}' is not a valid thumbnail size for ImageUploads")
     elsif image_upload.phocoder_status != "ready"
+      puts "image_upload is not ready!!!!!!!!!!!!!!!!!!!!!!!!"
       return pending_phocoder_thumbnail(image_upload,thumbnail,thumbnail_atts)
     #else
     #  return "<div class='notice'>Online mode is coming soon!</div>"
@@ -27,6 +28,7 @@ module PhocoderHelper
     
     thumb = image_upload.thumbnail_for(thumbnail)
     if thumb.blank? or thumb.phocoder_status != "ready"
+      puts "thumb (#{thumb.to_json}) is not ready!!!!!!!!!!!!!!!!!!!!!!!!"
       #this happens if the main image has been notified, but not this thumbnail
       return pending_phocoder_thumbnail(image_upload,thumbnail,thumbnail_atts)
     end
