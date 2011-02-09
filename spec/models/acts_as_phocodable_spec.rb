@@ -100,7 +100,9 @@ describe ActsAsPhocodable do
   
   
   it "should read actual configs" do
+    ActsAsPhocodable.config_file == "config/phocodable.yml"
     iu = ImageUpload.new()
+    iu.phocodable_config.should_not be_nil
     # these values are based on a config in spec/dummy/config/phocodable.yml
     # it is currently excluded from git since it contains an API key
     # this will fail for any one other than me.
@@ -186,17 +188,33 @@ describe ActsAsPhocodable do
     iu.height.should == 20
     iu.file_size.should == 30
     iu.phocoder_status.should == "ready"
+    iu.destroy
   end
   
-  it "should update thumbnail images from phocoder" do
-    iu = ImageUpload.new(@attr.merge :phocoder_output_id=>1)
+  it "should update thumbnail images from phocoder and donwload images in local mode" do
+    ActsAsPhocodable.storeage_mode = "local"
+    iu = ImageUpload.new(@attr.merge :phocoder_input_id=>1)
     iu.save
-    ImageUpload.update_from_phocoder({:output=>{:id=>1,:width=>10,:height=>20,:file_size=>30}})
-    iu.reload
-    iu.width.should == 10
-    iu.height.should == 20
-    iu.file_size.should == 30
-    iu.phocoder_status.should == "ready"
+    thumb = iu.thumbnails.new(:phocoder_output_id=>1)
+    thumb.save
+    
+    
+    ImageUpload.update_from_phocoder({:output=>{:id=>1,:width=>10,:height=>20,:file_size=>30,:url=>"http://production.webapeel.com/octolabs/themes/octolabs/images/octologo.png" }})
+    
+    thumb.reload
+    #expected_local_path = File.expand_path(File.join(File.dirname(File.expand_path(__FILE__)),'..','dummy','public','ImageUpload',iu.id.to_s,thumb.filename))
+    puts "thumb.local_path = #{thumb.local_path} - #{thumb.id}"
+    File.exists?(thumb.local_path).should be_true
+    thumb.width.should == 10
+    thumb.height.should == 20
+    thumb.file_size.should == 30
+    thumb.filename.should == "octologo.png"
+    thumb.phocoder_status.should == "ready"
+    #thumb.destroy
+    #File.exists?(expected_local_path).should_not be_true
+    #iu.destroy
   end
+  
+  
   
 end

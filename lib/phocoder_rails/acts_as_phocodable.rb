@@ -1,7 +1,7 @@
 module ActsAsPhocodable
   
   require 'phocoder'
-  
+  require 'open-uri'
   # Storeage mode controls how uploads are handled.
   # Valid options are:
   #     offline : For development mode with no net connection.  No processing.
@@ -56,6 +56,10 @@ module ActsAsPhocodable
     if !params[:output].blank?
       iu = find_by_phocoder_output_id params[:output][:id]
       img_params = params[:output]
+      iu.filename = File.basename(params[:output][:url]) if iu.filename.blank?
+      if ActsAsPhocodable.storeage_mode == "local"
+        iu.save_url(params[:output][:url])
+      end
     else
       iu = find_by_phocoder_input_id params[:input][:id]
       img_params = params[:input]
@@ -153,7 +157,13 @@ module ActsAsPhocodable
       true
     end
     
-    
+    def save_url(url)
+      FileUtils.mkdir(local_dir) if !File.exists?(local_dir)
+      FileUtils.touch local_path
+      writeOut = open(local_path, "wb")
+      writeOut.write(open(url).read)
+      writeOut.close
+    end
     
     def destroy_thumbnails
       self.thumbnails.each do |thumb|
@@ -187,7 +197,9 @@ module ActsAsPhocodable
     def remove_local_file
       if local_path and File.exists? local_path
         FileUtils.rm local_path
-        FileUtils.rmdir local_dir
+        if Dir.glob(File.join(local_dir,"*")).size == 0
+          FileUtils.rmdir local_dir 
+        end
       end
     end
     

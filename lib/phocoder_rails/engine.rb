@@ -10,7 +10,7 @@ module PhocoderRails
       end
     
       if !config.acts_as_phocodable.config_file.blank?
-        ActsAsPhocodable.config_file = config.acts_as_phocodable.storage_mode
+        ActsAsPhocodable.config_file = config.acts_as_phocodable.config_file
       end
     
     
