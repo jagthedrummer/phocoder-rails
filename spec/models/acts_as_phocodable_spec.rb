@@ -69,8 +69,8 @@ describe ActsAsPhocodable do
     ActsAsPhocodable.storeage_mode.should == "offline"
   end
   
-  it "should default to a made up base_url" do 
-    ActsAsPhocodable.base_url.should == "http://your-domain.com"
+  it "should default to the url in the config" do 
+    ActsAsPhocodable.base_url.should == "http://actsasphocodableexample.chaos.webapeel.com"
   end
   
   it "should take a new base_url" do 

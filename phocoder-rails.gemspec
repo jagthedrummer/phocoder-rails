@@ -9,7 +9,7 @@ Gem::Specification.new do |s|
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Jeremy Green"]
-  s.date = %q{2011-02-08}
+  s.date = %q{2011-02-09}
   s.description = %q{Rails engine for easy integration with phocoder.com}
   s.email = %q{jagthedrummer@gmail.com}
   s.extra_rdoc_files = [
@@ -27,11 +27,16 @@ Gem::Specification.new do |s|
     "README.rdoc",
     "Rakefile",
     "VERSION",
+    "app/controllers/phocoder_controller.rb",
     "app/helpers/phocoder_helper.rb",
+    "app/views/phocoder/_thumbnail_update.html.erb",
+    "app/views/phocoder/thumbnail_update.js.rjs",
+    "config/routes.rb",
     "lib/phocoder_rails.rb",
     "lib/phocoder_rails/acts_as_phocodable.rb",
     "lib/phocoder_rails/engine.rb",
     "phocoder-rails.gemspec",
+    "spec/controllers/phocoder_controller_spec.rb",
     "spec/dummy/Rakefile",
     "spec/dummy/app/controllers/application_controller.rb",
     "spec/dummy/app/helpers/application_helper.rb",
@@ -66,11 +71,13 @@ Gem::Specification.new do |s|
     "spec/dummy/public/javascripts/rails.js",
     "spec/dummy/public/stylesheets/.gitkeep",
     "spec/dummy/script/rails",
+    "spec/engine_spec.rb",
     "spec/fixtures/big_eye_tiny.jpg",
     "spec/helpers/phocoder_helper_spec.rb",
     "spec/integration/navigation_spec.rb",
-    "spec/models/phocodable_spec.rb",
+    "spec/models/acts_as_phocodable_spec.rb",
     "spec/phocoder_rails_spec.rb",
+    "spec/routing/phocoder_routing_spec.rb",
     "spec/spec_helper.rb"
   ]
   s.homepage = %q{http://github.com/jagthedrummer/phocoder-rails}
@@ -79,6 +86,7 @@ Gem::Specification.new do |s|
   s.rubygems_version = %q{1.3.7}
   s.summary = %q{Rails engine for easy integration with phocoder.com}
   s.test_files = [
+    "spec/controllers/phocoder_controller_spec.rb",
     "spec/dummy/app/controllers/application_controller.rb",
     "spec/dummy/app/helpers/application_helper.rb",
     "spec/dummy/app/models/image_upload.rb",
@@ -95,10 +103,12 @@ Gem::Specification.new do |s|
     "spec/dummy/config/initializers/session_store.rb",
     "spec/dummy/config/routes.rb",
     "spec/dummy/db/migrate/001_create_image_uploads.rb",
+    "spec/engine_spec.rb",
     "spec/helpers/phocoder_helper_spec.rb",
     "spec/integration/navigation_spec.rb",
-    "spec/models/phocodable_spec.rb",
+    "spec/models/acts_as_phocodable_spec.rb",
     "spec/phocoder_rails_spec.rb",
+    "spec/routing/phocoder_routing_spec.rb",
     "spec/spec_helper.rb"
   ]
 
@@ -110,7 +120,7 @@ Gem::Specification.new do |s|
       s.add_runtime_dependency(%q<rails>, ["~> 3.0.3"])
       s.add_runtime_dependency(%q<capybara>, [">= 0.3.9"])
       s.add_runtime_dependency(%q<webrat>, [">= 0"])
-      s.add_runtime_dependency(%q<activerecord>, [">= 0"])
+      s.add_runtime_dependency(%q<phocoder-rb>, [">= 0"])
       s.add_runtime_dependency(%q<ruby-debug>, [">= 0.10.3"])
       s.add_development_dependency(%q<rspec-rails>, ["= 2.4.1"])
       s.add_development_dependency(%q<bundler>, ["~> 1.0.0"])
@@ -120,7 +130,7 @@ Gem::Specification.new do |s|
       s.add_dependency(%q<rails>, ["~> 3.0.3"])
       s.add_dependency(%q<capybara>, [">= 0.3.9"])
       s.add_dependency(%q<webrat>, [">= 0"])
-      s.add_dependency(%q<activerecord>, [">= 0"])
+      s.add_dependency(%q<phocoder-rb>, [">= 0"])
       s.add_dependency(%q<ruby-debug>, [">= 0.10.3"])
       s.add_dependency(%q<rspec-rails>, ["= 2.4.1"])
       s.add_dependency(%q<bundler>, ["~> 1.0.0"])
@@ -131,7 +141,7 @@ Gem::Specification.new do |s|
     s.add_dependency(%q<rails>, ["~> 3.0.3"])
     s.add_dependency(%q<capybara>, [">= 0.3.9"])
     s.add_dependency(%q<webrat>, [">= 0"])
-    s.add_dependency(%q<activerecord>, [">= 0"])
+    s.add_dependency(%q<phocoder-rb>, [">= 0"])
     s.add_dependency(%q<ruby-debug>, [">= 0.10.3"])
     s.add_dependency(%q<rspec-rails>, ["= 2.4.1"])
     s.add_dependency(%q<bundler>, ["~> 1.0.0"])

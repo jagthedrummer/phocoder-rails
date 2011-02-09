@@ -50,6 +50,7 @@ module ActsAsPhocodable
     
     #just a writer, the reader is below
     cattr_accessor :phocodable_configuration
+    read_phocodable_configuration
   end
   
   def update_from_phocoder(params)
@@ -92,7 +93,9 @@ module ActsAsPhocodable
     if self.phocodable_configuration[:phocoder_url]
       ::Phocoder.base_url = phocodable_configuration[:phocoder_url]
     end
-    
+    if self.phocodable_configuration[:api_key]
+      ::Phocoder.api_key = phocodable_configuration[:api_key]
+    end
   end
   
   def config
@@ -234,7 +237,7 @@ module ActsAsPhocodable
     end
     
     def notification_callback_path
-    "/phocodable/notifications/#{self.class.name}/#{self.id}"
+    "/phocoder/notifications/#{self.class.name}/#{self.id}"
     end
     
     def base_url

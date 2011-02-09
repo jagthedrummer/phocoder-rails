@@ -2,7 +2,7 @@ class PhocoderController < ApplicationController
   
   protect_from_forgery :except=>[:phocoder_update,:thumbnail_update]  
 
-  def phocoder_update
+  def notification_update
     logger.debug "the params = #{params.to_json}"
     @image_upload = ImageUpload.update_from_phocoder(params)
     respond_to do |format|

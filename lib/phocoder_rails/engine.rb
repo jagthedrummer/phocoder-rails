@@ -1,9 +1,11 @@
 module PhocoderRails
   class Engine < Rails::Engine
     
+    
+    
     config.acts_as_phocodable = ActiveSupport::OrderedOptions.new
     
-    initializer "mongo_fifo.configure_mongodb_connection" do |app|
+    initializer "phocoder_config" do |app|
       
       if !config.acts_as_phocodable.storage_mode.blank?
         ActsAsPhocodable.storeage_mode = config.acts_as_phocodable.storage_mode
@@ -13,6 +15,7 @@ module PhocoderRails
         ActsAsPhocodable.config_file = config.acts_as_phocodable.config_file
       end
     
+      app.middleware.use ::ActionDispatch::Static, "#{root}/public"
     
     end
     
