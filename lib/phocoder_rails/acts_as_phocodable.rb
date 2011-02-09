@@ -190,10 +190,10 @@ module ActsAsPhocodable
       {:input => {:url => self.public_url, :notifications=>[{:url=>callback_url }] },
         :thumbnails => self.class.phocoder_thumbnails.map{|thumb|
           thumb_filename = thumb[:label] + "_" + File.basename(self.filename,File.extname(self.filename)) + ".jpg" 
-          #base_url = "s3://#{s3_config[:bucket_name]}/#{self.resource_dir}/"
+          base_url = ActsAsPhocodable.storeage_mode == "s3" ? "s3://#{self.s3_bucket_name}/#{self.resource_dir}/" : ""
           thumb.merge({
             :filename=>thumb_filename,
-            #:base_url=>base_url,
+            :base_url=>base_url,
             :notifications=>[{:url=>callback_url }]
           })
         }

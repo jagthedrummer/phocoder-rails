@@ -36,6 +36,9 @@ Gem::Specification.new do |s|
     "lib/phocoder_rails/acts_as_phocodable.rb",
     "lib/phocoder_rails/engine.rb",
     "phocoder-rails.gemspec",
+    "public/images/building.gif",
+    "public/images/storing.gif",
+    "public/images/waiting.gif",
     "spec/controllers/phocoder_controller_spec.rb",
     "spec/dummy/Rakefile",
     "spec/dummy/app/controllers/application_controller.rb",
@@ -121,6 +124,7 @@ Gem::Specification.new do |s|
       s.add_runtime_dependency(%q<capybara>, [">= 0.3.9"])
       s.add_runtime_dependency(%q<webrat>, [">= 0"])
       s.add_runtime_dependency(%q<phocoder-rb>, [">= 0"])
+      s.add_runtime_dependency(%q<aws-s3>, [">= 0"])
       s.add_runtime_dependency(%q<ruby-debug>, [">= 0.10.3"])
       s.add_development_dependency(%q<rspec-rails>, ["= 2.4.1"])
       s.add_development_dependency(%q<bundler>, ["~> 1.0.0"])
@@ -131,6 +135,7 @@ Gem::Specification.new do |s|
       s.add_dependency(%q<capybara>, [">= 0.3.9"])
       s.add_dependency(%q<webrat>, [">= 0"])
       s.add_dependency(%q<phocoder-rb>, [">= 0"])
+      s.add_dependency(%q<aws-s3>, [">= 0"])
       s.add_dependency(%q<ruby-debug>, [">= 0.10.3"])
       s.add_dependency(%q<rspec-rails>, ["= 2.4.1"])
       s.add_dependency(%q<bundler>, ["~> 1.0.0"])
@@ -142,6 +147,7 @@ Gem::Specification.new do |s|
     s.add_dependency(%q<capybara>, [">= 0.3.9"])
     s.add_dependency(%q<webrat>, [">= 0"])
     s.add_dependency(%q<phocoder-rb>, [">= 0"])
+    s.add_dependency(%q<aws-s3>, [">= 0"])
     s.add_dependency(%q<ruby-debug>, [">= 0.10.3"])
     s.add_dependency(%q<rspec-rails>, ["= 2.4.1"])
     s.add_dependency(%q<bundler>, ["~> 1.0.0"])
