@@ -30,6 +30,18 @@ module ActsAsPhocodable
   mattr_accessor :base_url
   self.base_url = "http://your-domain.com"
   
+  # The bucket for storing s3 files
+  mattr_accessor :s3_bucket_name
+  self.s3_bucket_name = "your-bucket"
+  
+  # The access_key_id for storing s3 files
+  mattr_accessor :s3_access_key_id
+  self.s3_access_key_id = "your-bucket"
+  
+  # The secret_access_key for storing s3 files
+  mattr_accessor :s3_secret_access_key
+  self.s3_secret_access_key = "your-bucket"
+  
   # The config file that tells phocoder where to find
   # config options.
   mattr_accessor :config_file
@@ -47,7 +59,7 @@ module ActsAsPhocodable
     include InstanceMethods
     attr_reader :saved_file
     after_save :save_local_file
-    before_destroy :remove_local_file,:destroy_thumbnails #,:remove_s3_file
+    before_destroy :remove_local_file,:destroy_thumbnails,:remove_s3_file
     
     
     cattr_accessor :phocoder_options
@@ -107,14 +119,34 @@ module ActsAsPhocodable
     if self.phocodable_configuration[:processing_mode]
       ActsAsPhocodable.processing_mode = phocodable_configuration[:processing_mode]
     end
+    if self.phocodable_configuration[:s3_bucket_name]
+      ActsAsPhocodable.s3_bucket_name = phocodable_configuration[:s3_bucket_name]
+    end
+    if self.phocodable_configuration[:s3_access_key_id]
+      ActsAsPhocodable.s3_access_key_id = phocodable_configuration[:s3_access_key_id]
+    end
+    if self.phocodable_configuration[:s3_secret_access_key]
+      ActsAsPhocodable.s3_secret_access_key = phocodable_configuration[:s3_secret_access_key]
+    end
     if self.phocodable_configuration[:phocoder_url]
       ::Phocoder.base_url = phocodable_configuration[:phocoder_url]
     end
     if self.phocodable_configuration[:api_key]
       ::Phocoder.api_key = phocodable_configuration[:api_key]
     end
+    if ActsAsPhocodable.storeage_mode == "s3"
+      self.establish_aws_connection
+    end
   end
   
+  def establish_aws_connection
+    AWS::S3::Base.establish_connection!(
+      :access_key_id     => ActsAsPhocodable.s3_access_key_id,
+      :secret_access_key => ActsAsPhocodable.s3_secret_access_key
+    )
+  end
+  
+   
   def config
     return phocodable_configuration if !phocodable_configuration.blank?
     self.read_phocodable_configuration
@@ -212,6 +244,9 @@ module ActsAsPhocodable
       @saved_file = nil
       @saved_a_new_file = true
       self.save
+      if ActsAsPhocodable.storeage_mode == "s3" and ActsAsPhocodable.processing_mode == "automatic"
+        self.save_s3_file
+      end
       if ActsAsPhocodable.processing_mode == "automatic"
         self.phocode
       end
@@ -248,7 +283,7 @@ module ActsAsPhocodable
       if ActsAsPhocodable.storeage_mode == "local" or ActsAsPhocodable.storeage_mode == "offline" 
         ActsAsPhocodable.base_url + local_url
       else
-        "Hmm... we need to get you a decent URL.  Thx - ActsAsPhocodable"
+        s3_url
       end
     end
     
@@ -262,6 +297,41 @@ module ActsAsPhocodable
     
     def base_url
       self.class.base_url
+    end
+    
+    def s3_key
+      filename.blank? ? nil : File.join(resource_dir,filename)
+    end
+    
+    def s3_url
+      "http://#{s3_bucket_name}.s3.amazonaws.com/#{s3_key}"
+    end
+    
+    def s3_bucket_name
+      self.class.s3_bucket_name
+    end
+    
+    def save_s3_file
+      #this is a dirty hack to see what happens when we add save_s3_file and phocode to the after_save routine
+      return if !@saved_a_new_file
+      @saved_a_new_file = false
+      AWS::S3::S3Object.store(
+        s3_key, 
+        open(local_path), 
+        s3_bucket_name,
+        :access => :public_read
+      )
+      self.phocoder_status = "s3"
+      self.save
+      self.phocode
+    end
+    
+    def remove_s3_file
+      if ActsAsPhocodable.storeage_mode == "s3"
+        AWS::S3::S3Object.delete s3_key, s3_bucket_name
+      end
+    rescue Exception => e
+      #this probably means that the file never made it to S3
     end
     
     # Sanitizes a filename.

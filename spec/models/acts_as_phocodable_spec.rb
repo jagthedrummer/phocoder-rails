@@ -234,7 +234,77 @@ describe ActsAsPhocodable do
     #File.exists?(expected_local_path).should_not be_true
     #iu.destroy
   end
+    
   
+  it "in delayed s3 mode it should save the file to an AWS S3 storage location, call phocoder, then destroy" do
+    ActsAsPhocodable.storeage_mode = "s3"
+    ActsAsPhocodable.processing_mode = "delayed"
+    ImageUpload.establish_aws_connection
+    
+    iu = ImageUpload.new(@attr)
+    Phocoder::Job.stub!(:create).and_return(mock(Phocoder::Response,:body=>{
+      "job"=>{
+        "id"=>1,
+        "inputs"=>[{"id"=>1}],
+        "thumbnails"=>[{"label"=>"small","filename"=>"small-test-file.jpg","id"=>1}]
+      }
+    }))
+    
+    #now store in S3 + phocode
+    iu.save
+    
+    #it should not be in S3 yet
+    lambda{
+      o = AWS::S3::S3Object.find(key,bucket)
+    }.should raise_error(Exception)
+    
+    iu.save_s3_file
+    
+    bucket = iu.s3_bucket_name
+    key = iu.s3_key
+    lambda{
+      o = AWS::S3::S3Object.find(key,bucket)
+    }.should_not raise_error(Exception)
+    
+    iu.destroy
+    #after destroy the file should not be in S3 anymore
+    lambda{
+      o = AWS::S3::S3Object.find(key,bucket)
+    }.should raise_error(Exception)
+    
+  end
+  
+  
+  it "in automatic s3 mode it should save the file to an AWS S3 storage location, call phocoder, then destroy" do
+    ActsAsPhocodable.storeage_mode = "s3"
+    ActsAsPhocodable.processing_mode = "automatic"
+    ImageUpload.establish_aws_connection
+    
+    iu = ImageUpload.new(@attr)
+    Phocoder::Job.stub!(:create).and_return(mock(Phocoder::Response,:body=>{
+      "job"=>{
+        "id"=>1,
+        "inputs"=>[{"id"=>1}],
+        "thumbnails"=>[{"label"=>"small","filename"=>"small-test-file.jpg","id"=>1}]
+      }
+    }))
+    
+    #now store in S3 + phocode
+    iu.save
+    
+    bucket = iu.s3_bucket_name
+    key = iu.s3_key
+    lambda{
+      o = AWS::S3::S3Object.find(key,bucket)
+    }.should_not raise_error(Exception)
+    
+    iu.destroy
+    #after destroy the file should not be in S3 anymore
+    lambda{
+      o = AWS::S3::S3Object.find(key,bucket)
+    }.should raise_error(Exception)
+    
+  end
   
   
 end
