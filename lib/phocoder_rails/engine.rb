@@ -9,6 +9,11 @@ module PhocoderRails
         ActsAsPhocodable.storeage_mode = config.acts_as_phocodable.storage_mode
       end
     
+      if !config.acts_as_phocodable.config_file.blank?
+        ActsAsPhocodable.config_file = config.acts_as_phocodable.storage_mode
+      end
+    
+    
     end
     
     

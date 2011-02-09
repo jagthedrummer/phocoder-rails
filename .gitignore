@@ -8,3 +8,5 @@ spec/dummy/public/ImageUpload
 *~
 .project
 coverage/
+# This needs to be here to make sure that we don't leak an API key
+spec/dummy/config/phocodable.yml
