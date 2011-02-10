@@ -18,7 +18,7 @@ module PhocoderHelper
     elsif thumbnail.nil? and image_upload.phocoder_status == "ready"
       return image_tag image_upload.public_url, :size=>"#{image_upload.width}x#{image_upload.height}"
     elsif thumbnail_atts.blank?
-      return error_div("'#{thumbnail}' is not a valid thumbnail size for ImageUploads")
+      return error_div("'#{thumbnail}' is not a valid thumbnail size for #{image_upload.class}")
     elsif image_upload.phocoder_status != "ready"
       puts "image_upload is not ready!!!!!!!!!!!!!!!!!!!!!!!!"
       return pending_phocoder_thumbnail(image_upload,thumbnail,thumbnail_atts)

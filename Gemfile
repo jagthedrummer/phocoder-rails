@@ -1,6 +1,6 @@
 source "http://rubygems.org"
       
-gem "rails", "~>3.0.3"
+gem "rails", "~>3.0.0"
 gem "capybara", ">= 0.3.9"
 gem "webrat"
 
@@ -28,7 +28,7 @@ group :development do
 end
 
 group :test do
-  gem "sqlite3-ruby", :require => "sqlite3"
+  #gem "sqlite3-ruby", :require => "sqlite3"
   gem 'rspec', '2.4.0'
   gem 'rspec-rails', '2.4.1'
   gem "bundler", "~> 1.0.0"

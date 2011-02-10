@@ -76,6 +76,10 @@ module ActsAsPhocodable
     read_phocodable_configuration
   end
   
+  def validates_phocodable
+    validates_presence_of :content_type, :filename, :if=>lambda{ parent_id.blank? }
+  end
+
   def update_from_phocoder(params)
     Rails.logger.debug "tying to call update from phocoder for params = #{params}"
     if !params[:output].blank?
@@ -174,8 +178,9 @@ module ActsAsPhocodable
       self.phocoder_status = "phocoding"
       self.save #false need to do save(false) here if we're calling phocode on after_save
       response.body["job"]["thumbnails"].each do |thumb_params|
+        puts "creating a thumb for #{thumb_params["label"]}"
         thumb = self.thumbnails.new(
-                                :thumbnail=>thumb_params["label"],
+        :thumbnail=>thumb_params["label"],
         :filename=>thumb_params["filename"],
         :phocoder_output_id=>thumb_params["id"],
         :phocoder_job_id=>response.body["job"]["id"],
@@ -183,6 +188,7 @@ module ActsAsPhocodable
         :phocoder_status => "phocoding"
         )
         thumb.save
+	puts "    thumb.errors = #{thumb.errors.to_json}"
       end
     end
     
@@ -227,21 +233,37 @@ module ActsAsPhocodable
     def thumbnail_for(thumbnail_name)
       thumbnails.find_by_thumbnail(thumbnail_name)
     end
+
+    def get_thumbnail(thumbnail_name)
+    	thumbnail_for(thumbnail_name)
+    end
     
     def file=(new_file)
+      return if new_file.nil?
       Rails.logger.debug "we got a new file of class = #{new_file.class}"
       self.filename = new_file.original_filename
       self.content_type = new_file.content_type
-      @saved_file = new_file
+      if new_file.respond_to? :tempfile
+        @saved_file = new_file.tempfile
+      else
+        @saved_file = new_file
+      end
+    end
+
+    #compatability method for attachment_fu
+    def uploaded_data=(data)
+	self.file = data
     end
     
     def save_local_file
       return if @saved_file.blank?
       FileUtils.mkdir_p local_dir
-      FileUtils.cp @saved_file.tempfile.path, local_path
+      FileUtils.cp @saved_file.path, local_path
       FileUtils.chmod 0755, local_path
       self.phocoder_status = "local"
-      self.upload_host = %x{hostname}.strip
+      if self.respond_to? :upload_host      
+	self.upload_host = %x{hostname}.strip
+      end
       @saved_file = nil
       @saved_a_new_file = true
       self.save
@@ -288,6 +310,10 @@ module ActsAsPhocodable
       end
     end
     
+    def public_filename
+      public_url
+    end
+
     def callback_url
       self.base_url + self.notification_callback_path
     end
