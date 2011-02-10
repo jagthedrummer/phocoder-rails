@@ -4,7 +4,7 @@ module PhocoderHelper
   
   def preview_reload_timeout
     #time in ms between preview reloading
-    1000
+    10000
   end
   
   #for now we'll assume that a thumbnail is needed

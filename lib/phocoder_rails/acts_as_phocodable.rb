@@ -77,6 +77,7 @@ module ActsAsPhocodable
   end
   
   def update_from_phocoder(params)
+    Rails.logger.debug "tying to call update from phocoder for params = #{params}"
     if !params[:output].blank?
       iu = find_by_phocoder_output_id params[:output][:id]
       img_params = params[:output]
@@ -173,7 +174,7 @@ module ActsAsPhocodable
       self.phocoder_status = "phocoding"
       self.save #false need to do save(false) here if we're calling phocode on after_save
       response.body["job"]["thumbnails"].each do |thumb_params|
-        thumb = ImageUpload.new(
+        thumb = self.thumbnails.new(
                                 :thumbnail=>thumb_params["label"],
         :filename=>thumb_params["filename"],
         :phocoder_output_id=>thumb_params["id"],
@@ -292,7 +293,7 @@ module ActsAsPhocodable
     end
     
     def notification_callback_path
-    "/phocoder/notifications/#{self.class.name}/#{self.id}"
+    "/phocoder/notifications/#{self.class.name}/#{self.id}.json"
     end
     
     def base_url

@@ -156,6 +156,13 @@ describe ActsAsPhocodable do
   
   it "should save the file to a local storage location" do
     iu = ImageUpload.new(@attr)
+    Phocoder::Job.stub!(:create).and_return(mock(Phocoder::Response,:body=>{
+      "job"=>{
+        "id"=>1,
+        "inputs"=>["id"=>1],
+        "thumbnails"=>[{"label"=>"small","filename"=>"small-test-file.jpg","id"=>1}]
+      }
+    }))
     iu.save
     
     expected_resource_dir = "ImageUpload/1"

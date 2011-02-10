@@ -25,7 +25,7 @@ describe PhocoderHelper do
   
   
   it "should return a preview_reload_timeout" do
-    preview_reload_timeout.should == 1000
+    preview_reload_timeout.should == 10000
   end
   
   describe "phcoder_thumbnail for offline mode" do
