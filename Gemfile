@@ -11,6 +11,7 @@ gem "webrat"
 #gem 'pg'
 
 gem 'phocoder-rb'
+gem 'zencoder'
 gem 'aws-s3', :require => 'aws/s3'
 
 if RUBY_VERSION < '1.9'

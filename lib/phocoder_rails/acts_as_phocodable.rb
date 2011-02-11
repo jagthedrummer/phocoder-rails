@@ -47,7 +47,50 @@ module ActsAsPhocodable
   mattr_accessor :config_file
   self.config_file = "config/phocodable.yml"
   
+  # The list of content types that will trigger image handling.
+  mattr_accessor :image_types
+  self.image_types = [
+      'image/jpeg',
+      'image/pjpeg',
+      'image/jpg',
+      'image/gif',
+      'image/png',
+      'image/x-png',
+      'image/jpg',
+      'image/x-ms-bmp',
+      'image/bmp',
+      'image/x-bmp',
+      'image/x-bitmap',
+      'image/x-xbitmap',
+      'image/x-win-bitmap',
+      'image/x-windows-bmp',
+      'image/ms-bmp',
+      'application/bmp',
+      'application/x-bmp',
+      'application/x-win-bitmap',
+      'application/preview',
+      'image/jp_',
+      'application/jpg',
+      'application/x-jpg',
+      'image/pipeg',
+      'image/vnd.swiftview-jpeg',
+      'image/x-xbitmap',
+      'application/png',
+      'application/x-png',
+      'image/gi_',
+      'image/x-citrix-pjpeg'
+  ]
   
+  # The list of content types that will trigger video handling.
+  mattr_accessor :video_types
+  self.video_types = [
+   'application/x-flash-video',
+   'video/avi',
+   'video/mp4',
+   'video/ogg',
+   'video/quicktime',
+   'video/vnd.objectvideo'
+  ]
   
   #def self.storeage_mode
   #  @@storeage_mode
@@ -62,10 +105,15 @@ module ActsAsPhocodable
     before_destroy :remove_local_file,:destroy_thumbnails,:remove_s3_file
     
     
-    cattr_accessor :phocoder_options
+    #cattr_accessor :phocoder_options
+    #self.phocoder_options = options
+    
     cattr_accessor :phocoder_thumbnails
-    self.phocoder_options = options
     self.phocoder_thumbnails = options[:thumbnails]
+    
+    cattr_accessor :zencoder_videos
+    self.zencoder_videos = options[:videos]
+    
     has_many   :thumbnails, :class_name => "::#{base_class.name}",:foreign_key => "parent_id"
     belongs_to  :parent, :class_name => "::#{base_class.name}" ,:foreign_key => "parent_id"
     
@@ -74,6 +122,11 @@ module ActsAsPhocodable
     #just a writer, the reader is below
     cattr_accessor :phocodable_configuration
     read_phocodable_configuration
+  end
+  
+  def config
+    return phocodable_configuration if !phocodable_configuration.blank?
+    self.read_phocodable_configuration
   end
   
   def validates_phocodable
@@ -136,8 +189,11 @@ module ActsAsPhocodable
     if self.phocodable_configuration[:phocoder_url]
       ::Phocoder.base_url = phocodable_configuration[:phocoder_url]
     end
-    if self.phocodable_configuration[:api_key]
-      ::Phocoder.api_key = phocodable_configuration[:api_key]
+    if self.phocodable_configuration[:phocoder_api_key]
+      ::Phocoder.api_key = phocodable_configuration[:pocoder_api_key]
+    end
+    if self.phocodable_configuration[:zencoder_api_key]
+      ::Zencoder.api_key = phocodable_configuration[:zencoder_api_key]
     end
     if ActsAsPhocodable.storeage_mode == "s3"
       self.establish_aws_connection
@@ -152,10 +208,7 @@ module ActsAsPhocodable
   end
   
    
-  def config
-    return phocodable_configuration if !phocodable_configuration.blank?
-    self.read_phocodable_configuration
-  end
+  
   
   
   
