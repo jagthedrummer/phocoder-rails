@@ -10,11 +10,14 @@ describe PhocoderHelper do
         "thumbnails"=>[]
       }
       }))
+    #@attr = {
+    #  :file => ActionDispatch::Http::UploadedFile.new(
+    #                                                  :tempfile=> Rack::Test::UploadedFile.new(fixture_path + '/big_eye_tiny.jpg', 'image/jpeg'),
+    #  :filename=>"big_eye_tiny.jpg"
+    #  ) 
+    #}
     @attr = {
-      :file => ActionDispatch::Http::UploadedFile.new(
-                                                      :tempfile=> Rack::Test::UploadedFile.new(fixture_path + '/big_eye_tiny.jpg', 'image/jpeg'),
-      :filename=>"big_eye_tiny.jpg"
-      ) 
+      :file => fixture_file_upload(fixture_path + '/big_eye_tiny.jpg','image/jpeg')
     }
     @image = ImageUpload.create(@attr)
   end

@@ -45,16 +45,16 @@ describe ActsAsPhocodable do
   #before(:all){ TestMigration.up }
   #after(:all){ TestMigration.up }
   before(:each) do
-        @attr = {
-        :file => ActionDispatch::Http::UploadedFile.new(
-          :tempfile=> Rack::Test::UploadedFile.new(fixture_path + '/big_eye_tiny.jpg', 'image/jpeg'),
-          :filename=>"big_eye_tiny.jpg"
-        ) 
-        }
-    
-#    @attr = {
-#      :file => fixture_file_upload(fixture_path + '/big_eye_tiny.jpg','image/jpeg')
-#    }
+#        @attr = {
+#        :file => ActionDispatch::Http::UploadedFile.new(
+#          :tempfile=> Rack::Test::UploadedFile.new(fixture_path + '/big_eye_tiny.jpg', 'image/jpeg'),
+#          :filename=>"big_eye_tiny.jpg"
+#        ) 
+#        }
+        
+    @attr = {
+      :file => fixture_file_upload(fixture_path + '/big_eye_tiny.jpg','image/jpeg')
+    }
   end
   
   
@@ -221,8 +221,22 @@ describe ActsAsPhocodable do
   it "should update thumbnail images from phocoder and donwload images in local mode" do
     ActsAsPhocodable.storeage_mode = "local"
     iu = ImageUpload.new(@attr.merge :phocoder_input_id=>1)
+    Phocoder::Job.stub!(:create).and_return(mock(Phocoder::Response,:body=>{
+      "job"=>{
+        "id"=>1,
+        "inputs"=>["id"=>1],
+        "thumbnails"=>[] # don't auto create thumbs since we'll make one below
+      }
+    }))
     iu.save
     thumb = iu.thumbnails.new(:phocoder_output_id=>1)
+    #Phocoder::Job.stub!(:create).and_return(mock(Phocoder::Response,:body=>{
+    #  "job"=>{
+    #    "id"=>1,
+    #    "inputs"=>["id"=>1],
+    #    "thumbnails"=>[]
+    #  }
+    #}))
     thumb.save
     
     

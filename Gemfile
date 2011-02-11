@@ -28,7 +28,7 @@ group :development do
 end
 
 group :test do
-  #gem "sqlite3-ruby", :require => "sqlite3"
+  gem "sqlite3-ruby", :require => "sqlite3"
   gem 'rspec', '2.4.0'
   gem 'rspec-rails', '2.4.1'
   gem "bundler", "~> 1.0.0"
