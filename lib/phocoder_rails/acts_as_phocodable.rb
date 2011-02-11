@@ -227,7 +227,7 @@ module ActsAsPhocodable
       ::Phocoder.base_url = phocodable_configuration[:phocoder_url]
     end
     if self.phocodable_configuration[:phocoder_api_key]
-      ::Phocoder.api_key = phocodable_configuration[:pocoder_api_key]
+      ::Phocoder.api_key = phocodable_configuration[:phocoder_api_key]
     end
     if self.phocodable_configuration[:zencoder_api_key]
       ::Zencoder.api_key = phocodable_configuration[:zencoder_api_key]

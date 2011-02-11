@@ -9,7 +9,7 @@ Gem::Specification.new do |s|
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Jeremy Green"]
-  s.date = %q{2011-02-10}
+  s.date = %q{2011-02-11}
   s.description = %q{Rails engine for easy integration with phocoder.com}
   s.email = %q{jagthedrummer@gmail.com}
   s.extra_rdoc_files = [
@@ -76,6 +76,8 @@ Gem::Specification.new do |s|
     "spec/dummy/script/rails",
     "spec/engine_spec.rb",
     "spec/fixtures/big_eye_tiny.jpg",
+    "spec/fixtures/test.txt",
+    "spec/fixtures/video-test.mov",
     "spec/helpers/phocoder_helper_spec.rb",
     "spec/integration/navigation_spec.rb",
     "spec/models/acts_as_phocodable_spec.rb",
@@ -124,6 +126,7 @@ Gem::Specification.new do |s|
       s.add_runtime_dependency(%q<capybara>, [">= 0.3.9"])
       s.add_runtime_dependency(%q<webrat>, [">= 0"])
       s.add_runtime_dependency(%q<phocoder-rb>, [">= 0"])
+      s.add_runtime_dependency(%q<zencoder>, [">= 0"])
       s.add_runtime_dependency(%q<aws-s3>, [">= 0"])
       s.add_runtime_dependency(%q<ruby-debug>, [">= 0.10.3"])
       s.add_development_dependency(%q<rspec-rails>, ["= 2.4.1"])
@@ -135,6 +138,7 @@ Gem::Specification.new do |s|
       s.add_dependency(%q<capybara>, [">= 0.3.9"])
       s.add_dependency(%q<webrat>, [">= 0"])
       s.add_dependency(%q<phocoder-rb>, [">= 0"])
+      s.add_dependency(%q<zencoder>, [">= 0"])
       s.add_dependency(%q<aws-s3>, [">= 0"])
       s.add_dependency(%q<ruby-debug>, [">= 0.10.3"])
       s.add_dependency(%q<rspec-rails>, ["= 2.4.1"])
@@ -147,6 +151,7 @@ Gem::Specification.new do |s|
     s.add_dependency(%q<capybara>, [">= 0.3.9"])
     s.add_dependency(%q<webrat>, [">= 0"])
     s.add_dependency(%q<phocoder-rb>, [">= 0"])
+    s.add_dependency(%q<zencoder>, [">= 0"])
     s.add_dependency(%q<aws-s3>, [">= 0"])
     s.add_dependency(%q<ruby-debug>, [">= 0.10.3"])
     s.add_dependency(%q<rspec-rails>, ["= 2.4.1"])
