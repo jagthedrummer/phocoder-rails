@@ -8,10 +8,34 @@ class PhocoderController < ApplicationController
     # This is a brute force way around the problem for now.
     # It would be nice to know what's at the root of this problem.
     # The TVN Media project (rarearth) is a prime example.
+    #payload = symbolize_keys(ActiveSupport::JSON.decode(request.body))
+    #logger.debug "the params = #{params.to_json} - #{payload.to_json}"
+    #full_params = params.merge payload
+    #@image_upload = full_params[:class].constantize.update_from_phocoder(full_params)
+    
+    # This may have been due to a screwy Rails upgrade.  
+    # 3.0.3 seems to break this and make routes all screwy  
+    @image_upload = params[:class].constantize.update_from_phocoder(params)
+    
+    #@image_upload = ImageUpload.update_from_phocoder(params)
+    respond_to do |format|
+      #format.html  { render :json => {} }
+      format.json  { render :json => {} }
+      #format.xml  { render :xml => {} }
+    end
+  end
+  
+  
+  def zencoder_notification_update
+    # Sometimes Rails does not like to honor either the 'Accept' or 'Content Type' headers.
+    # It also wan't follow :format => js, or :format => json and just refuses to parse the body.
+    # This is a brute force way around the problem for now.
+    # It would be nice to know what's at the root of this problem.
+    # The TVN Media project (rarearth) is a prime example.
     payload = symbolize_keys(ActiveSupport::JSON.decode(request.body))
     logger.debug "the params = #{params.to_json} - #{payload.to_json}"
     full_params = params.merge payload
-    @image_upload = full_params[:class].constantize.update_from_phocoder(full_params)
+    @image_upload = full_params[:class].constantize.update_from_zencoder(full_params)
     
     
     #@image_upload = ImageUpload.update_from_phocoder(params)

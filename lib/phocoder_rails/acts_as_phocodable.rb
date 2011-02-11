@@ -92,6 +92,27 @@ module ActsAsPhocodable
    'video/vnd.objectvideo'
   ]
   
+  # Mapping for generating a file extension 
+  # based on the coded passed in for zencoder
+  mattr_accessor :video_extensions
+  self.video_extensions = {
+    "h264" => "mp4",
+    "vp6" => "vp6",
+    "vp8" => "webm",
+    "theora" => "ogv",
+    "mpeg4" => "mpg",
+    "wmv" => "wmv"
+  }
+  
+  def image?(content_type)
+    image_types.include?(content_type)
+  end
+  
+  def video?(content_type)
+    video_types.include?(content_type)
+  end
+  
+  
   #def self.storeage_mode
   #  @@storeage_mode
   #end
@@ -132,7 +153,7 @@ module ActsAsPhocodable
   def validates_phocodable
     validates_presence_of :content_type, :filename, :if=>lambda{ parent_id.blank? }
   end
-
+  
   def update_from_phocoder(params)
     Rails.logger.debug "tying to call update from phocoder for params = #{params}"
     if !params[:output].blank?
@@ -152,6 +173,22 @@ module ActsAsPhocodable
     iu.phocoder_status = "ready"
     iu.save
     iu
+  end
+  
+  
+  # Updating from zencoder is a two pass operation.
+  # This method gets called for each output when it's ready.
+  # Once all outputs are ready, we call parent.check_zencoder_details
+  def update_from_zencoder(params)
+    Rails.logger.debug "tying to call update from zencoder for params = #{params}"
+    iu = find_by_zencoder_output_id params[:output][:id]
+    iu.filename = File.basename(params[:output][:url]) if iu.filename.blank?
+    if ActsAsPhocodable.storeage_mode == "local"
+      iu.save_url(params[:output][:url])
+    end
+    iu.zencoder_status = "ready"
+    iu.save
+    iu.parent.check_zencoder_details
   end
   
   def thumbnail_attributes_for(thumbnail = "small")
@@ -202,17 +239,35 @@ module ActsAsPhocodable
   
   def establish_aws_connection
     AWS::S3::Base.establish_connection!(
-      :access_key_id     => ActsAsPhocodable.s3_access_key_id,
-      :secret_access_key => ActsAsPhocodable.s3_secret_access_key
+                                        :access_key_id     => ActsAsPhocodable.s3_access_key_id,
+                                        :secret_access_key => ActsAsPhocodable.s3_secret_access_key
     )
   end
   
-   
+  
   
   
   
   
   module InstanceMethods
+    
+    
+    def image?
+      self.class.image?(content_type)
+    end
+    
+    def video?
+      self.class.video?(content_type)
+    end
+    
+    def encode
+      if image?
+        phocode
+      elsif video?
+        zencode
+      end
+    end
+    
     
     def phocode
       #if self.thumbnails.count >= self.class.phocoder_thumbnails.size
@@ -220,6 +275,8 @@ module ActsAsPhocodable
       #  return
       #end
       
+      # We do this because sometimes save will get called more than once
+      # during a single request
       return if @phocoding
       @phocoding = true
       
@@ -232,19 +289,44 @@ module ActsAsPhocodable
       self.save #false need to do save(false) here if we're calling phocode on after_save
       response.body["job"]["thumbnails"].each do |thumb_params|
         puts "creating a thumb for #{thumb_params["label"]}"
-        thumb = self.thumbnails.new(
-        :thumbnail=>thumb_params["label"],
-        :filename=>thumb_params["filename"],
-        :phocoder_output_id=>thumb_params["id"],
-        :phocoder_job_id=>response.body["job"]["id"],
-        :parent_id=>self.id,
-        :phocoder_status => "phocoding"
-        )
+        # we do this the long way around just in case some of these
+        # atts are attr_protected
+        thumb = self.thumbnails.new()
+        thumb.thumbnail = thumb_params["label"]
+        thumb.filename = thumb_params["filename"]
+        thumb.phocoder_output_id = thumb_params["id"]
+        thumb.phocoder_job_id = response.body["job"]["id"]
+        thumb.parent_id = self.id
+        thumb.phocoder_status  =  "phocoding"
+        
         thumb.save
-	puts "    thumb.errors = #{thumb.errors.to_json}"
+        puts "    thumb.errors = #{thumb.errors.to_json}"
       end
     end
     
+    def zencode
+      # We do this because sometimes save will get called more than once
+      # during a single request
+      return if @zencoding
+      @zencoding = true
+      
+      Rails.logger.debug "trying to zencode!!!!!"
+      Rails.logger.debug "callback url = #{callback_url}"
+      response = Zencoder::Job.create(zencoder_params)
+      self.zencoder_job_id = response.body["id"]
+      response.body["outputs"].each do |output_params|
+        thumb = self.thumbnails.new()
+        thumb.thumbnail = output_params["label"]
+        thumb.zencoder_output_id = output_params["id"]
+        thumb.zencoder_url = output_params["url"]
+        thumb.zencoder_job_id = response.body["id"]
+        thumb.zencoder_status  =  "zencoding"
+        thumb.save
+        puts "    thumb.errors = #{thumb.errors.to_json}"
+      end
+      
+      self.save
+    end
     
     def phocoder_params
       {:input => {:url => self.public_url, :notifications=>[{:url=>callback_url }] },
@@ -258,6 +340,77 @@ module ActsAsPhocodable
           })
         }
       }
+    end
+    
+    def zencoder_params
+      {:input => {:url => self.public_url, :notifications=>[{:url=>callback_url }] },
+        :outputs => self.class.zencoder_videos.map{|video|
+          vid_filename = self.new_zencoder_filename( video[:video_codec] )
+          base_url = ActsAsPhocodable.storeage_mode == "s3" ? "s3://#{self.s3_bucket_name}/#{self.resource_dir}/" : ""
+          vid = video.clone
+          if vid[:thumbnails] and vid[:thumbnails].is_a? Array
+            vid[:thumbnails].each do |thumb|
+              thumb[:base_url] = base_url
+            end
+          elsif vid[:thumbnails]
+            vid[:thumbnails][:base_url] = base_url
+          end
+        
+            
+          vid.merge({
+            :filename=>vid_filename,
+            :base_url=>base_url,
+            :notifications=>[{:url=>zencoder_callback_url }]
+          })
+        }
+      }
+    end
+   
+    def new_zencoder_filename(format)
+      filename + "." + self.class.video_extensions[format]
+    end
+    
+    
+    def check_zencoder_details
+      # we don't get a lot of info from zencoder, so we have to ask for details
+      shouldCheck = true
+      thumbnails.each do |t|
+        if t.zencoder_status != 'ready'
+          shouldCheck = false
+        end
+      end
+      
+      return  if !shouldCheck
+      
+      details = Zencoder::Job.details(self.zencoder_job_id)
+      
+      puts "in check_zencoder_details the details.body = #{details.body.to_json}"
+      
+      if details.body["job"]["state"] != 'finished'
+        zencoder_status = details.body["job"]["state"]
+        save
+        return
+      end
+      
+      self.zencoder_status = "ready"
+      self.width = details.body["job"]["input_media_file"]["width"]
+      self.height = details.body["job"]["input_media_file"]["height"]
+      self.duration_in_ms = details.body["job"]["input_media_file"]["duration_in_ms"]
+      self.file_size = details.body["job"]["input_media_file"]["file_size_bytes"]
+      self.save
+      
+      puts "the output files = #{details.body["job"]["output_media_files"]}"
+      
+      details.body["job"]["output_media_files"].each do |output|
+        puts "updating for output = #{output.to_json}"
+        thumb = thumbnails.find_by_zencoder_output_id output["id"]
+        thumb.width = output["width"]
+        thumb.height = output["height"]
+        thumb.file_size = output["file_size_bytes"]
+        thumb.duration_in_ms = output["duration_in_ms"]
+        thumb.save
+      end
+      
     end
     
     def phocodable_config
@@ -286,9 +439,9 @@ module ActsAsPhocodable
     def thumbnail_for(thumbnail_name)
       thumbnails.find_by_thumbnail(thumbnail_name)
     end
-
+    
     def get_thumbnail(thumbnail_name)
-    	thumbnail_for(thumbnail_name)
+      thumbnail_for(thumbnail_name)
     end
     
     def file=(new_file)
@@ -302,10 +455,10 @@ module ActsAsPhocodable
         @saved_file = new_file
       end
     end
-
+    
     #compatability method for attachment_fu
     def uploaded_data=(data)
-	self.file = data
+      self.file = data
     end
     
     def save_local_file
@@ -315,7 +468,7 @@ module ActsAsPhocodable
       FileUtils.chmod 0755, local_path
       self.phocoder_status = "local"
       if self.respond_to? :upload_host      
-	self.upload_host = %x{hostname}.strip
+        self.upload_host = %x{hostname}.strip
       end
       @saved_file = nil
       @saved_a_new_file = true
@@ -324,7 +477,7 @@ module ActsAsPhocodable
         self.save_s3_file
       end
       if ActsAsPhocodable.processing_mode == "automatic"
-        self.phocode
+        self.encode
       end
     end
     
@@ -366,15 +519,24 @@ module ActsAsPhocodable
     def public_filename
       public_url
     end
-
+    
+    
     def callback_url
       self.base_url + self.notification_callback_path
     end
     
-    def notification_callback_path
-    "/phocoder/notifications/#{self.class.name}/#{self.id}.json"
+    def zencoder_callback_url
+      self.base_url + self.zencoder_notification_callback_path
     end
     
+    def notification_callback_path
+      "/phocoder/notifications/#{self.class.name}/#{self.id}.json"
+    end
+  
+    def zencoder_notification_callback_path
+      "/zencoder/notifications/#{self.class.name}/#{self.id}.json"
+    end
+  
     def base_url
       self.class.base_url
     end
@@ -392,18 +554,17 @@ module ActsAsPhocodable
     end
     
     def save_s3_file
-      #this is a dirty hack to see what happens when we add save_s3_file and phocode to the after_save routine
       return if !@saved_a_new_file
       @saved_a_new_file = false
       AWS::S3::S3Object.store(
-        s3_key, 
-        open(local_path), 
-        s3_bucket_name,
-        :access => :public_read
+                              s3_key, 
+                              open(local_path), 
+      s3_bucket_name,
+      :access => :public_read
       )
       self.phocoder_status = "s3"
       self.save
-      self.phocode
+      self.encode
     end
     
     def remove_s3_file
@@ -432,7 +593,7 @@ module ActsAsPhocodable
     end
     
     
-    end#module InstanceMethods
+  end#module InstanceMethods
     
-  end
-  ActiveRecord::Base.extend ActsAsPhocodable
+end
+ActiveRecord::Base.extend ActsAsPhocodable

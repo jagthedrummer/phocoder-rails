@@ -55,6 +55,12 @@ describe ActsAsPhocodable do
     @attr = {
       :file => fixture_file_upload(fixture_path + '/big_eye_tiny.jpg','image/jpeg')
     }
+    @vid_attr = {
+      :file => fixture_file_upload(fixture_path + '/video-test.mov', 'video/quicktime')
+    }
+    @txt_attr = {
+      :file => fixture_file_upload(fixture_path + '/test.txt', 'text/plain')
+    }
   end
   
   
@@ -126,12 +132,24 @@ describe ActsAsPhocodable do
   it "should create phocoder params based on the acts_as_phocodable :thumbnail options" do
     iu = ImageUpload.new(@attr)
     phorams = iu.phocoder_params
-    puts phorams.to_json
+    #puts phorams.to_json
     phorams.should_not be_nil
     phorams[:input][:url].should == iu.public_url
     phorams[:thumbnails].size.should == 2
   end
   
+  it "should create zencooder params based on the acts_as_phocodable :videos options" do
+    iu = ImageUpload.new(@vid_attr)
+    zenrams = iu.zencoder_params
+    puts zenrams.to_json
+    zenrams.should_not be_nil
+    zenrams[:input][:url].should == iu.public_url
+    zenrams[:outputs].size.should == 2
+    #the first thumbnail variant :thumbnails => { :number => 2, ...}
+    zenrams[:outputs][0][:thumbnails][:base_url].should_not be_nil
+    #the second thumbnail variant :thumbnails => [{...},{...}]
+    zenrams[:outputs][1][:thumbnails][0][:base_url].should_not be_nil
+  end
   
   it "should return some thumbnail options" do
     ImageUpload.phocoder_thumbnails.should_not be_nil
@@ -155,20 +173,14 @@ describe ActsAsPhocodable do
   end
   
   it "should save the file to a local storage location" do
-    iu = ImageUpload.new(@attr)
-    Phocoder::Job.stub!(:create).and_return(mock(Phocoder::Response,:body=>{
-      "job"=>{
-        "id"=>1,
-        "inputs"=>["id"=>1],
-        "thumbnails"=>[{"label"=>"small","filename"=>"small-test-file.jpg","id"=>1}]
-      }
-    }))
+    iu = ImageUpload.new(@txt_attr)
+    Phocoder::Job.should_not_receive(:create)
     iu.save
     
     expected_resource_dir = "ImageUpload/1"
     iu.resource_dir.should == expected_resource_dir
     
-    expected_local_url = "/ImageUpload/1/big_eye_tiny.jpg"
+    expected_local_url = "/ImageUpload/1/test.txt"
     iu.local_url.should == expected_local_url
     
     expected_local_path = File.expand_path(File.join(File.dirname(File.expand_path(__FILE__)),'..','dummy','public','ImageUpload',iu.id.to_s,iu.filename))
@@ -179,10 +191,10 @@ describe ActsAsPhocodable do
     File.exists?(expected_local_path).should_not be_true
   end
   
-  it "should call phocoder" do
+  it "should call phocoder for images" do
     iu = ImageUpload.new(@attr)
     
-    Phocoder::Job.stub!(:create).and_return(mock(Phocoder::Response,:body=>{
+    Phocoder::Job.should_receive(:create).and_return(mock(Phocoder::Response,:body=>{
       "job"=>{
         "id"=>1,
         "inputs"=>["id"=>1],
@@ -198,6 +210,27 @@ describe ActsAsPhocodable do
     ImageUpload.count.should == 0
     File.exists?(expected_local_path).should_not be_true
   end
+  
+  
+  
+  it "should call zencoder for videos" do
+    iu = ImageUpload.new(@vid_attr)  
+    Zencoder::Job.should_receive(:create).and_return(mock(Zencoder::Response,:body=>{
+        "id"=>1,
+        "inputs"=>["id"=>1],
+        "outputs"=>[{"label"=>"small","url"=>"http://someurl/","filename"=>"small-test-file.jpg","id"=>1}]
+    }))
+    iu.save
+    expected_local_path = File.expand_path(File.join(File.dirname(File.expand_path(__FILE__)),'..','dummy','public','ImageUpload',iu.id.to_s,iu.filename))
+    File.exists?(expected_local_path).should be_true
+    #iu.phocode
+    ImageUpload.count.should == 2 #it should have created a thumbnail record
+    iu.destroy
+    ImageUpload.count.should == 0
+    File.exists?(expected_local_path).should_not be_true
+  end
+  
+  
   
   it "should update parent images from phocoder" do
     iu = ImageUpload.new(@attr.merge :phocoder_input_id=>1)
