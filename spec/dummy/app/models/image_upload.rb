@@ -17,7 +17,7 @@ class ImageUpload < ActiveRecord::Base
                                                                                           :size =>  "720x480",
                                                                                           :format => "jpg"
                                                                                         }]
-}
+                                   }
                                  ]
                                   
 end

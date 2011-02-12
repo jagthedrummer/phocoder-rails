@@ -143,12 +143,28 @@ describe ActsAsPhocodable do
     zenrams = iu.zencoder_params
     puts zenrams.to_json
     zenrams.should_not be_nil
-    zenrams[:input][:url].should == iu.public_url
+    zenrams[:input].should == iu.public_url
+    zenrams[:outputs].size.should == 2
+    #the first thumbnail variant :thumbnails => { :number => 2, ...}
+    zenrams[:outputs][0][:thumbnails][:base_url].should be_nil
+    #the second thumbnail variant :thumbnails => [{...},{...}]
+    zenrams[:outputs][1][:thumbnails][0][:base_url].should be_nil
+  end
+  
+  
+  it "should create zencooder params with base_urls in s3 mode based on the acts_as_phocodable :videos options" do
+    ActsAsPhocodable.storeage_mode = "s3"
+    iu = ImageUpload.new(@vid_attr)
+    zenrams = iu.zencoder_params
+    puts zenrams.to_json
+    zenrams.should_not be_nil
+    zenrams[:input].should == iu.public_url
     zenrams[:outputs].size.should == 2
     #the first thumbnail variant :thumbnails => { :number => 2, ...}
     zenrams[:outputs][0][:thumbnails][:base_url].should_not be_nil
     #the second thumbnail variant :thumbnails => [{...},{...}]
     zenrams[:outputs][1][:thumbnails][0][:base_url].should_not be_nil
+    ActsAsPhocodable.storeage_mode = "local"
   end
   
   it "should return some thumbnail options" do

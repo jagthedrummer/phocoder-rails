@@ -1,6 +1,6 @@
 class PhocoderController < ApplicationController
   
-  protect_from_forgery :except=>[:notification_update,:thumbnail_update]  
+  protect_from_forgery :except=>[:notification_update,:zencoder_notification_update,:thumbnail_update]  
   
   def notification_update
     # Sometimes Rails does not like to honor either the 'Accept' or 'Content Type' headers.

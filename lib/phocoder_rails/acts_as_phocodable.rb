@@ -1,6 +1,7 @@
 module ActsAsPhocodable
   
   require 'phocoder'
+  require 'zencoder'
   require 'open-uri'
   # Storeage mode controls how uploads are handled.
   # Valid options are:
@@ -182,7 +183,7 @@ module ActsAsPhocodable
   def update_from_zencoder(params)
     Rails.logger.debug "tying to call update from zencoder for params = #{params}"
     iu = find_by_zencoder_output_id params[:output][:id]
-    iu.filename = File.basename(params[:output][:url]) if iu.filename.blank?
+    iu.filename = File.basename(params[:output][:url].match(/(.*)\?/)[1]) if iu.filename.blank?
     if ActsAsPhocodable.storeage_mode == "local"
       iu.save_url(params[:output][:url])
     end
@@ -313,6 +314,7 @@ module ActsAsPhocodable
       Rails.logger.debug "trying to zencode!!!!!"
       Rails.logger.debug "callback url = #{callback_url}"
       response = Zencoder::Job.create(zencoder_params)
+      Rails.logger.debug "response from Zencoder = #{response.body.to_json}"
       self.zencoder_job_id = response.body["id"]
       response.body["outputs"].each do |output_params|
         thumb = self.thumbnails.new()
@@ -333,9 +335,10 @@ module ActsAsPhocodable
         :thumbnails => self.class.phocoder_thumbnails.map{|thumb|
           thumb_filename = thumb[:label] + "_" + File.basename(self.filename,File.extname(self.filename)) + ".jpg" 
           base_url = ActsAsPhocodable.storeage_mode == "s3" ? "s3://#{self.s3_bucket_name}/#{self.resource_dir}/" : ""
-          thumb.merge({
+          th = thumb.clone
+          th[:base_url] = base_url  if !base_url.blank?
+          th.merge({
             :filename=>thumb_filename,
-            :base_url=>base_url,
             :notifications=>[{:url=>callback_url }]
           })
         }
@@ -343,27 +346,29 @@ module ActsAsPhocodable
     end
     
     def zencoder_params
-      {:input => {:url => self.public_url, :notifications=>[{:url=>callback_url }] },
+      params = {:input =>  self.public_url ,
         :outputs => self.class.zencoder_videos.map{|video|
           vid_filename = self.new_zencoder_filename( video[:video_codec] )
           base_url = ActsAsPhocodable.storeage_mode == "s3" ? "s3://#{self.s3_bucket_name}/#{self.resource_dir}/" : ""
           vid = video.clone
           if vid[:thumbnails] and vid[:thumbnails].is_a? Array
             vid[:thumbnails].each do |thumb|
-              thumb[:base_url] = base_url
+              thumb[:base_url] = base_url if !base_url.blank?
             end
           elsif vid[:thumbnails]
-            vid[:thumbnails][:base_url] = base_url
+            vid[:thumbnails][:base_url] = base_url  if !base_url.blank?
           end
         
-            
+          vid[:base_url] = base_url  if !base_url.blank?
           vid.merge({
             :filename=>vid_filename,
-            :base_url=>base_url,
             :notifications=>[{:url=>zencoder_callback_url }]
           })
         }
       }
+      Rails.logger.debug "for zencoder the params = #{params}"
+      puts "for zencoder the params = #{params.to_json}"
+      params
     end
    
     def new_zencoder_filename(format)
@@ -423,6 +428,7 @@ module ActsAsPhocodable
     end
     
     def save_url(url)
+      Rails.logger.debug "We are about to download : #{url} to #{local_dir} - #{local_path}"
       FileUtils.mkdir(local_dir) if !File.exists?(local_dir)
       FileUtils.touch local_path
       writeOut = open(local_path, "wb")
@@ -534,7 +540,7 @@ module ActsAsPhocodable
     end
   
     def zencoder_notification_callback_path
-      "/zencoder/notifications/#{self.class.name}/#{self.id}.json"
+      "/phocoder/zencoder_notifications/#{self.class.name}/#{self.id}.json"
     end
   
     def base_url
