@@ -183,7 +183,7 @@ module ActsAsPhocodable
   def update_from_zencoder(params)
     Rails.logger.debug "tying to call update from zencoder for params = #{params}"
     iu = find_by_zencoder_output_id params[:output][:id]
-    iu.filename = File.basename(params[:output][:url].match(/(.*)\?/)[1]) if iu.filename.blank?
+    iu.filename = File.basename(params[:output][:url].match(/(.*)\??/)[1]) if iu.filename.blank?
     if ActsAsPhocodable.storeage_mode == "local"
       iu.save_url(params[:output][:url])
     end
