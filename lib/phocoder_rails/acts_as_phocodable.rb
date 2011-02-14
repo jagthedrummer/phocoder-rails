@@ -530,7 +530,7 @@ module ActsAsPhocodable
       if ActsAsPhocodable.storeage_mode == "s3" and ActsAsPhocodable.processing_mode == "automatic"
         self.save_s3_file
       end
-      if ActsAsPhocodable.processing_mode == "automatic"
+      if ActsAsPhocodable.processing_mode == "automatic" and ActsAsPhocodable.storeage_mode != "offline"
         self.encode
       end
     end
