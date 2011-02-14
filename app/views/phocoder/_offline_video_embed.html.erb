@@ -1,0 +1,19 @@
+<!-- Begin VideoJS -->
+<div class="video-js-box vim-css">
+    <!-- Using the Video for Everybody Embed Code http://camendesign.com/code/video_for_everybody -->
+    <video class="video-js" width="<%=width%>" height="<%=height%>" controls preload poster="<%= video.get_thumbnail('jpg').public_url %>">
+        <source src="<%= video.public_url %>">
+        <!-- Flash Fallback. Use any flash video player here. Make sure to keep the vjs-flash-fallback class. -->
+        <object class="vjs-flash-fallback" width="<%=width%>" height="<%=height%>" type="application/x-shockwave-flash" data="http://releases.flowplayer.org/swf/flowplayer-3.2.1.swf">
+            <param name="movie" value="http://releases.flowplayer.org/swf/flowplayer-3.2.1.swf" /><param name="allowfullscreen" value="true" /><param name="flashvars" value='config={"playlist":["<%= video.get_thumbnail('jpg').public_url %>", {"url": "<%= video.public_url %>","autoPlay":false,"autoBuffering":true}]}' /><!-- Image Fallback. Typically the same as the poster image. --><img src="<%= video.get_thumbnail('jpg').public_url %>" width="<%=width%>" height="<%=height%>" alt="Poster Image" title="No video playback capabilities." />
+        </object>
+    </video><!-- Download links provided for devices that can't play video in the browser. -->
+    <p class="vjs-no-video">
+        <strong>Download Video:</strong>
+        <a href="<%= video.public_url %>">Original</a>
+        <br>
+        <!-- Support VideoJS by keeping this link. --><a href="http://videojs.com">HTML5 Video Player</a>
+        by VideoJS
+    </p>
+</div>
+<!-- End VideoJS -->

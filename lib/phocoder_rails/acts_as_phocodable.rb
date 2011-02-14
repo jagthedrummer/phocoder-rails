@@ -346,10 +346,10 @@ module ActsAsPhocodable
     end
     
     def zencoder_params
+      base_url = ActsAsPhocodable.storeage_mode == "s3" ? "s3://#{self.s3_bucket_name}/#{self.resource_dir}/" : ""
       params = {:input =>  self.public_url ,
         :outputs => self.class.zencoder_videos.map{|video|
           vid_filename = self.new_zencoder_filename( video[:video_codec] )
-          base_url = ActsAsPhocodable.storeage_mode == "s3" ? "s3://#{self.s3_bucket_name}/#{self.resource_dir}/" : ""
           vid = video.clone
           if vid[:thumbnails] and vid[:thumbnails].is_a? Array
             vid[:thumbnails].each do |thumb|
@@ -357,16 +357,19 @@ module ActsAsPhocodable
             end
           elsif vid[:thumbnails]
             vid[:thumbnails][:base_url] = base_url  if !base_url.blank?
-          end
-        
+          end        
+          
           vid[:base_url] = base_url  if !base_url.blank?
           vid.merge({
             :filename=>vid_filename,
+            :public=>1,
             :notifications=>[{:url=>zencoder_callback_url }]
           })
         }
       }
-      Rails.logger.debug "for zencoder the params = #{params}"
+      params[:outputs][0][:thumbnails] = { :number=>1, :start_at_first_frame=>1,:public=>1 }
+      params[:outputs][0][:thumbnails][:base_url] = base_url  if !base_url.blank?
+      Rails.logger.debug "for zencoder the params = #{params.to_json}"
       puts "for zencoder the params = #{params.to_json}"
       params
     end
@@ -406,6 +409,15 @@ module ActsAsPhocodable
       
       puts "the output files = #{details.body["job"]["output_media_files"]}"
       
+      update_zencoder_outputs(details)
+            
+      # Now create the image thumb
+      create_zezncoder_image_thumb(details)
+      
+    end
+    
+    
+    def update_zencoder_outputs(details)
       details.body["job"]["output_media_files"].each do |output|
         puts "updating for output = #{output.to_json}"
         thumb = thumbnails.find_by_zencoder_output_id output["id"]
@@ -415,7 +427,24 @@ module ActsAsPhocodable
         thumb.duration_in_ms = output["duration_in_ms"]
         thumb.save
       end
+    end
+    
+    def create_zezncoder_image_thumb(details)
       
+      # for now we should only have one thumbnail
+      output = details.body["job"]["thumbnails"].first
+      thumb = thumbnails.new
+      thumb.thumbnail = "poster"
+      thumb.width = output["width"]
+      thumb.height = output["height"]
+      thumb.file_size = output["file_size_bytes"]
+      thumb.filename = "frame_0000.png" #File.basename(output["url"])
+      if ActsAsPhocodable.storeage_mode == "local"
+        thumb.save_url(output["url"])
+      end
+      thumb.save
+      #now get thumbnails for the poster
+      thumb.phocode 
     end
     
     def phocodable_config
@@ -443,7 +472,12 @@ module ActsAsPhocodable
     end
     
     def thumbnail_for(thumbnail_name)
-      thumbnails.find_by_thumbnail(thumbnail_name)
+      thumb = thumbnails.find_by_thumbnail(thumbnail_name)
+      #thumb
+      #a dirty hack for now to keep things working.  
+      #Remove this!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      #Go back to just returning the thumb
+      thumb.blank? ? self : thumb
     end
     
     def get_thumbnail(thumbnail_name)
@@ -496,8 +530,14 @@ module ActsAsPhocodable
       end
     end
     
+    def path_id
+      puts "parent_id = #{parent_id}"
+      puts "parent = #{parent}"
+      parent_id.blank? ? id : parent.path_id
+    end
+    
     def resource_dir
-      File.join(self.class.name, parent_id.blank? ? id.to_s : parent_id.to_s )
+      File.join(self.class.name, path_id.to_s )
     end
     
     def local_dir
@@ -597,6 +637,53 @@ module ActsAsPhocodable
         name.gsub! /[^A-Za-z0-9\.\-]/, '_'
       end
     end
+    
+    # Calculate the width for the target thumbnail atts
+    def calc_width(thumbnail_atts)   
+      tw = thumbnail_atts[:width].blank? ? 100000 : thumbnail_atts[:width].to_f
+      th = thumbnail_atts[:height].blank? ? 100000 : thumbnail_atts[:height].to_f
+      w =  width.to_f
+      h =  height.to_f
+      if w <= tw and h <= th
+        w.round
+      elsif w > h
+        if (h * ( tw / w )).round < tw
+          tw .round
+        else
+         (h * ( tw / w )).round
+        end
+      else
+        if (w * ( th / h )).round < tw
+         (w * ( th / h )).round
+        else
+          tw.round
+        end
+      end
+    end #end calc_width
+    
+    
+    def calc_height(thumbnail_atts)
+      tw = thumbnail_atts[:width].blank? ? 100000 : thumbnail_atts[:width].to_f
+      th = thumbnail_atts[:height].blank? ? 100000 : thumbnail_atts[:height].to_f
+      w =  width.to_f
+      h =  height.to_f
+      if w <= tw and h <= th
+        h.round
+      elsif w > h
+        if (h * ( tw / w )).round < th
+         (h * ( tw / w )).round
+        else
+          th.round
+        end
+      else
+        if (w * ( th / h )).round < tw
+          th.round
+        else
+         (h * ( tw / w )).round
+        end
+      end
+    end #end calc_height
+    
     
     
   end#module InstanceMethods
