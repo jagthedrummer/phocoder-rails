@@ -27,8 +27,7 @@ module PhocoderHelper
     elsif image_upload.image? 
       phocoder_image_thumbnail image_upload, thumbnail,thumbnail_atts
     elsif (image_upload.video? and !live_video)
-      poster = image_upload.get_thumbnail 'poster'
-      phocoder_image_thumbnail poster, thumbnail,thumbnail_atts
+      phocoder_image_thumbnail image_upload, thumbnail,thumbnail_atts
     elsif image_upload.video?
       phocoder_video_thumbnail image_upload, thumbnail,thumbnail_atts
     else
@@ -67,11 +66,11 @@ module PhocoderHelper
   def phocoder_image_thumbnail(image_upload,thumbnail="small",thumbnail_atts={})  
     
     
-    if thumbnail.nil? and image_upload.phocoder_status == "ready"
+    if thumbnail.nil? and (image_upload.phocoder_status == "ready")
       return image_tag image_upload.public_url, :size=>"#{image_upload.width}x#{image_upload.height}"
     elsif thumbnail_atts.blank?
       return error_div("'#{thumbnail}' is not a valid thumbnail size for #{image_upload.class}")
-    elsif image_upload.phocoder_status != "ready"
+    elsif image_upload.phocoder_status != "ready" and image_upload.zencoder_status != "ready"
       puts "image_upload is not ready!!!!!!!!!!!!!!!!!!!!!!!!"
       return pending_phocoder_thumbnail(image_upload,thumbnail,false,thumbnail_atts)
     #else

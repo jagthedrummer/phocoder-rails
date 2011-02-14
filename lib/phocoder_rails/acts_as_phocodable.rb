@@ -286,7 +286,7 @@ module ActsAsPhocodable
       return if @phocoding
       @phocoding = true
       
-      Rails.logger.debug "trying to phocode for #{Phocoder.base_url}"
+      Rails.logger.debug "trying to phocode for #{Phocoder.base_url} - my parent_id = #{self.parent_id}"
       Rails.logger.debug "callback url = #{callback_url}"
       response = Phocoder::Job.create(phocoder_params)
       self.phocoder_input_id = response.body["job"]["inputs"].first["id"]
@@ -297,12 +297,21 @@ module ActsAsPhocodable
         puts "creating a thumb for #{thumb_params["label"]}"
         # we do this the long way around just in case some of these
         # atts are attr_protected
-        thumb = self.thumbnails.new()
+        thumb = nil
+        if !self.parent_id.blank? 
+          Rails.logger.debug "trying to create a thumb from the parent "
+          thumb = self.parent.thumbnails.new()
+        else
+          Rails.logger.debug "trying to create a thumb from myself "
+          thumb = self.thumbnails.new()
+        end
+        
+        
         thumb.thumbnail = thumb_params["label"]
         thumb.filename = thumb_params["filename"]
         thumb.phocoder_output_id = thumb_params["id"]
         thumb.phocoder_job_id = response.body["job"]["id"]
-        thumb.parent_id = self.id
+        #thumb.parent_id = self.id
         thumb.phocoder_status  =  "phocoding"
         
         thumb.save
@@ -478,11 +487,11 @@ module ActsAsPhocodable
     
     def thumbnail_for(thumbnail_name)
       thumb = thumbnails.find_by_thumbnail(thumbnail_name)
-      #thumb
+      thumb
       #a dirty hack for now to keep things working.  
       #Remove this!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       #Go back to just returning the thumb
-      thumb.blank? ? self : thumb
+      #thumb.blank? ? self : thumb
     end
     
     def get_thumbnail(thumbnail_name)
