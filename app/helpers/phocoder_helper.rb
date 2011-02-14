@@ -9,10 +9,13 @@ module PhocoderHelper
   
   
   def phocoder_includes
-    tag =  stylesheet_link_tag 'video-js-2.0.2/video-js.css'
+    tag =  stylesheet_link_tag '/javascripts/video-js-2.0.2/video-js.css'
     tag += "\n"
     tag += javascript_include_tag 'video-js-2.0.2/video.js'
-    tag
+    tag += "\n"
+    tag += stylesheet_link_tag 'phocodable.css'
+    tag += "\n"
+    tag += %[<script type="text/javascript" charset="utf-8">VideoJS.setupAllWhenReady();</script>].html_safe
   end
   
   
@@ -27,7 +30,12 @@ module PhocoderHelper
     elsif image_upload.image? 
       phocoder_image_thumbnail image_upload, thumbnail,thumbnail_atts
     elsif (image_upload.video? and !live_video)
-      phocoder_image_thumbnail image_upload, thumbnail,thumbnail_atts
+      tag =  %[<span class="phocoder_video_poster">]
+      tag += phocoder_image_thumbnail(image_upload, thumbnail,thumbnail_atts)
+      tag += %[<img src="/images/play_small.png" alt="Play" width="25" height="25" class="play"/>]
+      tag += "</span>"
+      tag.html_safe
+      
     elsif image_upload.video?
       phocoder_video_thumbnail image_upload, thumbnail,thumbnail_atts
     else

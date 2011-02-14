@@ -9,7 +9,7 @@ Gem::Specification.new do |s|
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Jeremy Green"]
-  s.date = %q{2011-02-11}
+  s.date = %q{2011-02-14}
   s.description = %q{Rails engine for easy integration with phocoder.com}
   s.email = %q{jagthedrummer@gmail.com}
   s.extra_rdoc_files = [
@@ -29,7 +29,9 @@ Gem::Specification.new do |s|
     "VERSION",
     "app/controllers/phocoder_controller.rb",
     "app/helpers/phocoder_helper.rb",
+    "app/views/phocoder/_offline_video_embed.html.erb",
     "app/views/phocoder/_thumbnail_update.html.erb",
+    "app/views/phocoder/_video_embed.html.erb",
     "app/views/phocoder/thumbnail_update.js.rjs",
     "config/routes.rb",
     "lib/phocoder_rails.rb",
@@ -39,6 +41,16 @@ Gem::Specification.new do |s|
     "public/images/building.gif",
     "public/images/storing.gif",
     "public/images/waiting.gif",
+    "public/javascripts/video-js-2.0.2/.DS_Store",
+    "public/javascripts/video-js-2.0.2/LICENSE.txt",
+    "public/javascripts/video-js-2.0.2/README.markdown",
+    "public/javascripts/video-js-2.0.2/demo-subtitles.srt",
+    "public/javascripts/video-js-2.0.2/demo.html",
+    "public/javascripts/video-js-2.0.2/skins/hu.css",
+    "public/javascripts/video-js-2.0.2/skins/tube.css",
+    "public/javascripts/video-js-2.0.2/skins/vim.css",
+    "public/javascripts/video-js-2.0.2/video-js.css",
+    "public/javascripts/video-js-2.0.2/video.js",
     "spec/controllers/phocoder_controller_spec.rb",
     "spec/dummy/Rakefile",
     "spec/dummy/app/controllers/application_controller.rb",

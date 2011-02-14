@@ -274,6 +274,15 @@ module ActsAsPhocodable
       end
     end
     
+    def ready?
+      if ActsAsPhocodable.storeage_mode == "offline"
+        true
+      elsif image?
+        return phocoder_status=='ready'
+      elsif video?
+        return zencoder_status=='ready'  
+      end
+    end
     
     def phocode
       #if self.thumbnails.count >= self.class.phocoder_thumbnails.size
