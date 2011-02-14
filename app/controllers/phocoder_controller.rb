@@ -49,6 +49,7 @@ class PhocoderController < ApplicationController
   def thumbnail_update
     @img = Kernel.const_get(params[:class]).find params[:id]
     @random = params[:random]
+    @live_vide = params[:live_video]
     respond_to do |format|
       format.js {}
     end

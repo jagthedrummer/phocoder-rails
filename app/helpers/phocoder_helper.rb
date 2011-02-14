@@ -38,7 +38,9 @@ module PhocoderHelper
   
   
   def phocoder_video_thumbnail(image_upload,thumbnail="small",thumbnail_atts={},live_video = true)
-    if live_video
+    if image_upload.zencoder_status != 'ready'
+      pending_phocoder_thumbnail(image_upload,thumbnail,true,thumbnail_atts)
+    elsif live_video
       phocoder_video_embed(image_upload,thumbnail_atts)
     else
       %[<div class="phocoder_video_thumbnail">Video static image thumb goes here.</div>].html_safe  
@@ -71,7 +73,7 @@ module PhocoderHelper
       return error_div("'#{thumbnail}' is not a valid thumbnail size for #{image_upload.class}")
     elsif image_upload.phocoder_status != "ready"
       puts "image_upload is not ready!!!!!!!!!!!!!!!!!!!!!!!!"
-      return pending_phocoder_thumbnail(image_upload,thumbnail,thumbnail_atts)
+      return pending_phocoder_thumbnail(image_upload,thumbnail,false,thumbnail_atts)
     #else
     #  return "<div class='notice'>Online mode is coming soon!</div>"
     end
@@ -80,7 +82,7 @@ module PhocoderHelper
     if thumb.blank? or thumb.phocoder_status != "ready"
       puts "thumb (#{thumb.to_json}) is not ready!!!!!!!!!!!!!!!!!!!!!!!!"
       #this happens if the main image has been notified, but not this thumbnail
-      return pending_phocoder_thumbnail(image_upload,thumbnail,thumbnail_atts)
+      return pending_phocoder_thumbnail(image_upload,thumbnail,false,thumbnail_atts)
     end
     image_tag thumb.public_url, :size=>"#{thumb.width}x#{thumb.height}"  
   end
@@ -115,7 +117,7 @@ module PhocoderHelper
   end
   
   
-  def pending_phocoder_thumbnail(photo,thumbnail,thumbnail_atts,spinner='waiting')
+  def pending_phocoder_thumbnail(photo,thumbnail,live_video,thumbnail_atts,spinner='waiting')
     random = ActiveSupport::SecureRandom.hex(16)
     elemId = "#{photo.class.to_s}_#{photo.id.to_s}_#{random}"
     #updater = remote_function(:update=>elemId)

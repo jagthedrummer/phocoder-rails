@@ -148,7 +148,8 @@ describe ActsAsPhocodable do
     #the first thumbnail variant :thumbnails => { :number => 2, ...}
     zenrams[:outputs][0][:thumbnails][:base_url].should be_nil
     #the second thumbnail variant :thumbnails => [{...},{...}]
-    zenrams[:outputs][1][:thumbnails][0][:base_url].should be_nil
+    #we removed this for now - only 1 thumb is being generated, automatically 
+    #zenrams[:outputs][1][:thumbnails][0][:base_url].should be_nil
   end
   
   
@@ -163,7 +164,8 @@ describe ActsAsPhocodable do
     #the first thumbnail variant :thumbnails => { :number => 2, ...}
     zenrams[:outputs][0][:thumbnails][:base_url].should_not be_nil
     #the second thumbnail variant :thumbnails => [{...},{...}]
-    zenrams[:outputs][1][:thumbnails][0][:base_url].should_not be_nil
+    #we removed this for now - only 1 thumb is being generated, automatically 
+    #zenrams[:outputs][1][:thumbnails][0][:base_url].should_not be_nil
     ActsAsPhocodable.storeage_mode = "local"
   end
   
