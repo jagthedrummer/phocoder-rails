@@ -487,6 +487,9 @@ module ActsAsPhocodable
     
     def thumbnail_for(thumbnail_name)
       thumb = thumbnails.find_by_thumbnail(thumbnail_name)
+      if thumb.blank? and ActsAsPhocodable.storeage_mode == "offline"
+        thumb = self
+      end
       thumb
       #a dirty hack for now to keep things working.  
       #Remove this!!!!!!!!!!!!!!!!!!!!!!!!!!!!
