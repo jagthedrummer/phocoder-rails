@@ -79,7 +79,9 @@ module ActsAsPhocodable
       'application/png',
       'application/x-png',
       'image/gi_',
-      'image/x-citrix-pjpeg'
+      'image/x-citrix-pjpeg',
+      'image/x-nikon-nef',
+      'image/tiff'
   ]
   
   # The list of content types that will trigger video handling.
