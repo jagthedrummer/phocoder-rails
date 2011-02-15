@@ -62,7 +62,7 @@ module PhocoderHelper
   end
   
   
-  def phocoder_offline_video_embed(image_upload,thumbnail_atts,options={} )
+  def offline_phocoder_video_embed(image_upload,thumbnail_atts,options={} )
     options.merge!(:video => image_upload, :width=>image_upload.calc_width(thumbnail_atts),:height=>image_upload.calc_height(thumbnail_atts))
     render(:partial => 'phocoder/offline_video_embed', :locals => options)
   end

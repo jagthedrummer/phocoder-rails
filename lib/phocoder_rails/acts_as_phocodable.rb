@@ -124,7 +124,7 @@ module ActsAsPhocodable
     include InstanceMethods
     attr_reader :saved_file
     after_save :save_local_file
-    before_destroy :remove_local_file,:destroy_thumbnails,:remove_s3_file
+    before_destroy :cleanup #:remove_local_file,:destroy_thumbnails,:remove_s3_file
     
     
     #cattr_accessor :phocoder_options
@@ -513,6 +513,7 @@ module ActsAsPhocodable
     def file=(new_file)
       return if new_file.nil?
       Rails.logger.debug "we got a new file of class = #{new_file.class}"
+      cleanup
       self.filename = new_file.original_filename
       self.content_type = new_file.content_type
       if new_file.respond_to? :tempfile
@@ -544,6 +545,15 @@ module ActsAsPhocodable
       end
       if ActsAsPhocodable.processing_mode == "automatic" and ActsAsPhocodable.storeage_mode != "offline"
         self.encode
+      end
+    end
+    
+    
+    def cleanup
+      destroy_thumbnails
+      remove_local_file
+      if ActsAsPhocodable.storeage_mode == "s3"
+        remove_s3_file
       end
     end
     
@@ -581,8 +591,9 @@ module ActsAsPhocodable
     # This should generate a fully qualified http://something-something
     # type of a reference.  Depending on storeage_mode/base_url settings.
     def public_url
+      puts "our base_url = #{base_url} and our local_url = #{local_url}"
       if ActsAsPhocodable.storeage_mode == "local" or ActsAsPhocodable.storeage_mode == "offline" 
-        ActsAsPhocodable.base_url + local_url
+        base_url + local_url
       else
         s3_url
       end
@@ -640,9 +651,9 @@ module ActsAsPhocodable
     end
     
     def remove_s3_file
-      if ActsAsPhocodable.storeage_mode == "s3"
+      #if ActsAsPhocodable.storeage_mode == "s3"
         AWS::S3::S3Object.delete s3_key, s3_bucket_name
-      end
+      #end
     rescue Exception => e
       #this probably means that the file never made it to S3
     end
