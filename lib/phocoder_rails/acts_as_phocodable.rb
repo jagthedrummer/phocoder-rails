@@ -658,8 +658,9 @@ module ActsAsPhocodable
     end
     
     def save_s3_file
-      return if !@saved_a_new_file
-      @saved_a_new_file = false
+      #I don't think we need this return check anymore.  
+      #return if !@saved_a_new_file
+      #@saved_a_new_file = false
       AWS::S3::S3Object.store(
                               s3_key, 
                               open(local_path), 
