@@ -68,6 +68,13 @@ describe PhocoderController do
                   "thumbnails" => [{ "url" => "http://farm2.static.flickr.com/1243/5168720424_ea33e31d96.jpg", "id" => 1 }]
         }
        }))
+       Phocoder::Job.should_receive(:create).and_return(mock(Phocoder::Response,:body=>{
+        "job"=>{
+        "id"=>1,
+        "inputs"=>["id"=>1],
+        "thumbnails"=>[{"label"=>"small","filename"=>"small-test-file.jpg","id"=>1}]
+      }
+      }))
       #@image_upload.should_receive(:create_zencoder_image_thumb).and_return(nil)
       post 'zencoder_notification_update', {:class=>"ImageUpload",:id=>@thumb.id,
                                             "job"=>{"state"=>"finished","id"=>2},

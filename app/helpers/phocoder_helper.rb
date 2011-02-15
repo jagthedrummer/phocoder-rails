@@ -39,7 +39,7 @@ module PhocoderHelper
     elsif image_upload.video?
       phocoder_video_thumbnail image_upload, thumbnail,thumbnail_atts
     else
-      %[<span class="error">No preview available for #{image_upload.filename}</span>]
+      image_tag "error.png"
     end
   end
   

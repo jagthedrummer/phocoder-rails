@@ -294,6 +294,20 @@ module ActsAsPhocodable
         return phocoder_status=='ready'
       elsif video?
         return zencoder_status=='ready'  
+      else
+        return false
+      end
+    end
+    
+    def error?
+      if ActsAsPhocodable.storeage_mode == "offline"
+        false
+      elsif image?
+        return phocoder_status=='failed'
+      elsif video?
+        return zencoder_status=='failed'
+      else
+        true
       end
     end
     
