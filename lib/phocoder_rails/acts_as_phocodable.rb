@@ -140,6 +140,10 @@ module ActsAsPhocodable
     belongs_to  :parent, :class_name => "::#{base_class.name}" ,:foreign_key => "parent_id"
     
     scope :top_level, where({:parent_id=>nil})
+    # we can't just call the scope 'parents' because that is already
+    # taken and returns an array of parent classes of the ruby object
+    scope :parent_items, where({:parent_id=>nil})
+    scope :thumbnails, where("#{base_class.table_name}.parent_id is not null")
     
     #just a writer, the reader is below
     cattr_accessor :phocodable_configuration
@@ -274,6 +278,13 @@ module ActsAsPhocodable
       end
     end
     
+    def recode
+      reload #make sure that we have current thumbs
+      destroy_thumbnails
+      reload
+      encode
+    end
+    
     def ready?
       if ActsAsPhocodable.storeage_mode == "offline"
         true
@@ -310,9 +321,11 @@ module ActsAsPhocodable
         if !self.parent_id.blank? 
           Rails.logger.debug "trying to create a thumb from the parent "
           thumb = self.parent.thumbnails.new()
+          self.parent.thumbnails << thumb
         else
           Rails.logger.debug "trying to create a thumb from myself "
           thumb = self.thumbnails.new()
+          self.thumbnails << thumb
         end
         
         
@@ -324,6 +337,7 @@ module ActsAsPhocodable
         thumb.phocoder_status  =  "phocoding"
         
         thumb.save
+        
         puts "    thumb.errors = #{thumb.errors.to_json}"
       end
     end
@@ -341,6 +355,7 @@ module ActsAsPhocodable
       self.zencoder_job_id = response.body["id"]
       response.body["outputs"].each do |output_params|
         thumb = self.thumbnails.new()
+        self.thumbnails << thumb
         thumb.thumbnail = output_params["label"]
         thumb.zencoder_output_id = output_params["id"]
         thumb.zencoder_url = output_params["url"]
@@ -435,7 +450,7 @@ module ActsAsPhocodable
       update_zencoder_outputs(details)
             
       # Now create the image thumb
-      create_zezncoder_image_thumb(details)
+      create_zencoder_image_thumb(details)
       
     end
     
@@ -452,10 +467,11 @@ module ActsAsPhocodable
       end
     end
     
-    def create_zezncoder_image_thumb(details)
+    def create_zencoder_image_thumb(details)
       
       # for now we should only have one thumbnail
       output = details.body["job"]["thumbnails"].first
+      return if output.blank?
       thumb = thumbnails.new
       thumb.thumbnail = "poster"
       thumb.width = output["width"]
@@ -489,9 +505,11 @@ module ActsAsPhocodable
     end
     
     def destroy_thumbnails
+      puts "calling destory thumbnails for #{self.thumbnails.count} - #{self.thumbnails.size}"
       self.thumbnails.each do |thumb|
         thumb.destroy
       end
+      puts "calling destory thumbnails for #{self.thumbnails.count}"
     end
     
     def thumbnail_for(thumbnail_name)
@@ -550,6 +568,7 @@ module ActsAsPhocodable
     
     
     def cleanup
+      puts "calling cleanup!"
       destroy_thumbnails
       remove_local_file
       if ActsAsPhocodable.storeage_mode == "s3"
@@ -573,7 +592,7 @@ module ActsAsPhocodable
     end
     
     def resource_dir
-      File.join(self.class.name, path_id.to_s )
+      File.join(self.class.table_name, path_id.to_s )
     end
     
     def local_dir

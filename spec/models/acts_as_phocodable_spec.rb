@@ -195,20 +195,20 @@ describe ActsAsPhocodable do
     Phocoder::Job.should_not_receive(:create)
     iu.save
     
-    expected_resource_dir = "ImageUpload/1"
+    expected_resource_dir = "image_uploads/1"
     iu.resource_dir.should == expected_resource_dir
     
-    expected_local_url = "/ImageUpload/1/test.txt"
+    expected_local_url = "/image_uploads/1/test.txt"
     iu.local_url.should == expected_local_url
     
-    expected_local_path = File.expand_path(File.join(File.dirname(File.expand_path(__FILE__)),'..','dummy','public','ImageUpload',iu.id.to_s,iu.filename))
+    expected_local_path = File.expand_path(File.join(File.dirname(File.expand_path(__FILE__)),'..','dummy','public','image_uploads',iu.id.to_s,iu.filename))
     iu.local_path.should == expected_local_path
-    iu.local_url.should == "/ImageUpload/#{iu.id}/#{iu.filename}"
+    iu.local_url.should == "/image_uploads/#{iu.id}/#{iu.filename}"
     File.exists?(expected_local_path).should be_true
     iu.destroy
     File.exists?(expected_local_path).should_not be_true
   end
-  
+#  
   it "should call phocoder for images" do
     iu = ImageUpload.new(@attr)
     
@@ -220,7 +220,7 @@ describe ActsAsPhocodable do
       }
     }))
     iu.save
-    expected_local_path = File.expand_path(File.join(File.dirname(File.expand_path(__FILE__)),'..','dummy','public','ImageUpload',iu.id.to_s,iu.filename))
+    expected_local_path = File.expand_path(File.join(File.dirname(File.expand_path(__FILE__)),'..','dummy','public','image_uploads',iu.id.to_s,iu.filename))
     File.exists?(expected_local_path).should be_true
     #iu.phocode
     ImageUpload.count.should == 2 #it should have created a thumbnail record
@@ -228,25 +228,31 @@ describe ActsAsPhocodable do
     ImageUpload.count.should == 0
     File.exists?(expected_local_path).should_not be_true
   end
-  
-  
+    
+      
+      
   
   it "should call zencoder for videos" do
     iu = ImageUpload.new(@vid_attr)  
     Zencoder::Job.should_receive(:create).and_return(mock(Zencoder::Response,:body=>{
         "id"=>1,
         "inputs"=>["id"=>1],
-        "outputs"=>[{"label"=>"small","url"=>"http://someurl/","filename"=>"small-test-file.jpg","id"=>1}]
+        "outputs"=>[{"label"=>"mp4","url"=>"http://someurl/","filename"=>"small-test-file.mp4","id"=>1}]
     }))
+    #iu.should_receive(:create_zencoder_image_thumb).and_return(nil)
     iu.save
-    expected_local_path = File.expand_path(File.join(File.dirname(File.expand_path(__FILE__)),'..','dummy','public','ImageUpload',iu.id.to_s,iu.filename))
+    expected_local_path = File.expand_path(File.join(File.dirname(File.expand_path(__FILE__)),'..','dummy','public','image_uploads',iu.id.to_s,iu.filename))
     File.exists?(expected_local_path).should be_true
     #iu.phocode
     ImageUpload.count.should == 2 #it should have created a thumbnail record
+    
+    #iu.reload #make sure it knows aobut the thumbnail
     iu.destroy
+    puts "ImageUpload.first = #{ImageUpload.first.to_json}"
     ImageUpload.count.should == 0
     File.exists?(expected_local_path).should_not be_true
   end
+  
   
   
   
@@ -302,9 +308,9 @@ describe ActsAsPhocodable do
     thumb.file_size.should == 30
     thumb.filename.should == "octologo.png"
     thumb.phocoder_status.should == "ready"
-    #thumb.destroy
-    #File.exists?(expected_local_path).should_not be_true
-    #iu.destroy
+    thumb.destroy
+    File.exists?(thumb.local_path).should_not be_true
+    iu.destroy
   end
     
   
