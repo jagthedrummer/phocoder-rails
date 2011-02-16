@@ -92,6 +92,8 @@ module ActsAsPhocodable
    'video/mp4',
    'video/ogg',
    'video/quicktime',
+   'video/3gp',
+   'video/3gpp',
    'video/vnd.objectvideo'
   ]
   
@@ -162,9 +164,11 @@ module ActsAsPhocodable
   end
   
   def update_from_phocoder(params)
-    Rails.logger.debug "tying to call update from phocoder for params = #{params}"
+    Rails.logger.debug "tying to call update from phocoder for params = #{params.to_json}"
     if !params[:output].blank?
+      Rails.logger.debug "find_by_phocoder_output_id #{params[:output][:id]}"
       iu = find_by_phocoder_output_id params[:output][:id]
+      Rails.logger.debug "the item = #{iu}"
       img_params = params[:output]
       iu.filename = File.basename(params[:output][:url]) if iu.filename.blank?
       if ActsAsPhocodable.storeage_mode == "local"
@@ -174,9 +178,16 @@ module ActsAsPhocodable
       iu = find_by_phocoder_input_id params[:input][:id]
       img_params = params[:input]
     end
-    iu.file_size = img_params[:file_size]
-    iu.width = img_params[:width]
-    iu.height = img_params[:height]
+    [:file_size,:width,:height,:taken_at,:lat,:lng].each do |att|
+      setter = att.to_s + "="
+      if iu.respond_to? setter and !img_params[att].blank?
+        iu.send setter, img_params[att]
+      end
+    end
+    
+    #iu.file_size = img_params[:file_size]
+    #iu.width = img_params[:width]
+    #iu.height = img_params[:height]
     iu.phocoder_status = "ready"
     iu.save
     iu
@@ -548,8 +559,14 @@ module ActsAsPhocodable
       return if new_file.nil?
       Rails.logger.debug "we got a new file of class = #{new_file.class}"
       cleanup
-      self.filename = new_file.original_filename
-      self.content_type = new_file.content_type
+      if new_file.is_a? File
+        self.filename = File.basename new_file.path
+        self.content_type = MIME::Types.type_for(self.filename).first.content_type
+      else
+        self.filename = new_file.original_filename
+        self.content_type = new_file.content_type  
+      end
+      
       if new_file.respond_to? :tempfile
         @saved_file = new_file.tempfile
       else
