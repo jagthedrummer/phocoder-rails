@@ -3,7 +3,9 @@ require File.expand_path(File.dirname(__FILE__) + '/../spec_helper')
 describe PhocoderController do
 
   before(:each) do
-    @image_upload = ImageUpload.create(:phocoder_job_id=>1,:phocoder_input_id=>1,:phocoder_output_id=>1,:zencoder_job_id=>1,:zencoder_input_id=>1,:zencoder_output_id=>1,:file_size=>1,:width=>1,:height=>1)
+    @image_upload = ImageUpload.create(:phocoder_job_id=>1,:phocoder_input_id=>1,:phocoder_output_id=>1,
+                                       :zencoder_job_id=>1,:zencoder_input_id=>1,:zencoder_output_id=>1,
+                                       :file_size=>1,:width=>1,:height=>1,:filename=>"test.png",:content_type=>"image/png")
   end
   
   after(:each) do
@@ -68,6 +70,7 @@ describe PhocoderController do
                   "thumbnails" => [{ "url" => "http://farm2.static.flickr.com/1243/5168720424_ea33e31d96.jpg", "id" => 1 }]
         }
        }))
+      
        Phocoder::Job.should_receive(:create).and_return(mock(Phocoder::Response,:body=>{
         "job"=>{
         "id"=>1,
@@ -75,6 +78,7 @@ describe PhocoderController do
         "thumbnails"=>[{"label"=>"small","filename"=>"small-test-file.jpg","id"=>1}]
       }
       }))
+      
       #@image_upload.should_receive(:create_zencoder_image_thumb).and_return(nil)
       post 'zencoder_notification_update', {:class=>"ImageUpload",:id=>@thumb.id,
                                             "job"=>{"state"=>"finished","id"=>2},

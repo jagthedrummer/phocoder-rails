@@ -395,10 +395,14 @@ module ActsAsPhocodable
       self.save
     end
     
+    def phocoder_extension
+      self.content_type.match(/png/) ? ".png" : ".jpg"
+    end
+    
     def phocoder_params
       {:input => {:url => self.public_url, :notifications=>[{:url=>callback_url }] },
         :thumbnails => self.class.phocoder_thumbnails.map{|thumb|
-          thumb_filename = thumb[:label] + "_" + File.basename(self.filename,File.extname(self.filename)) + ".jpg" 
+          thumb_filename = thumb[:label] + "_" + File.basename(self.filename,File.extname(self.filename)) + phocoder_extension 
           base_url = ActsAsPhocodable.storeage_mode == "s3" ? "s3://#{self.s3_bucket_name}/#{self.resource_dir}/" : ""
           th = thumb.clone
           th[:base_url] = base_url  if !base_url.blank?
@@ -505,6 +509,7 @@ module ActsAsPhocodable
       thumb.height = output["height"]
       thumb.file_size = output["file_size_bytes"]
       thumb.filename = "frame_0000.png" #File.basename(output["url"])
+      thumb.content_type = "image/png"
       if ActsAsPhocodable.storeage_mode == "local"
         thumb.save_url(output["url"])
       end
