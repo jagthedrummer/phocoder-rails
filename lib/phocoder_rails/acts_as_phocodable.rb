@@ -94,7 +94,12 @@ module ActsAsPhocodable
    'video/quicktime',
    'video/3gp',
    'video/3gpp',
-   'video/vnd.objectvideo'
+   'video/vnd.objectvideo',
+   'video/x-ms-wmv',
+   'video/x-ms-asf',
+   'video/x-ms-wvx',
+   'video/x-ms-wm',
+   'video/x-ms-wmx'
   ]
   
   # Mapping for generating a file extension 
