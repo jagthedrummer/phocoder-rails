@@ -81,7 +81,8 @@ module ActsAsPhocodable
       'image/gi_',
       'image/x-citrix-pjpeg',
       'image/x-nikon-nef',
-      'image/tiff'
+      'image/tiff',
+      'image/x-olympus-orf'
   ]
   
   # The list of content types that will trigger video handling.
@@ -675,7 +676,7 @@ module ActsAsPhocodable
     end
     
     def notification_callback_path
-      "/phocoder/notifications/#{self.class.name}/#{self.id}.json"
+      "/phocoder/phocoder_notifications/#{self.class.name}/#{self.id}.json"
     end
   
     def zencoder_notification_callback_path

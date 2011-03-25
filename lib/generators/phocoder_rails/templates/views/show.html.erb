@@ -1,0 +1,66 @@
+<p id="notice"><%= notice %></p>
+
+<p>
+  <b>Filename:</b>
+  <%= @encodable.filename %>
+</p>
+
+<%= phocoder_thumbnail @encodable,"medium" %>
+
+
+<table>
+	<tr>
+		<th>&nbsp;</th>
+		<th>Preserve</th>
+		<th>Stretch</th>
+		<th>Crop</th>
+		<th>Pad</th>
+	</tr>
+	<tr>
+		<th>Square</th>
+		<td>
+			<%= phocoder_thumbnail @encodable,"preserve-square", false %>
+		</td>
+		<td>
+			<%= phocoder_thumbnail @encodable,"stretch-square", false %>
+		</td>
+		<td>
+			<%= phocoder_thumbnail @encodable,"crop-square", false %>
+		</td>
+		<td>
+			<%= phocoder_thumbnail @encodable,"pad-square", false %>
+		</td>
+	</tr>
+	<tr>
+		<th>Portrait</th>
+		<td>
+			<%= phocoder_thumbnail @encodable,"preserve-portrait", false %>
+		</td>
+		<td>
+			<%= phocoder_thumbnail @encodable,"stretch-portrait", false %>
+		</td>
+		<td>
+			<%= phocoder_thumbnail @encodable,"crop-portrait", false %>
+		</td>
+		<td>
+			<%= phocoder_thumbnail @encodable,"pad-portrait", false %>
+		</td>
+	</tr>
+	<tr>
+		<th>Landscape</th>
+		<td>
+			<%= phocoder_thumbnail @encodable,"preserve-landscape", false %>
+		</td>
+		<td>
+			<%= phocoder_thumbnail @encodable,"stretch-landscape", false %>
+		</td>
+		<td>
+			<%= phocoder_thumbnail @encodable,"crop-landscape", false %>
+		</td>
+		<td>
+			<%= phocoder_thumbnail @encodable,"pad-landscape", false %>
+		</td>
+	</tr>
+</table>
+
+<%= link_to 'Back', encodables_path %>

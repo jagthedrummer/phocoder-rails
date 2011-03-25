@@ -1,0 +1,23 @@
+<%= form_for( @encodable, :html => { :multipart => true } ) do |f| %>
+
+  <% if @encodable.errors.any? %>
+    <div id="error_explanation">
+      <h2><%= pluralize(@encodable.errors.count, "error") %> prohibited this encodable from being saved:</h2>
+      <ul>
+      <% @encodable.errors.full_messages.each do |msg| %>
+        <li><%= msg %></li>
+      <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="field">
+  	<%= f.label :file, "Upload image file" %>
+  	<%= f.file_field :file %>
+  </div>
+  
+  <div class="actions">
+    <%= f.submit %>
+  </div>
+  
+<% end %>
