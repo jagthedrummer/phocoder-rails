@@ -28,14 +28,14 @@ describe PhocoderController do
   describe "POST 'phocoder_update'" do
     
     it "should update an input" do
-      post 'notification_update', {:class=>"ImageUpload",:id=>1,:input=>{:id=>1,:file_size=>2,:width=>2,:height=>2,:url=>"http://production.webapeel.com/octolabs/themes/octolabs/images/octologo.png"},:format=>"json" }
+      post 'phocoder_notification_update', {:class=>"ImageUpload",:id=>1,:input=>{:id=>1,:file_size=>2,:width=>2,:height=>2,:url=>"http://production.webapeel.com/octolabs/themes/octolabs/images/octologo.png"},:format=>"json" }
       response.should be_success
       @image_upload.reload
       @image_upload.file_size.should == 2
     end
     
     it "should update an output" do
-      post 'notification_update', {:class=>"ImageUpload",:id=>1,:output=>{:id=>1,:file_size=>2,:width=>2,:height=>2,:url=>"http://production.webapeel.com/octolabs/themes/octolabs/images/octologo.png"},:format=>"json" }
+      post 'phocoder_notification_update', {:class=>"ImageUpload",:id=>1,:output=>{:id=>1,:file_size=>2,:width=>2,:height=>2,:url=>"http://production.webapeel.com/octolabs/themes/octolabs/images/octologo.png"},:format=>"json" }
       response.should be_success
       @image_upload.reload
       @image_upload.file_size.should == 2

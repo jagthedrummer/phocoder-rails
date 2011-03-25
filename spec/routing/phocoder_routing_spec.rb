@@ -4,7 +4,7 @@ describe "Phocoder Routes" do
 
 
   it "should accept a post to /phocoder" do
-    { :post => '/phocoder/notifications/ImageUpload/1' }.should route_to(:controller => "phocoder", :action => "notification_update",:class=>"ImageUpload",:id=>"1")
+    { :post => '/phocoder/phocoder_notifications/ImageUpload/1' }.should route_to(:controller => "phocoder", :action => "phocoder_notification_update",:class=>"ImageUpload",:id=>"1")
   end
   
   it "should accept a post to /phocoder" do

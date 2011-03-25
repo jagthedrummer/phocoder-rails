@@ -1,8 +1,8 @@
 class PhocoderController < ApplicationController
   
-  protect_from_forgery :except=>[:notification_update,:zencoder_notification_update,:thumbnail_update]  
+  protect_from_forgery :except=>[:phocoder_notification_update,:zencoder_notification_update,:thumbnail_update]  
   
-  def notification_update
+  def phocoder_notification_update
     # Sometimes Rails does not like to honor either the 'Accept' or 'Content Type' headers.
     # It also wan't follow :format => js, or :format => json and just refuses to parse the body.
     # This is a brute force way around the problem for now.

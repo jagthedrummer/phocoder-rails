@@ -15,6 +15,7 @@ class CreateEncodableJobs < ActiveRecord::Migration
       t.timestamps
     end
     add_index :encodable_jobs, [:encodable_type, :encodable_id]
+    add_index :encodable_jobs, :id
   end
 
   def self.down
