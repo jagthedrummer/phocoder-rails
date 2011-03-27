@@ -37,11 +37,11 @@ module ActsAsPhocodable
   
   # The access_key_id for storing s3 files
   mattr_accessor :s3_access_key_id
-  self.s3_access_key_id = "your-bucket"
+  self.s3_access_key_id = "your-access-key-id"
   
   # The secret_access_key for storing s3 files
   mattr_accessor :s3_secret_access_key
-  self.s3_secret_access_key = "your-bucket"
+  self.s3_secret_access_key = "your-secret-access-key"
   
   # The config file that tells phocoder where to find
   # config options.
@@ -104,7 +104,7 @@ module ActsAsPhocodable
   ]
   
   # Mapping for generating a file extension 
-  # based on the coded passed in for zencoder
+  # based on the codec passed in for zencoder
   mattr_accessor :video_extensions
   self.video_extensions = {
     "h264" => "mp4",
