@@ -22,10 +22,12 @@ module PhocoderRails
     
       def create_migration_file
         migration_template 'model_migration.rb', "db/migrate/create_#{file_name.pluralize}.rb"
+        #migration_template 'model_thumbnail_migration.rb', "db/migrate/create_#{file_name.singularize}_thumbnails.rb"
       end
       
       def create_model_file
         template 'model.rb', File.join('app/models', class_path, "#{file_name.singularize}.rb")
+        template 'model_thumbnail.rb', File.join('app/models', class_path, "#{file_name.singularize}_thumbnail.rb")
       end
       
       def create_helper_file
