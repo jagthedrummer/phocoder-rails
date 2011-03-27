@@ -9,33 +9,33 @@ class <%= name.classify.pluralize %>Controller < ApplicationController
   # GET /<%= name.pluralize %>
   # GET /<%= name.pluralize %>.xml
   def index
-    @encodables = <%= name.classify %>.top_level.all
+    @<%= name.pluralize %> = <%= name.classify %>.top_level.all
 
     respond_to do |format|
       format.html # index.html.erb
-      format.xml  { render :xml => @encodables }
+      format.xml  { render :xml => @<%= name.pluralize %> }
     end
   end
 
   # GET /<%= name.pluralize %>/1
   # GET /<%= name.pluralize %>/1.xml
   def show
-    @encodable = <%= name.classify %>.find(params[:id])
+    @<%= name.singularize %> = <%= name.classify %>.find(params[:id])
 
     respond_to do |format|
       format.html # show.html.erb
-      format.xml  { render :xml => @encodable }
+      format.xml  { render :xml => @<%= name.singularize %> }
     end
   end
 
   # GET /<%= name.pluralize %>/new
   # GET /<%= name.pluralize %>/new.xml
   def new
-    @encodable = <%= name.classify %>.new
+    @<%= name.singularize %> = <%= name.classify %>.new
 
     respond_to do |format|
       format.html # new.html.erb
-      format.xml  { render :xml => @encodable }
+      format.xml  { render :xml => @<%= name.singularize %> }
     end
   end
 
@@ -43,15 +43,15 @@ class <%= name.classify.pluralize %>Controller < ApplicationController
   # POST /<%= name.pluralize %>
   # POST /<%= name.pluralize %>.xml
   def create
-    @encodable = <%= name.classify %>.new(params[:<%= name %>])
+    @<%= name.singularize %> = <%= name.classify %>.new(params[:<%= name.singularize %>])
 
     respond_to do |format|
-      if @encodable.save
-        format.html { redirect_to(@encodable, :notice => "<%= name.classify %> was successfully created.") }
-        format.xml  { render :xml => @encodable, :status => :created, :location => @encodable }
+      if @<%= name.singularize %>.save
+        format.html { redirect_to(@<%= name.singularize %>, :notice => "<%= name.classify %> was successfully created.") }
+        format.xml  { render :xml => @<%= name.singularize %>, :status => :created, :location => @<%= name.singularize %> }
       else
         format.html { render :action => "new" }
-        format.xml  { render :xml => @encodable.errors, :status => :unprocessable_entity }
+        format.xml  { render :xml => @<%= name.singularize %>.errors, :status => :unprocessable_entity }
       end
     end
   end
@@ -60,8 +60,8 @@ class <%= name.classify.pluralize %>Controller < ApplicationController
   # DELETE /<%= name.pluralize %>/1
   # DELETE /<%= name.pluralize %>/1.xml
   def destroy
-    @encodable = <%= name.classify %>.find(params[:id])
-    @encodable.destroy
+    @<%= name.singularize %> = <%= name.classify %>.find(params[:id])
+    @<%= name.singularize %>.destroy
 
     respond_to do |format|
       format.html { redirect_to(<%= name.pluralize %>_url) }

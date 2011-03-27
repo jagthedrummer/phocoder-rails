@@ -43,6 +43,10 @@ module PhocoderRails
         #end
       end
       
+      def create_route
+        route("resources :#{file_name.pluralize}, :except=>[:edit,:update]")
+      end
+      
       #class_option :view_engine, :type => :string, :aliases => "-t", :desc => "Template engine for the views. Available options are 'erb' and 'haml'.", :default => "erb"
       #class_option :haml, :type => :boolean, :default => false
  
