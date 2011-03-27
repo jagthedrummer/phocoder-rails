@@ -130,7 +130,7 @@ module ActsAsPhocodable
   
   
   def acts_as_phocodable(options = { })
-    #has_many :reviews, :as=>:reviewable, :dependent=>:destroy
+    
     include InstanceMethods
     attr_reader :saved_file
     after_save :save_local_file
@@ -146,7 +146,10 @@ module ActsAsPhocodable
     cattr_accessor :zencoder_videos
     self.zencoder_videos = options[:videos]
     
-    has_many   :thumbnails, :class_name => "::#{base_class.name}",:foreign_key => "parent_id"
+    cattr_accessor :thumbnail_class
+    self.thumbnail_class = options[:thumbnail_class] ? options[:thumbnail_class].constantize : self
+    
+    has_many   :thumbnails, :class_name => "::#{self.thumbnail_class.name}",:foreign_key => "parent_id"
     belongs_to  :parent, :class_name => "::#{base_class.name}" ,:foreign_key => "parent_id"
     
     scope :top_level, where({:parent_id=>nil})
