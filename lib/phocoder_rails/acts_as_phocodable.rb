@@ -412,7 +412,7 @@ module ActsAsPhocodable
       {:input => {:url => self.public_url, :notifications=>[{:url=>callback_url }] },
         :thumbnails => self.class.phocoder_thumbnails.map{|thumb|
           thumb_filename = thumb[:label] + "_" + File.basename(self.filename,File.extname(self.filename)) + phocoder_extension 
-          base_url = ActsAsPhocodable.storeage_mode == "s3" ? "s3://#{self.s3_bucket_name}/#{self.resource_dir}/" : ""
+          base_url = ActsAsPhocodable.storeage_mode == "s3" ? "s3://#{self.s3_bucket_name}/#{self.thumbnail_resource_dir}/" : ""
           th = thumb.clone
           th[:base_url] = base_url  if !base_url.blank?
           th.merge({
@@ -424,7 +424,7 @@ module ActsAsPhocodable
     end
     
     def zencoder_params
-      base_url = ActsAsPhocodable.storeage_mode == "s3" ? "s3://#{self.s3_bucket_name}/#{self.resource_dir}/" : ""
+      base_url = ActsAsPhocodable.storeage_mode == "s3" ? "s3://#{self.s3_bucket_name}/#{self.thumbnail_resource_dir}/" : ""
       params = {:input =>  self.public_url ,
         :outputs => self.class.zencoder_videos.map{|video|
           vid_filename = self.new_zencoder_filename( video[:video_codec] )
@@ -640,6 +640,10 @@ module ActsAsPhocodable
     
     def resource_dir
       File.join(self.class.table_name, path_id.to_s )
+    end
+    
+    def thumbnail_resource_dir
+      File.join(self.thumbnail_class.table_name, path_id.to_s )
     end
     
     def local_dir
