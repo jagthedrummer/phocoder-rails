@@ -417,7 +417,7 @@ module ActsAsPhocodable
           th[:base_url] = base_url  if !base_url.blank?
           th.merge({
             :filename=>thumb_filename,
-            :notifications=>[{:url=>callback_url }]
+            :notifications=>[{:url=>thumbnail_callback_url }]
           })
         }
       }
@@ -441,7 +441,7 @@ module ActsAsPhocodable
           vid.merge({
             :filename=>vid_filename,
             :public=>1,
-            :notifications=>[{:url=>zencoder_callback_url }]
+            :notifications=>[{:url=>zencoder_thumbnail_callback_url }]
           })
         }
       }
@@ -682,6 +682,14 @@ module ActsAsPhocodable
       self.base_url + self.zencoder_notification_callback_path
     end
     
+    def thumbnail_callback_url
+      self.base_url + self.thumbnail_notification_callback_path
+    end
+    
+    def zencoder_thumbnail_callback_url
+      self.base_url + self.zencoder_thumbnail_notification_callback_path
+    end
+    
     def notification_callback_path
       "/phocoder/phocoder_notifications/#{self.class.name}/#{self.id}.json"
     end
@@ -689,7 +697,15 @@ module ActsAsPhocodable
     def zencoder_notification_callback_path
       "/phocoder/zencoder_notifications/#{self.class.name}/#{self.id}.json"
     end
+      
+    def thumbnail_notification_callback_path
+      "/phocoder/phocoder_notifications/#{self.thumbnail_class.name}/#{self.id}.json"
+    end
   
+    def zencoder_thumbnail_notification_callback_path
+      "/phocoder/zencoder_notifications/#{self.thumbnail_class.name}/#{self.id}.json"
+    end
+    
     def base_url
       self.class.base_url
     end
