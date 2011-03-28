@@ -149,8 +149,11 @@ module ActsAsPhocodable
     cattr_accessor :thumbnail_class
     self.thumbnail_class = options[:thumbnail_class] ? options[:thumbnail_class].constantize : self
     
+    cattr_accessor :parent_class
+    self.parent_class = options[:parent_class] ? options[:parent_class].constantize : self
+    
     has_many   :thumbnails, :class_name => "::#{self.thumbnail_class.name}",:foreign_key => "parent_id"
-    belongs_to  :parent, :class_name => "::#{base_class.name}" ,:foreign_key => "parent_id"
+    belongs_to  :parent, :class_name => "::#{self.parent_class.name}" ,:foreign_key => "parent_id"
     
     scope :top_level, where({:parent_id=>nil})
     # we can't just call the scope 'parents' because that is already
@@ -410,7 +413,7 @@ module ActsAsPhocodable
     
     def phocoder_params
       {:input => {:url => self.public_url, :notifications=>[{:url=>callback_url }] },
-        :thumbnails => self.class.phocoder_thumbnails.map{|thumb|
+        :thumbnails => self.parent_class.phocoder_thumbnails.map{|thumb|
           thumb_filename = thumb[:label] + "_" + File.basename(self.filename,File.extname(self.filename)) + phocoder_extension 
           base_url = ActsAsPhocodable.storeage_mode == "s3" ? "s3://#{self.s3_bucket_name}/#{self.thumbnail_resource_dir}/" : ""
           th = thumb.clone
