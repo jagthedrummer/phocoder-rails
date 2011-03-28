@@ -152,13 +152,24 @@ module ActsAsPhocodable
     cattr_accessor :parent_class
     self.parent_class = options[:parent_class] ? options[:parent_class].constantize : self
     
-    has_many   :thumbnails, :class_name => "::#{self.thumbnail_class.name}",:foreign_key => "parent_id"
-    belongs_to  :parent, :class_name => "::#{self.parent_class.name}" ,:foreign_key => "parent_id"
+    has_many   :thumbnails, :class_name => "::#{self.thumbnail_class.name}",:as => :parent 
+    if self.thumbnail_class != self.parent_class
+      #we have to do this to get the poster for videos covered
+      belongs_to  :parent, :polymorphic => true
+    else
+      belongs_to  :parent, :class_name => "::#{self.parent_class.name}" ,:foreign_key => "parent_id"
+    end
     
-    scope :top_level, where({:parent_id=>nil})
-    # we can't just call the scope 'parents' because that is already
+    
+    has_many :encodable_jobs, :as => :encodable 
+    
+    scope :top_level, where({:parent_id=>nil}) if respond_to?(:parent_id)
+    scope :top_level, where({}) if !respond_to?(:parent_id)
+    # we can't just call this next scope 'parents' because that is already
     # taken and returns an array of parent classes of the ruby object
-    scope :parent_items, where({:parent_id=>nil})
+    scope :parent_items, where({:parent_id=>nil}) if respond_to?(:parent_id)
+    scope :parent_items, where({}) if !respond_to?(:parent_id)
+    
     scope :thumbnails, where("#{base_class.table_name}.parent_id is not null")
     
     #just a writer, the reader is below
@@ -313,24 +324,28 @@ module ActsAsPhocodable
     def ready?
       if ActsAsPhocodable.storeage_mode == "offline"
         true
-      elsif image?
-        return phocoder_status=='ready'
-      elsif video?
-        return zencoder_status=='ready'  
+      #elsif image?
+      #  return phocoder_status=='ready'
+      #elsif video?
+      #  return zencoder_status=='ready'  
+      #else
+      #  return false
       else
-        return false
+        return encodable_status == "ready"
       end
     end
     
     def error?
       if ActsAsPhocodable.storeage_mode == "offline"
         false
-      elsif image?
-        return phocoder_status=='failed'
-      elsif video?
-        return zencoder_status=='failed'
+      #elsif image?
+      #  return phocoder_status=='failed'
+      #elsif video?
+      #  return zencoder_status=='failed'
+      #else
+      #  true
       else
-        true
+        return encodable_status == "ready"
       end
     end
     
@@ -345,19 +360,22 @@ module ActsAsPhocodable
       return if @phocoding
       @phocoding = true
       
-      Rails.logger.debug "trying to phocode for #{Phocoder.base_url} - my parent_id = #{self.parent_id}"
+      Rails.logger.debug "trying to phocode for #{Phocoder.base_url} "
       Rails.logger.debug "callback url = #{callback_url}"
       response = Phocoder::Job.create(phocoder_params)
-      self.phocoder_input_id = response.body["job"]["inputs"].first["id"]
-      self.phocoder_job_id = response.body["job"]["id"]
-      self.phocoder_status = "phocoding"
+      job = self.encodable_jobs.new
+      job.phocoder_input_id = response.body["job"]["inputs"].first["id"]
+      job.phocoder_job_id = response.body["job"]["id"]
+      job.phocoder_status = "phocoding"
+      self.encodable_jobs << job
+      self.encodable_status = "phocoding"
       self.save #false need to do save(false) here if we're calling phocode on after_save
       response.body["job"]["thumbnails"].each do |thumb_params|
         puts "creating a thumb for #{thumb_params["label"]}"
         # we do this the long way around just in case some of these
         # atts are attr_protected
         thumb = nil
-        if !self.parent_id.blank? 
+        if respond_to?(:parent_id) and !self.parent_id.blank? 
           Rails.logger.debug "trying to create a thumb from the parent "
           thumb = self.parent.thumbnails.new()
           self.parent.thumbnails << thumb
@@ -370,11 +388,14 @@ module ActsAsPhocodable
         
         thumb.thumbnail = thumb_params["label"]
         thumb.filename = thumb_params["filename"]
-        thumb.phocoder_output_id = thumb_params["id"]
-        thumb.phocoder_job_id = response.body["job"]["id"]
-        #thumb.parent_id = self.id
-        thumb.phocoder_status  =  "phocoding"
+        tjob = thumb.encodable_jobs.new
         
+        tjob.phocoder_output_id = thumb_params["id"]
+        tjob.phocoder_job_id = response.body["job"]["id"]
+        #thumb.parent_id = self.id
+        tjob.phocoder_status  =  "phocoding"
+        thumb.encodable_jobs << tjob
+        thumb.encodable_status = "phocoding"
         thumb.save
         
         puts "    thumb.errors = #{thumb.errors.to_json}"
@@ -601,7 +622,7 @@ module ActsAsPhocodable
       FileUtils.mkdir_p local_dir
       FileUtils.cp @saved_file.path, local_path
       FileUtils.chmod 0755, local_path
-      self.phocoder_status = "local"
+      self.encodable_status = "local"
       if self.respond_to? :upload_host      
         self.upload_host = %x{hostname}.strip
       end
@@ -636,9 +657,14 @@ module ActsAsPhocodable
     end
     
     def path_id
-      puts "parent_id = #{parent_id}"
-      puts "parent = #{parent}"
-      parent_id.blank? ? id : parent.path_id
+      
+      #puts "parent_id = #{parent_id}"
+      #puts "parent = #{parent}"
+      if respond_to?(:parent_id)
+        parent_id.blank? ? id : parent.path_id
+      else
+        id
+      end
     end
     
     def resource_dir
@@ -735,7 +761,7 @@ module ActsAsPhocodable
       s3_bucket_name,
       :access => :public_read
       )
-      self.phocoder_status = "s3"
+      self.encodable_status = "s3"
       self.save
       self.encode
     end

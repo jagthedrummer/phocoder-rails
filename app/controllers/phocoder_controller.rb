@@ -11,8 +11,8 @@ class PhocoderController < ApplicationController
     payload = symbolize_keys(ActiveSupport::JSON.decode(request.body))
     logger.debug "the params = #{params.to_json} - #{payload.to_json}"
     full_params = params.merge payload
-    @image_upload = full_params[:class].constantize.update_from_phocoder(full_params)
-    
+    #@image_upload = full_params[:class].constantize.update_from_phocoder(full_params)
+    EncodableJob.update_from_phocoder(full_params)
     # This may have been due to a screwy Rails upgrade.  
     # 3.0.3 seems to break this and make routes all screwy  
     #@image_upload = params[:class].constantize.update_from_phocoder(params)
