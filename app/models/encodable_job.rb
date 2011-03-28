@@ -37,5 +37,29 @@ class EncodableJob < ActiveRecord::Base
   
   
   
+  # Updating from zencoder is a two pass operation.
+  # This method gets called for each output when it's ready.
+  # Once all outputs are ready, we call parent.check_zencoder_details
+  def self.update_from_zencoder(params)
+    Rails.logger.debug "tying to call update from zencoder for params = #{params}"
+    job = find_by_zencoder_output_id params[:output][:id]
+    encodable = job.encodable
+    if params[:output][:url].match /%2F(.*)\?/
+      encodable.filename = $1
+    else
+      encodable.filename = File.basename(params[:output][:url].match(/(.*)\??/)[1])
+    end
+    #job.filename = File.basename(params[:output][:url].match(/(.*)\??/)[1]) if job.filename.blank?
+    if ActsAsPhocodable.storeage_mode == "local"
+      encodable.save_url(params[:output][:url])
+    end
+    job.zencoder_status = encodable.encodable_status = "ready"
+    encodable.save
+    job.save
+    encodable.parent.check_zencoder_details
+  end
+  
+  
+  
   
 end

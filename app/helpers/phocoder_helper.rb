@@ -45,7 +45,7 @@ module PhocoderHelper
   
   
   def phocoder_video_thumbnail(image_upload,thumbnail="small",thumbnail_atts={},live_video = true)
-    if image_upload.zencoder_status != 'ready'
+    if image_upload.encodable_status != 'ready'
       pending_phocoder_thumbnail(image_upload,thumbnail,true,thumbnail_atts)
     elsif live_video
       phocoder_video_embed(image_upload,thumbnail_atts)

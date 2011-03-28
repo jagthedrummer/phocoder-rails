@@ -35,8 +35,8 @@ class PhocoderController < ApplicationController
     payload = symbolize_keys(ActiveSupport::JSON.decode(request.body))
     logger.debug "the params = #{params.to_json} - #{payload.to_json}"
     full_params = params.merge payload
-    @image_upload = full_params[:class].constantize.update_from_zencoder(full_params)
-    
+    #@image_upload = full_params[:class].constantize.update_from_zencoder(full_params)
+    EncodableJob.update_from_zencoder(full_params)
     
     #@image_upload = ImageUpload.update_from_phocoder(params)
     respond_to do |format|

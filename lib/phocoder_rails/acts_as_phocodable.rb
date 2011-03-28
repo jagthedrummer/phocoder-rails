@@ -412,15 +412,23 @@ module ActsAsPhocodable
       Rails.logger.debug "callback url = #{callback_url}"
       response = Zencoder::Job.create(zencoder_params)
       Rails.logger.debug "response from Zencoder = #{response.body.to_json}"
-      self.zencoder_job_id = response.body["id"]
+      job = self.encodable_jobs.new
+      job.zencoder_job_id = response.body["id"]
+      self.encodable_jobs << job
+      
       response.body["outputs"].each do |output_params|
         thumb = self.thumbnails.new()
-        self.thumbnails << thumb
         thumb.thumbnail = output_params["label"]
-        thumb.zencoder_output_id = output_params["id"]
-        thumb.zencoder_url = output_params["url"]
-        thumb.zencoder_job_id = response.body["id"]
-        thumb.zencoder_status  =  "zencoding"
+        
+        tjob = thumb.encodable_jobs.new
+        tjob.zencoder_output_id = output_params["id"]
+        tjob.zencoder_url = output_params["url"]
+        tjob.zencoder_job_id = response.body["id"]
+        tjob.zencoder_status  =  "zencoding"
+        thumb.encodable_jobs << tjob
+        
+        self.thumbnails << thumb
+        thumb.encodable_status = "zencoding"
         thumb.save
         puts "    thumb.errors = #{thumb.errors.to_json}"
       end
@@ -485,24 +493,24 @@ module ActsAsPhocodable
       # we don't get a lot of info from zencoder, so we have to ask for details
       shouldCheck = true
       thumbnails.each do |t|
-        if t.zencoder_status != 'ready'
+        if t.encodable_status != 'ready'
           shouldCheck = false
         end
       end
       
       return  if !shouldCheck
       
-      details = Zencoder::Job.details(self.zencoder_job_id)
+      details = Zencoder::Job.details(self.encodable_jobs.last.zencoder_job_id)
       
       puts "in check_zencoder_details the details.body = #{details.body.to_json}"
       
       if details.body["job"]["state"] != 'finished'
-        zencoder_status = details.body["job"]["state"]
+        self.encodable_jobs.last.zencoder_status = details.body["job"]["state"]
         save
         return
       end
       
-      self.zencoder_status = "ready"
+      self.encodable_jobs.last.zencoder_status = self.encodable_status = "ready"
       self.width = details.body["job"]["input_media_file"]["width"]
       self.height = details.body["job"]["input_media_file"]["height"]
       self.duration_in_ms = details.body["job"]["input_media_file"]["duration_in_ms"]
@@ -522,7 +530,8 @@ module ActsAsPhocodable
     def update_zencoder_outputs(details)
       details.body["job"]["output_media_files"].each do |output|
         puts "updating for output = #{output.to_json}"
-        thumb = thumbnails.find_by_zencoder_output_id output["id"]
+        job = EncodableJob.find_by_zencoder_output_id output["id"]
+        thumb = job.encodable
         thumb.width = output["width"]
         thumb.height = output["height"]
         thumb.file_size = output["file_size_bytes"]
