@@ -133,7 +133,34 @@ module PhocoderHelper
     tag = %[<span id="#{elemId}">
               #{ image_tag "#{spinner}.gif", :size=>"#{width}x#{height}" }
               ]
-    tag +=%[
+    if ActsAsPhocodable.javascript_library == 'prototype'
+      tag += prototype_updater(photo,thumbnail,random)
+    else
+      tag += jquery_updater(photo,thumbnail,random)
+    end
+    tag += %[</span>]
+    tag.html_safe
+  end
+
+
+  def jquery_updater(photo,thumbnail,random)
+    %[
+            <script type="text/javascript">
+              setTimeout(function() {
+                $.ajax({ type: 'POST',
+                         url : '/phocoder/thumbnail_update.js',
+                         dataType : 'script',
+                         data : { class:'#{photo.class.to_s}', id:#{photo.id.to_s},thumbnail:'#{thumbnail}',random:'#{random}' }
+                });
+              },#{preview_reload_timeout});
+            </script>   
+    ]
+  end
+
+
+
+  def prototype_updater(photo,thumbnail,random)
+    %[
             <script type="text/javascript">
               setTimeout(function() {
                 new Ajax.Request( '/phocoder/thumbnail_update', {
@@ -143,8 +170,6 @@ module PhocoderHelper
               },#{preview_reload_timeout});
             </script>   
     ]
-    tag += %[</span>]
-    tag.html_safe
   end
 
 end

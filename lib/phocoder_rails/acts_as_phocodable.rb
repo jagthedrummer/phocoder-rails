@@ -43,6 +43,11 @@ module ActsAsPhocodable
   mattr_accessor :s3_secret_access_key
   self.s3_secret_access_key = "your-secret-access-key"
   
+  # The javascript library to use for updates
+  # either 'prototype' or 'jquery'
+  mattr_accessor :javascript_library
+  self.javascript_library = 'prototype'
+  
   # The config file that tells phocoder where to find
   # config options.
   mattr_accessor :config_file
@@ -136,15 +141,18 @@ module ActsAsPhocodable
     after_save :save_local_file
     before_destroy :cleanup #:remove_local_file,:destroy_thumbnails,:remove_s3_file
     
+    include ActiveSupport::Callbacks
+
+    define_callbacks :file_saved
     
     #cattr_accessor :phocoder_options
     #self.phocoder_options = options
     
     cattr_accessor :phocoder_thumbnails
-    self.phocoder_thumbnails = options[:thumbnails]
+    self.phocoder_thumbnails = options[:thumbnails] ||= []
     
     cattr_accessor :zencoder_videos
-    self.zencoder_videos = options[:videos]
+    self.zencoder_videos = options[:videos] ||= []
     
     cattr_accessor :thumbnail_class
     self.thumbnail_class = options[:thumbnail_class] ? options[:thumbnail_class].constantize : self
@@ -269,6 +277,11 @@ module ActsAsPhocodable
     if self.phocodable_configuration[:s3_secret_access_key]
       ActsAsPhocodable.s3_secret_access_key = phocodable_configuration[:s3_secret_access_key]
     end
+    if self.phocodable_configuration[:javascript_library]
+      ActsAsPhocodable.javascript_library = phocodable_configuration[:javascript_library]
+    end
+    
+    
     if self.phocodable_configuration[:phocoder_url]
       ::Phocoder.base_url = phocodable_configuration[:phocoder_url]
     end
@@ -296,6 +309,7 @@ module ActsAsPhocodable
   
   
   module InstanceMethods
+    
     
     
     def image?
@@ -402,6 +416,60 @@ module ActsAsPhocodable
       end
     end
     
+    def phocode_hdr
+      #if self.thumbnails.count >= self.class.phocoder_thumbnails.size
+      #  raise "This item already has thumbnails!"
+      #  return
+      #end
+      
+      # We do this because sometimes save will get called more than once
+      # during a single request
+      return if @phocoding
+      @phocoding = true
+      
+      Rails.logger.debug "trying to phocode for #{Phocoder.base_url} "
+      Rails.logger.debug "callback url = #{callback_url}"
+      response = Phocoder::Job.create(phocoder_hdr_params)
+      job = self.encodable_jobs.new
+      job.phocoder_input_id = response.body["job"]["inputs"].first["id"]
+      job.phocoder_job_id = response.body["job"]["id"]
+      job.phocoder_status = "phocoding"
+      self.encodable_jobs << job
+      self.encodable_status = "phocoding"
+      self.save #false need to do save(false) here if we're calling phocode on after_save
+      response.body["job"]["thumbnails"].each do |thumb_params|
+        puts "creating a thumb for #{thumb_params["label"]}"
+        # we do this the long way around just in case some of these
+        # atts are attr_protected
+        thumb = nil
+        if respond_to?(:parent_id) and !self.parent_id.blank? 
+          Rails.logger.debug "trying to create a thumb from the parent "
+          thumb = self.parent.thumbnails.new()
+          self.parent.thumbnails << thumb
+        else
+          Rails.logger.debug "trying to create a thumb from myself "
+          thumb = self.thumbnails.new()
+          self.thumbnails << thumb
+        end
+        
+        
+        thumb.thumbnail = thumb_params["label"]
+        thumb.filename = thumb_params["filename"]
+        tjob = thumb.encodable_jobs.new
+        
+        tjob.phocoder_output_id = thumb_params["id"]
+        tjob.phocoder_job_id = response.body["job"]["id"]
+        #thumb.parent_id = self.id
+        tjob.phocoder_status  =  "phocoding"
+        thumb.encodable_jobs << tjob
+        thumb.encodable_status = "phocoding"
+        thumb.save
+        
+        puts "    thumb.errors = #{thumb.errors.to_json}"
+      end
+    end
+    
+    
     def zencode
       # We do this because sometimes save will get called more than once
       # during a single request
@@ -453,6 +521,10 @@ module ActsAsPhocodable
           })
         }
       }
+    end
+    
+    def phocoder_hdr_params
+      { }
     end
     
     def zencoder_params
@@ -579,6 +651,10 @@ module ActsAsPhocodable
     end
     
     def destroy_thumbnails
+      if self.class.phocoder_thumbnails.size == 0 and self.class.zencoder_videos.size == 0 
+        puts "we're skipping destory_thumbnails since we don't do any processing "
+        return
+      end
       puts "calling destory thumbnails for #{self.thumbnails.count} - #{self.thumbnails.size}"
       self.thumbnails.each do |thumb|
         thumb.destroy
@@ -627,22 +703,26 @@ module ActsAsPhocodable
     end
     
     def save_local_file
-      return if @saved_file.blank?
-      FileUtils.mkdir_p local_dir
-      FileUtils.cp @saved_file.path, local_path
-      FileUtils.chmod 0755, local_path
-      self.encodable_status = "local"
-      if self.respond_to? :upload_host      
-        self.upload_host = %x{hostname}.strip
-      end
-      @saved_file = nil
-      @saved_a_new_file = true
-      self.save
-      if ActsAsPhocodable.storeage_mode == "s3" and ActsAsPhocodable.processing_mode == "automatic"
-        self.save_s3_file
-      end
-      if ActsAsPhocodable.processing_mode == "automatic" and ActsAsPhocodable.storeage_mode != "offline"
-        self.encode
+      run_callbacks :file_saved do
+        
+        return if @saved_file.blank?
+        FileUtils.mkdir_p local_dir
+        FileUtils.cp @saved_file.path, local_path
+        FileUtils.chmod 0755, local_path
+        self.encodable_status = "local"
+        if self.respond_to? :upload_host      
+          self.upload_host = %x{hostname}.strip
+        end
+        @saved_file = nil
+        @saved_a_new_file = true
+        self.save
+        if ActsAsPhocodable.storeage_mode == "s3" and ActsAsPhocodable.processing_mode == "automatic"
+          self.save_s3_file
+        end
+        if ActsAsPhocodable.processing_mode == "automatic" and ActsAsPhocodable.storeage_mode != "offline"
+          self.encode
+        end
+        
       end
     end
     
