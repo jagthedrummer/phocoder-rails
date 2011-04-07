@@ -431,42 +431,13 @@ module ActsAsPhocodable
       Rails.logger.debug "callback url = #{callback_url}"
       response = Phocoder::Job.create(phocoder_hdr_params)
       job = self.encodable_jobs.new
-      job.phocoder_input_id = response.body["job"]["inputs"].first["id"]
+      job.phocoder_output_id = response.body["job"]["hdrs"].first["id"]
       job.phocoder_job_id = response.body["job"]["id"]
       job.phocoder_status = "phocoding"
       self.encodable_jobs << job
       self.encodable_status = "phocoding"
       self.save #false need to do save(false) here if we're calling phocode on after_save
-      response.body["job"]["thumbnails"].each do |thumb_params|
-        puts "creating a thumb for #{thumb_params["label"]}"
-        # we do this the long way around just in case some of these
-        # atts are attr_protected
-        thumb = nil
-        if respond_to?(:parent_id) and !self.parent_id.blank? 
-          Rails.logger.debug "trying to create a thumb from the parent "
-          thumb = self.parent.thumbnails.new()
-          self.parent.thumbnails << thumb
-        else
-          Rails.logger.debug "trying to create a thumb from myself "
-          thumb = self.thumbnails.new()
-          self.thumbnails << thumb
-        end
-        
-        
-        thumb.thumbnail = thumb_params["label"]
-        thumb.filename = thumb_params["filename"]
-        tjob = thumb.encodable_jobs.new
-        
-        tjob.phocoder_output_id = thumb_params["id"]
-        tjob.phocoder_job_id = response.body["job"]["id"]
-        #thumb.parent_id = self.id
-        tjob.phocoder_status  =  "phocoding"
-        thumb.encodable_jobs << tjob
-        thumb.encodable_status = "phocoding"
-        thumb.save
-        
-        puts "    thumb.errors = #{thumb.errors.to_json}"
-      end
+     
     end
     
     

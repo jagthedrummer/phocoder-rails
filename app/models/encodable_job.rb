@@ -6,7 +6,7 @@ class EncodableJob < ActiveRecord::Base
     Rails.logger.debug "tying to call update from phocoder for params = #{params.to_json}"
     if !params[:output].blank?
       Rails.logger.debug "find_by_phocoder_output_id #{params[:output][:id]}"
-      job = find_by_phocoder_output_id params[:output][:id]
+      job = self.find_by_phocoder_job_id_and_phocoder_output_id params[:job][:id],params[:output][:id]
       Rails.logger.debug "the job = #{job}"
       img_params = params[:output]
       encodable = job.encodable

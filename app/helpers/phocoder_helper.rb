@@ -19,6 +19,15 @@ module PhocoderHelper
   end
   
   
+  def phocoder_link(text,file)
+    if file.encodable_status == "ready" or file.encodable_status == "s3"
+      link_to text, file.public_filename
+    else
+      text
+    end
+  end
+  
+  
   # for now we'll assume that a thumbnail is needed
   # some files aren't displayable in a native way (NEF etc...)
   # 
