@@ -441,6 +441,31 @@ module ActsAsPhocodable
     end
     
     
+    def phocode_tone_mapping
+      #if self.thumbnails.count >= self.class.phocoder_thumbnails.size
+      #  raise "This item already has thumbnails!"
+      #  return
+      #end
+      
+      # We do this because sometimes save will get called more than once
+      # during a single request
+      return if @phocoding
+      @phocoding = true
+      
+      Rails.logger.debug "trying to phocode for #{Phocoder.base_url} "
+      Rails.logger.debug "callback url = #{callback_url}"
+      response = Phocoder::Job.create(phocoder_tone_mapping_params)
+      job = self.encodable_jobs.new
+      job.phocoder_output_id = response.body["job"]["tone_mappings"].first["id"]
+      job.phocoder_job_id = response.body["job"]["id"]
+      job.phocoder_status = "phocoding"
+      self.encodable_jobs << job
+      self.encodable_status = "phocoding"
+      self.save #false need to do save(false) here if we're calling phocode on after_save
+     
+    end
+    
+    
     def zencode
       # We do this because sometimes save will get called more than once
       # during a single request
@@ -476,25 +501,38 @@ module ActsAsPhocodable
     end
     
     def phocoder_extension
-      self.content_type.match(/png/) ? ".png" : ".jpg"
+      if self.content_type.blank?
+        ".jpg"
+      else
+        self.content_type.match(/png/) ? ".png" : ".jpg"
+      end
     end
     
     def phocoder_params
       {:input => {:url => self.public_url, :notifications=>[{:url=>callback_url }] },
-        :thumbnails => self.parent_class.phocoder_thumbnails.map{|thumb|
-          thumb_filename = thumb[:label] + "_" + File.basename(self.filename,File.extname(self.filename)) + phocoder_extension 
-          base_url = ActsAsPhocodable.storeage_mode == "s3" ? "s3://#{self.s3_bucket_name}/#{self.thumbnail_resource_dir}/" : ""
-          th = thumb.clone
-          th[:base_url] = base_url  if !base_url.blank?
-          th.merge({
-            :filename=>thumb_filename,
-            :notifications=>[{:url=>thumbnail_callback_url }]
-          })
-        }
+        :thumbnails => phocoder_thumbnail_params
       }
     end
     
+    def phocoder_thumbnail_params
+      self.parent_class.phocoder_thumbnails.map{|thumb|
+        thumb_filename = thumb[:label] + "_" + File.basename(self.filename,File.extname(self.filename)) + phocoder_extension 
+        base_url = ActsAsPhocodable.storeage_mode == "s3" ? "s3://#{self.s3_bucket_name}/#{self.thumbnail_resource_dir}/" : ""
+        th = thumb.clone
+        th[:base_url] = base_url  if !base_url.blank?
+        th.merge({
+          :filename=>thumb_filename,
+          :notifications=>[{:url=>thumbnail_callback_url }]
+        })
+      }
+    end
+    
+    
     def phocoder_hdr_params
+      { }
+    end
+    
+    def phocoder_tone_mapping_params
       { }
     end
     
