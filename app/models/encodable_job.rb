@@ -31,6 +31,7 @@ class EncodableJob < ActiveRecord::Base
     #job.height = img_params[:height]
     job.phocoder_status = encodable.encodable_status = "ready"
     encodable.save
+    encodable.fire_ready_callback
     job.save
     job
   end
@@ -55,6 +56,7 @@ class EncodableJob < ActiveRecord::Base
     end
     job.zencoder_status = encodable.encodable_status = "ready"
     encodable.save
+    encodable.fire_ready_callback
     job.save
     encodable.parent.check_zencoder_details
   end

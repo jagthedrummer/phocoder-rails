@@ -143,7 +143,7 @@ module ActsAsPhocodable
     
     include ActiveSupport::Callbacks
 
-    define_callbacks :file_saved
+    define_callbacks :file_saved, :file_ready
     
     #cattr_accessor :phocoder_options
     #self.phocoder_options = options
@@ -732,6 +732,11 @@ module ActsAsPhocodable
           self.encode
         end
         
+      end
+    end
+    
+    def fire_ready_callback
+      run_callbacks :file_ready do
       end
     end
     
