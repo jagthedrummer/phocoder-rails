@@ -1,6 +1,6 @@
 source "http://rubygems.org"
       
-gem "rails", "~>3.0.3"
+gem "rails", "~>3.0.0"
 gem "capybara", ">= 0.3.9"
 gem "webrat"
 
@@ -10,6 +10,9 @@ gem "webrat"
 #developing against postgres for now since I have an old version of SQLite3
 #gem 'pg'
 
+gem 'phocoder-rb'
+gem 'zencoder'
+gem 'aws-s3', :require => 'aws/s3'
 
 if RUBY_VERSION < '1.9'
   gem "ruby-debug", ">= 0.10.3"

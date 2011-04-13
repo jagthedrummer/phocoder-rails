@@ -1,0 +1,13 @@
+/******************************************************
+ * Video Posters
+ */
+span.phocoder_video_poster{
+	position:relative;
+}
+
+span.phocoder_video_poster .play{
+	position:absolute;
+	bottom:10px;
+	left:5px;
+	border:0px !important;
+}

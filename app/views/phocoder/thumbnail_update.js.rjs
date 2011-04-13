@@ -1,0 +1,9 @@
+if ActsAsPhocodable.javascript_library == 'prototype'
+  #The prototype version
+  page.replace "#{@img.class.to_s}_#{@img.id.to_s}_#{@random}", :partial=>"thumbnail_update"
+
+else
+  
+  page << %[$('##{@img.class.to_s}_#{@img.id.to_s}_#{@random}').replaceWith("#{ escape_javascript(render(:partial=>"thumbnail_update")) }")]
+  
+end

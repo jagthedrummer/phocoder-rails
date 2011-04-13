@@ -1,0 +1,12 @@
+<p id="notice"><%%= notice %></p>
+
+<p>
+  <b>Filename:</b>
+  <%%= @<%= file_name.singularize %>.filename %>
+</p>
+
+<%%= phocoder_thumbnail @<%= file_name.singularize %>,"medium" %>
+
+<br/>
+
+<%%= link_to 'Back', <%= file_name %>_path %>

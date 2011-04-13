@@ -24,14 +24,16 @@ require 'autotest/timestamp'
  
 
   Autotest.add_hook :initialize do |autotest|
-    #autotest.add_mapping(%r%^spec/(requests)/.*rb$%) do|filename, _|
-    #  filename
-    #end
-    autotest.add_mapping(%r%^spec/.*rb$%) do|filename, _|
+    autotest.add_mapping(%r%^spec/(app|lib)/.*rb$%) do|filename, _|
       filename
     end
 
+    #autotest.add_mapping(%r%^.*rb$%) do|filename, _|
+    #  filename
+    #end
+    
     autotest.add_exception(%r%spec/dummy/app%)
+    autotest.add_exception(%r%spec/dummy/db%)
     autotest.add_exception(%r%spec/dummy/lib%)
     autotest.add_exception(%r%spec/dummy/config%)
     autotest.add_exception(%r%spec/dummy/log%)
