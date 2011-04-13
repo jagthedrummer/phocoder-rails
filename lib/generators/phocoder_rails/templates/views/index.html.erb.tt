@@ -1,0 +1,26 @@
+<h1>Listing <%= file_name %></h1>
+
+<table>
+  <tr>
+    <th>Filename</th>
+    <th></th>
+    <th></th>
+
+  </tr>
+
+<%% @<%= file_name %>.each do |<%= file_name.singularize %>| %>
+  <tr>
+    <td>
+    	<%%= phocoder_thumbnail <%= file_name.singularize %>,"small",false %><br/>
+		<%%= <%= file_name.singularize %>.filename %>
+	</td>
+    <td><%%= link_to 'Show', <%= file_name.singularize %> %></td>
+    
+    <td><%%= link_to 'Destroy', <%= file_name.singularize %>, :confirm => 'Are you sure?', :method => :delete %></td>
+  </tr>
+<%% end %>
+</table>
+
+<br />
+
+<%%= link_to 'New <%= file_name.singularize %>', new_<%= file_name.singularize %>_path %>

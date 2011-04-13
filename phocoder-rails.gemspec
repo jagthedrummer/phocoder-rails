@@ -9,7 +9,7 @@ Gem::Specification.new do |s|
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Jeremy Green"]
-  s.date = %q{2011-02-10}
+  s.date = %q{2011-02-14}
   s.description = %q{Rails engine for easy integration with phocoder.com}
   s.email = %q{jagthedrummer@gmail.com}
   s.extra_rdoc_files = [
@@ -29,7 +29,9 @@ Gem::Specification.new do |s|
     "VERSION",
     "app/controllers/phocoder_controller.rb",
     "app/helpers/phocoder_helper.rb",
+    "app/views/phocoder/_offline_video_embed.html.erb",
     "app/views/phocoder/_thumbnail_update.html.erb",
+    "app/views/phocoder/_video_embed.html.erb",
     "app/views/phocoder/thumbnail_update.js.rjs",
     "config/routes.rb",
     "lib/phocoder_rails.rb",
@@ -39,6 +41,16 @@ Gem::Specification.new do |s|
     "public/images/building.gif",
     "public/images/storing.gif",
     "public/images/waiting.gif",
+    "public/javascripts/video-js-2.0.2/.DS_Store",
+    "public/javascripts/video-js-2.0.2/LICENSE.txt",
+    "public/javascripts/video-js-2.0.2/README.markdown",
+    "public/javascripts/video-js-2.0.2/demo-subtitles.srt",
+    "public/javascripts/video-js-2.0.2/demo.html",
+    "public/javascripts/video-js-2.0.2/skins/hu.css",
+    "public/javascripts/video-js-2.0.2/skins/tube.css",
+    "public/javascripts/video-js-2.0.2/skins/vim.css",
+    "public/javascripts/video-js-2.0.2/video-js.css",
+    "public/javascripts/video-js-2.0.2/video.js",
     "spec/controllers/phocoder_controller_spec.rb",
     "spec/dummy/Rakefile",
     "spec/dummy/app/controllers/application_controller.rb",
@@ -76,6 +88,8 @@ Gem::Specification.new do |s|
     "spec/dummy/script/rails",
     "spec/engine_spec.rb",
     "spec/fixtures/big_eye_tiny.jpg",
+    "spec/fixtures/test.txt",
+    "spec/fixtures/video-test.mov",
     "spec/helpers/phocoder_helper_spec.rb",
     "spec/integration/navigation_spec.rb",
     "spec/models/acts_as_phocodable_spec.rb",
@@ -124,6 +138,7 @@ Gem::Specification.new do |s|
       s.add_runtime_dependency(%q<capybara>, [">= 0.3.9"])
       s.add_runtime_dependency(%q<webrat>, [">= 0"])
       s.add_runtime_dependency(%q<phocoder-rb>, [">= 0"])
+      s.add_runtime_dependency(%q<zencoder>, [">= 0"])
       s.add_runtime_dependency(%q<aws-s3>, [">= 0"])
       s.add_runtime_dependency(%q<ruby-debug>, [">= 0.10.3"])
       s.add_development_dependency(%q<rspec-rails>, ["= 2.4.1"])
@@ -135,6 +150,7 @@ Gem::Specification.new do |s|
       s.add_dependency(%q<capybara>, [">= 0.3.9"])
       s.add_dependency(%q<webrat>, [">= 0"])
       s.add_dependency(%q<phocoder-rb>, [">= 0"])
+      s.add_dependency(%q<zencoder>, [">= 0"])
       s.add_dependency(%q<aws-s3>, [">= 0"])
       s.add_dependency(%q<ruby-debug>, [">= 0.10.3"])
       s.add_dependency(%q<rspec-rails>, ["= 2.4.1"])
@@ -147,6 +163,7 @@ Gem::Specification.new do |s|
     s.add_dependency(%q<capybara>, [">= 0.3.9"])
     s.add_dependency(%q<webrat>, [">= 0"])
     s.add_dependency(%q<phocoder-rb>, [">= 0"])
+    s.add_dependency(%q<zencoder>, [">= 0"])
     s.add_dependency(%q<aws-s3>, [">= 0"])
     s.add_dependency(%q<ruby-debug>, [">= 0.10.3"])
     s.add_dependency(%q<rspec-rails>, ["= 2.4.1"])

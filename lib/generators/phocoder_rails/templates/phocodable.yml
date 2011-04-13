@@ -1,0 +1,28 @@
+development:
+  phocoder_api_key: asdf
+  zencoder_api_key: asdf
+  base_url: http://your.host.test.com
+  storeage_mode : s3
+  s3_bucket_name: bucket.name
+  s3_access_key_id: asdf
+  s3_secret_access_key: asdf
+  
+test:
+  phocoder_api_key: asdf
+  zencoder_api_key: asdf
+  phocoder_url: http://photoapi.chaos.webapeel.com
+  base_url: http://your.host.test.com
+  storeage_mode : local
+  s3_bucket_name: bucket.name
+  s3_access_key_id: asdf
+  s3_secret_access_key: asdf
+
+production:
+  phocoder_api_key: asdf
+  zencoder_api_key: asdf
+  base_url: http://your.host.test.com
+  storeage_mode : s3
+  processing_mode : resque
+  s3_bucket_name: bucket.name
+  s3_access_key_id: asdf
+  s3_secret_access_key: asdf
