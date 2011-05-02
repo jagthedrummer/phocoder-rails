@@ -437,8 +437,9 @@ module ActsAsPhocodable
       Rails.logger.debug "trying to phocode for #{Phocoder.base_url} "
       Rails.logger.debug "callback url = #{callback_url}"
       response = Phocoder::Job.create(phocoder_hdr_params)
+      Rails.logger.debug "the response from phocode_hdr = #{response.body.to_json}"
       job = self.encodable_jobs.new
-      job.phocoder_output_id = response.body["job"]["hdrs"].first["id"]
+      job.phocoder_output_id = response.body["job"]["hdr"]["id"]
       job.phocoder_job_id = response.body["job"]["id"]
       job.phocoder_status = "phocoding"
       self.encodable_jobs << job
