@@ -87,7 +87,8 @@ module ActsAsPhocodable
       'image/x-citrix-pjpeg',
       'image/x-nikon-nef',
       'image/tiff',
-      'image/x-olympus-orf'
+      'image/x-olympus-orf',
+      'image/x-dcraw'
   ]
   
   # The list of content types that will trigger video handling.
@@ -436,8 +437,9 @@ module ActsAsPhocodable
       Rails.logger.debug "trying to phocode for #{Phocoder.base_url} "
       Rails.logger.debug "callback url = #{callback_url}"
       response = Phocoder::Job.create(phocoder_hdr_params)
+      Rails.logger.debug "the response from phocode_hdr = #{response.body.to_json}"
       job = self.encodable_jobs.new
-      job.phocoder_output_id = response.body["job"]["hdrs"].first["id"]
+      job.phocoder_output_id = response.body["job"]["hdr"]["id"]
       job.phocoder_job_id = response.body["job"]["id"]
       job.phocoder_status = "phocoding"
       self.encodable_jobs << job
@@ -458,6 +460,7 @@ module ActsAsPhocodable
       return if @phocoding
       @phocoding = true
       
+      destroy_thumbnails
       Rails.logger.debug "trying to phocode for #{Phocoder.base_url} "
       Rails.logger.debug "callback url = #{callback_url}"
       response = Phocoder::Job.create(phocoder_tone_mapping_params)
@@ -465,6 +468,36 @@ module ActsAsPhocodable
       puts "tone_mapping response = #{response.body.to_json}"
       job = self.encodable_jobs.new
       job.phocoder_output_id = response.body["job"]["tone_mapping"]["id"]
+      job.phocoder_job_id = response.body["job"]["id"]
+      job.phocoder_status = "phocoding"
+      self.encodable_jobs << job
+      self.encodable_status = "phocoding"
+      self.save #false need to do save(false) here if we're calling phocode on after_save
+      response_thumbs = response.body["job"]["thumbnails"]
+      Rails.logger.debug "trying to decode #{response_thumbs.size} response_thumbs = #{response_thumbs.to_json}"
+      create_thumbnails_from_response(response_thumbs,response.body["job"]["id"])
+    end
+    
+    
+    def phocode_composite
+      #if self.thumbnails.count >= self.class.phocoder_thumbnails.size
+      #  raise "This item already has thumbnails!"
+      #  return
+      #end
+      
+      # We do this because sometimes save will get called more than once
+      # during a single request
+      return if @phocoding
+      @phocoding = true
+      
+      destroy_thumbnails
+      Rails.logger.debug "trying to phocode for #{Phocoder.base_url} "
+      Rails.logger.debug "callback url = #{callback_url}"
+      response = Phocoder::Job.create(phocoder_composite_params)
+      Rails.logger.debug "composite response = #{response.body.to_json}"
+      puts "composite response = #{response.body.to_json}"
+      job = self.encodable_jobs.new
+      job.phocoder_output_id = response.body["job"]["composite"]["id"]
       job.phocoder_job_id = response.body["job"]["id"]
       job.phocoder_status = "phocoding"
       self.encodable_jobs << job
@@ -543,6 +576,10 @@ module ActsAsPhocodable
     end
     
     def phocoder_tone_mapping_params
+      { }
+    end
+    
+    def phocoder_composite_params
       { }
     end
     
