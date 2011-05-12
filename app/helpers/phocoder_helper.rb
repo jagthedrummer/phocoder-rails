@@ -31,33 +31,33 @@ module PhocoderHelper
   # for now we'll assume that a thumbnail is needed
   # some files aren't displayable in a native way (NEF etc...)
   # 
-  def phocoder_thumbnail(image_upload,thumbnail="small",live_video=true)
+  def phocoder_thumbnail(image_upload,thumbnail="small",live_video=true,options={})
     #get the details about this particular thumbnail size
     thumbnail_atts = image_upload.class.thumbnail_attributes_for thumbnail
     if ActsAsPhocodable.storeage_mode == "offline" and (thumbnail.nil? or !thumbnail_atts.blank?)
-      return offline_phocoder_thumbnail(image_upload,thumbnail_atts)
+      return offline_phocoder_thumbnail(image_upload,thumbnail_atts,options)
     elsif image_upload.image? 
-      phocoder_image_thumbnail image_upload, thumbnail,thumbnail_atts
+      phocoder_image_thumbnail image_upload, thumbnail,thumbnail_atts,options
     elsif (image_upload.video? and !live_video)
       tag =  %[<span class="phocoder_video_poster">]
-      tag += phocoder_image_thumbnail(image_upload, thumbnail,thumbnail_atts)
+      tag += phocoder_image_thumbnail(image_upload, thumbnail,thumbnail_atts,options)
       tag += %[<img src="/images/play_small.png" alt="Play" width="25" height="25" class="play"/>]
       tag += "</span>"
       tag.html_safe
       
     elsif image_upload.video?
-      phocoder_video_thumbnail image_upload, thumbnail,thumbnail_atts
+      phocoder_video_thumbnail image_upload, thumbnail,thumbnail_atts, options
     else
       image_tag "error.png"
     end
   end
   
   
-  def phocoder_video_thumbnail(image_upload,thumbnail="small",thumbnail_atts={},live_video = true)
+  def phocoder_video_thumbnail(image_upload,thumbnail="small",thumbnail_atts={},live_video = true,options={})
     if image_upload.encodable_status != 'ready'
       pending_phocoder_thumbnail(image_upload,thumbnail,true,thumbnail_atts)
     elsif live_video
-      phocoder_video_embed(image_upload,thumbnail_atts)
+      phocoder_video_embed(image_upload,thumbnail_atts,options)
     else
       %[<div class="phocoder_video_thumbnail">Video static image thumb goes here.</div>].html_safe  
     end
@@ -80,11 +80,11 @@ module PhocoderHelper
   # for now we'll assume that a thumbnail is needed
   # some files aren't displayable in a native way (NEF etc...)
   # 
-  def phocoder_image_thumbnail(image_upload,thumbnail="small",thumbnail_atts={})  
+  def phocoder_image_thumbnail(image_upload,thumbnail="small",thumbnail_atts={},options={})  
     
     
     if thumbnail.nil? and (image_upload.encodable_status == "ready")
-      return image_tag image_upload.public_url, :size=>"#{image_upload.width}x#{image_upload.height}"
+      return image_tag image_upload.public_url, {:size=>"#{image_upload.width}x#{image_upload.height}"}.merge(options)
     elsif thumbnail_atts.blank?
       return error_div("'#{thumbnail}' is not a valid thumbnail size for #{image_upload.class}")
     elsif image_upload.encodable_status != "ready" #and image_upload.zencoder_status != "ready"
@@ -109,26 +109,26 @@ module PhocoderHelper
   end
   
   
-  def offline_phocoder_thumbnail(image_upload,thumbnail_atts)
+  def offline_phocoder_thumbnail(image_upload,thumbnail_atts,options={})
     if image_upload.image?
-      offline_phocoder_image_thumbnail(image_upload,thumbnail_atts)
+      offline_phocoder_image_thumbnail(image_upload,thumbnail_atts,options)
     else
-      offline_phocoder_video_embed(image_upload,thumbnail_atts)
+      offline_phocoder_video_embed(image_upload,thumbnail_atts,options)
     end
   end
   
   
-  def offline_phocoder_image_thumbnail(photo,thumbnail_atts)
+  def offline_phocoder_image_thumbnail(photo,thumbnail_atts,options={})
     if thumbnail_atts.blank?
-      image_tag photo.local_url
+      image_tag photo.local_url, options
     #elsif thumbnail_atts[:aspect_mode].blank? or thumbnail_atts[:aspect_mode] == "preserve" 
       #implement handling for a certain size
       #image_tag photo.local_url, :width => thumbnail_atts[:width]
     elsif thumbnail_atts[:aspect_mode] == "stretch" 
-      image_tag photo.local_url, :width => thumbnail_atts[:width],:height => thumbnail_atts[:height]
+      image_tag photo.local_url, {:width => thumbnail_atts[:width],:height => thumbnail_atts[:height]}.merge(options)
     else
     #elsif thumbnail_atts[:aspect_mode] == "pad" or thumbnail_atts[:aspect_mode] == "crop"
-      "<div style='overflow:hidden;background:#ccc;width:#{thumbnail_atts[:width]}px;height:#{thumbnail_atts[:height]}px'>#{image_tag(photo.local_url,:width => thumbnail_atts[:width])}</div>".html_safe
+      "<div style='overflow:hidden;background:#ccc;width:#{thumbnail_atts[:width]}px;height:#{thumbnail_atts[:height]}px'>#{image_tag(photo.local_url,{:width => thumbnail_atts[:width]}.merge(options))}</div>".html_safe
     end
   end
   
