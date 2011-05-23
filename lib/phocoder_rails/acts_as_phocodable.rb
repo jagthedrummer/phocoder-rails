@@ -411,8 +411,8 @@ module ActsAsPhocodable
       Rails.logger.debug "trying to phocode for #{Phocoder.base_url} "
       Rails.logger.debug "callback url = #{callback_url}"
       response = Phocoder::Job.create(phocoder_params)
-      Rails.logger.debug "the phocode response = #{response.to_json}"
-      puts "the phocode response = #{response.to_json}"
+      Rails.logger.debug "the phocode response = #{response.to_json}" if Rails.env != "test"
+      puts "the phocode response = #{response.to_json}" if Rails.env != "test"
       job = self.encodable_jobs.new
       job.phocoder_input_id = response.body["job"]["inputs"].first["id"]
       job.phocoder_job_id = response.body["job"]["id"]
