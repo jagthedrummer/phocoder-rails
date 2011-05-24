@@ -4,9 +4,11 @@ class EncodableJob < ActiveRecord::Base
   
   def self.update_from_phocoder(params)
     Rails.logger.debug "tying to call update from phocoder for params = #{params.to_json}"
+    puts "tying to call update from phocoder for params = #{params.to_json}"
     if !params[:output].blank?
       Rails.logger.debug "find_by_phocoder_output_id #{params[:output][:id]}"
-      job = self.find_by_phocoder_job_id_and_phocoder_output_id params[:job][:id],params[:output][:id]
+      puts "find_by_phocoder_output_id #{params[:output][:id]}"
+      job = self.find_by_phocoder_output_id params[:output][:id]
       Rails.logger.debug "the job = #{job}"
       img_params = params[:output]
       encodable = job.encodable
@@ -16,6 +18,8 @@ class EncodableJob < ActiveRecord::Base
       end
     else
       job = find_by_phocoder_input_id params[:input][:id]
+      puts "found job = #{job.to_json}"
+      puts "job.encodable = #{job.encodable}"
       img_params = params[:input]
       encodable = job.encodable
     end
@@ -58,7 +62,15 @@ class EncodableJob < ActiveRecord::Base
     encodable.save
     encodable.fire_ready_callback
     job.save
-    encodable.parent.check_zencoder_details
+    puts "~~~~~~~~~~~~~~~~~~~~` #{encodable.to_json}"
+    
+    if encodable.parent
+      puts " WE NEED TO CHECK ON PARENT on #{encodable.to_json}"
+      encodable.parent.check_zencoder_details 
+    #else
+    #  puts " WE NEED TO CHECK OUR SELF!"
+    #  encodable.check_zencoder_details
+    end   
   end
   
   
