@@ -6,12 +6,17 @@ describe PhocoderController do
     @image_upload = ImageUpload.create(:phocoder_job_id=>1,:phocoder_input_id=>1,:phocoder_output_id=>1,
                                        :zencoder_job_id=>1,:zencoder_input_id=>1,:zencoder_output_id=>1,
                                        :file_size=>1,:width=>1,:height=>1,:filename=>"test.png",:content_type=>"image/png")
+    @encodable_job = EncodableJob.create(:phocoder_job_id=>1,:phocoder_input_id=>1,:phocoder_output_id=>1,
+                                         :zencoder_job_id=>1,:zencoder_input_id=>1,:zencoder_output_id=>1,
+                                         :encodable=>@image_upload)
   end
   
   after(:each) do
     @image_upload.destroy
+    @encodable_job.destroy
   end
 
+ 
   #at this point the image_upload does not have any thumbnails created
   describe "POST to 'thumbnail_update' " do
     
@@ -24,6 +29,7 @@ describe PhocoderController do
   end
   
   
+      
   
   describe "POST 'phocoder_update'" do
     
@@ -43,20 +49,27 @@ describe PhocoderController do
     
   end
   
-  
+ 
+    
     
   
   describe "POST zencoder update" do
     
     before(:each) do
-      @thumb = ImageUpload.create(:phocoder_job_id=>2,:phocoder_input_id=>2,:phocoder_output_id=>2,:zencoder_job_id=>2,:zencoder_input_id=>2,:zencoder_output_id=>2,:file_size=>2,:width=>2,:height=>2,:parent_id=>@image_upload.id)
+      @thumb = @image_upload.thumbnails.create(:phocoder_job_id=>2,:phocoder_input_id=>2,:phocoder_output_id=>2,
+                                               :zencoder_job_id=>2,:zencoder_input_id=>2,:zencoder_output_id=>2,
+                                               :file_size=>2,:width=>2,:height=>2)
+      @encodable_job2 = EncodableJob.create(:phocoder_job_id=>2,:phocoder_input_id=>2,:phocoder_output_id=>2,
+                                            :zencoder_job_id=>2,:zencoder_input_id=>2,:zencoder_output_id=>2,
+                                            :encodable=>@thumb)
     end
     
     after(:each) do
       @thumb.destroy
+      @encodable_job2.destroy
     end
        
-        
+                     
  
     
     
@@ -78,6 +91,8 @@ describe PhocoderController do
         "thumbnails"=>[{"label"=>"small","filename"=>"small-test-file.jpg","id"=>1}]
       }
       }))
+                  
+      
       
       #@image_upload.should_receive(:create_zencoder_image_thumb).and_return(nil)
       post 'zencoder_notification_update', {:class=>"ImageUpload",:id=>@thumb.id,

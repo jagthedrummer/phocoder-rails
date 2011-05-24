@@ -138,6 +138,16 @@ describe ActsAsPhocodable do
     phorams[:thumbnails].size.should == 2
   end
   
+  it "should create phocoder params based on input thumbs that are passed in" do
+    iu = ImageUpload.new(@attr)
+    phorams = iu.phocoder_params([{:label=>"test",:width=>60,:height=>60}])
+    #puts phorams.to_json
+    phorams.should_not be_nil
+    phorams[:input][:url].should == iu.public_url
+    phorams[:thumbnails].size.should == 1
+  end
+    
+  
   it "should create zencooder params based on the acts_as_phocodable :videos options" do
     iu = ImageUpload.new(@vid_attr)
     zenrams = iu.zencoder_params
@@ -229,8 +239,49 @@ describe ActsAsPhocodable do
     File.exists?(expected_local_path).should_not be_true
   end
     
-      
-      
+    
+  it "should call phocoder for images and be able to add new thumbs" do
+    iu = ImageUpload.new(@attr)
+    
+    Phocoder::Job.should_receive(:create).and_return(mock(Phocoder::Response,:body=>{
+      "job"=>{
+        "id"=>1,
+        "inputs"=>["id"=>1],
+        "thumbnails"=>[{"label"=>"small","filename"=>"small-test-file.jpg","id"=>1}]
+      }
+    }))
+    iu.save
+    expected_local_path = File.expand_path(File.join(File.dirname(File.expand_path(__FILE__)),'..','dummy','public','image_uploads',iu.id.to_s,iu.filename))
+    File.exists?(expected_local_path).should be_true
+    # phocode is called after save in this mode
+    #iu.phocode
+    ImageUpload.count.should == 2 #it should have created a thumbnail record
+    
+    Phocoder::Job.should_receive(:create).and_return(mock(Phocoder::Response,:body=>{
+      "job"=>{
+        "id"=>2,
+        "inputs"=>["id"=>2],
+        "thumbnails"=>[{"label"=>"test","filename"=>"test-test-file.jpg","id"=>2}]
+      }
+    }))
+    
+    iu.clear_phocoding
+    iu.phocode([{:label=>"test",:width=>60,:height=>60}])
+    ImageUpload.count.should == 3
+    
+    # now to make sure that it doesn't try to recode exsiting thumbs
+    iu.clear_phocoding
+    iu.phocode([{:label=>"test",:width=>60,:height=>60}])
+    ImageUpload.count.should == 3
+    
+    
+    iu.destroy
+    ImageUpload.count.should == 0
+    File.exists?(expected_local_path).should_not be_true
+  end
+     
+              
+            
   
   it "should call zencoder for videos" do
     iu = ImageUpload.new(@vid_attr)  
