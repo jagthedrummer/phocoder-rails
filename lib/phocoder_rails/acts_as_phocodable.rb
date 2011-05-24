@@ -397,12 +397,31 @@ module ActsAsPhocodable
       end
     end
     
-    def phocode
+    def clear_phocoding
+      @phocoding = false
+    end
+    
+    def dedupe_input_thumbs(input_thumbs)
+      needed_thumbs = []
+      input_thumbs.each do |it|
+        t = thumbnail_for it[:label]
+        if t.blank?
+          needed_thumbs << it
+        end
+      end
+      needed_thumbs
+    end
+    
+    def phocode(input_thumbs = self.parent_class.phocoder_thumbnails)
+      puts " input_thumbs.count = #{input_thumbs.size}"
+      input_thumbs = dedupe_input_thumbs(input_thumbs)
+      puts " after dedupe input_thumbs.count = #{input_thumbs.size}"
       #if self.thumbnails.count >= self.class.phocoder_thumbnails.size
       #  raise "This item already has thumbnails!"
       #  return
       #end
       
+      return if input_thumbs.size == 0
       # We do this because sometimes save will get called more than once
       # during a single request
       return if @phocoding
@@ -410,7 +429,7 @@ module ActsAsPhocodable
       
       Rails.logger.debug "trying to phocode for #{Phocoder.base_url} "
       Rails.logger.debug "callback url = #{callback_url}"
-      response = Phocoder::Job.create(phocoder_params)
+      response = Phocoder::Job.create(phocoder_params(input_thumbs))
       Rails.logger.debug "the phocode response = #{response.to_json}" if Rails.env != "test"
       puts "the phocode response = #{response.to_json}" if Rails.env != "test"
       job = self.encodable_jobs.new
@@ -422,6 +441,7 @@ module ActsAsPhocodable
       self.save #false need to do save(false) here if we're calling phocode on after_save
       response_thumbs = response.body["job"]["thumbnails"]
       Rails.logger.debug "trying to decode #{response_thumbs.size} response_thumbs = #{response_thumbs.to_json}"
+      puts "trying to decode #{response_thumbs.size} response_thumbs = #{response_thumbs.to_json}"
       create_thumbnails_from_response(response_thumbs,response.body["job"]["id"])
     end
     
@@ -507,6 +527,7 @@ module ActsAsPhocodable
       self.save #false need to do save(false) here if we're calling phocode on after_save
       response_thumbs = response.body["job"]["thumbnails"]
       Rails.logger.debug "trying to decode #{response_thumbs.size} response_thumbs = #{response_thumbs.to_json}"
+      puts "trying to decode #{response_thumbs.size} response_thumbs = #{response_thumbs.to_json}"
       create_thumbnails_from_response(response_thumbs,response.body["job"]["id"])
     end
     
@@ -553,14 +574,14 @@ module ActsAsPhocodable
       end
     end
     
-    def phocoder_params
+    def phocoder_params(input_thumbs = self.parent_class.phocoder_thumbnails)
       {:input => {:url => self.public_url, :notifications=>[{:url=>callback_url }] },
-        :thumbnails => phocoder_thumbnail_params
+        :thumbnails => phocoder_thumbnail_params(input_thumbs)
       }
     end
     
-    def phocoder_thumbnail_params
-      self.parent_class.phocoder_thumbnails.map{|thumb|
+    def phocoder_thumbnail_params(input_thumbs = self.parent_class.phocoder_thumbnails)
+      input_thumbs.map{|thumb|
         thumb_filename = thumb[:label] + "_" + File.basename(self.filename,File.extname(self.filename)) + phocoder_extension 
         base_url = ActsAsPhocodable.storeage_mode == "s3" ? "s3://#{self.s3_bucket_name}/#{self.thumbnail_resource_dir}/" : ""
         th = thumb.clone
@@ -610,7 +631,7 @@ module ActsAsPhocodable
       params[:outputs][0][:thumbnails] = { :number=>1, :start_at_first_frame=>1,:public=>1 }
       params[:outputs][0][:thumbnails][:base_url] = base_url  if !base_url.blank?
       Rails.logger.debug "for zencoder the params = #{params.to_json}"
-      puts "for zencoder the params = #{params.to_json}"
+      #puts "for zencoder the params = #{params.to_json}"
       params
     end
    
@@ -632,7 +653,7 @@ module ActsAsPhocodable
       
       details = Zencoder::Job.details(self.encodable_jobs.last.zencoder_job_id)
       
-      puts "in check_zencoder_details the details.body = #{details.body.to_json}"
+      #puts "in check_zencoder_details the details.body = #{details.body.to_json}"
       
       if details.body["job"]["state"] != 'finished'
         self.encodable_jobs.last.zencoder_status = details.body["job"]["state"]
@@ -647,7 +668,7 @@ module ActsAsPhocodable
       self.file_size = details.body["job"]["input_media_file"]["file_size_bytes"]
       self.save
       
-      puts "the output files = #{details.body["job"]["output_media_files"]}"
+      #puts "the output files = #{details.body["job"]["output_media_files"]}"
       
       update_zencoder_outputs(details)
             
@@ -659,7 +680,7 @@ module ActsAsPhocodable
     
     def update_zencoder_outputs(details)
       details.body["job"]["output_media_files"].each do |output|
-        puts "updating for output = #{output.to_json}"
+        #puts "updating for output = #{output.to_json}"
         job = EncodableJob.find_by_zencoder_output_id output["id"]
         thumb = job.encodable
         thumb.width = output["width"]
@@ -713,11 +734,11 @@ module ActsAsPhocodable
         puts "we're skipping destory_thumbnails since we don't do any processing "
         return
       end
-      puts "calling destory thumbnails for #{self.thumbnails.count} - #{self.thumbnails.size}"
+      #puts "calling destory thumbnails for #{self.thumbnails.count} - #{self.thumbnails.size}"
       self.thumbnails.each do |thumb|
         thumb.destroy
       end
-      puts "calling destory thumbnails for #{self.thumbnails.count}"
+      #puts "calling destory thumbnails for #{self.thumbnails.count}"
     end
     
     def thumbnail_for(thumbnail_name)
@@ -791,7 +812,7 @@ module ActsAsPhocodable
     
     
     def cleanup
-      puts "calling cleanup!"
+      #puts "calling cleanup!"
       destroy_thumbnails
       remove_local_file
       if ActsAsPhocodable.storeage_mode == "s3"
