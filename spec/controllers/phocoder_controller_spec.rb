@@ -28,9 +28,8 @@ describe PhocoderController do
     
   end
   
-  
-      
-  
+   
+
   describe "POST 'phocoder_update'" do
     
     it "should update an input" do
@@ -50,9 +49,8 @@ describe PhocoderController do
   end
   
  
-    
-    
-  
+   
+   
   describe "POST zencoder update" do
     
     before(:each) do
