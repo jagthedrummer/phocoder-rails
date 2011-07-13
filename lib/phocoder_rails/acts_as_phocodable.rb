@@ -20,6 +20,8 @@ module ActsAsPhocodable
   #   automatic : Send to phocoder as soon as the file is stored.
   #               With 'local' storage mode, this submits the job
   #               to phocoder while the user is still waiting.
+  #  delayed : Handle storage/phocoding in a background process.
+  #  spawn : Use the Spawn library to fork a new process to store/phocode.
   mattr_accessor :processing_mode
   self.processing_mode = "automatic"
   
@@ -47,6 +49,10 @@ module ActsAsPhocodable
   # either 'prototype' or 'jquery'
   mattr_accessor :javascript_library
   self.javascript_library = 'prototype'
+  
+  # The local directory where files should be stored
+  mattr_accessor :local_base_dir
+  self.javascript_library = '/tmp'
   
   # The config file that tells phocoder where to find
   # config options.
@@ -280,6 +286,9 @@ module ActsAsPhocodable
     end
     if self.phocodable_configuration[:javascript_library]
       ActsAsPhocodable.javascript_library = phocodable_configuration[:javascript_library]
+    end
+    if self.phocodable_configuration[:local_base_dir]
+      ActsAsPhocodable.local_base_dir = phocodable_configuration[:local_base_dir]
     end
     
     
@@ -849,7 +858,7 @@ module ActsAsPhocodable
     end
     
     def local_dir
-      File.join(::Rails.root,'public',resource_dir)
+      File.join(ActsAsPhocodable.local_base_dir,resource_dir)
     end
     
     def local_path
