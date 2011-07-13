@@ -211,7 +211,7 @@ describe ActsAsPhocodable do
     expected_local_url = "/image_uploads/1/test.txt"
     iu.local_url.should == expected_local_url
     
-    expected_local_path = File.expand_path(File.join(File.dirname(File.expand_path(__FILE__)),'..','dummy','public','image_uploads',iu.id.to_s,iu.filename))
+    expected_local_path = File.join('/tmp','image_uploads',iu.id.to_s,iu.filename)
     iu.local_path.should == expected_local_path
     iu.local_url.should == "/image_uploads/#{iu.id}/#{iu.filename}"
     File.exists?(expected_local_path).should be_true
@@ -230,7 +230,7 @@ describe ActsAsPhocodable do
       }
     }))
     iu.save
-    expected_local_path = File.expand_path(File.join(File.dirname(File.expand_path(__FILE__)),'..','dummy','public','image_uploads',iu.id.to_s,iu.filename))
+    expected_local_path = File.join('/tmp','image_uploads',iu.id.to_s,iu.filename)
     File.exists?(expected_local_path).should be_true
     #iu.phocode
     ImageUpload.count.should == 2 #it should have created a thumbnail record
@@ -251,7 +251,7 @@ describe ActsAsPhocodable do
       }
     }))
     iu.save
-    expected_local_path = File.expand_path(File.join(File.dirname(File.expand_path(__FILE__)),'..','dummy','public','image_uploads',iu.id.to_s,iu.filename))
+    expected_local_path = File.join('/tmp','image_uploads',iu.id.to_s,iu.filename)
     File.exists?(expected_local_path).should be_true
     # phocode is called after save in this mode
     #iu.phocode
@@ -292,7 +292,7 @@ describe ActsAsPhocodable do
     }))
     #iu.should_receive(:create_zencoder_image_thumb).and_return(nil)
     iu.save
-    expected_local_path = File.expand_path(File.join(File.dirname(File.expand_path(__FILE__)),'..','dummy','public','image_uploads',iu.id.to_s,iu.filename))
+    expected_local_path = File.join('/tmp','image_uploads',iu.id.to_s,iu.filename)
     File.exists?(expected_local_path).should be_true
     #iu.phocode
     ImageUpload.count.should == 2 #it should have created a thumbnail record
