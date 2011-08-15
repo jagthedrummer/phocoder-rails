@@ -150,7 +150,7 @@ module ActsAsPhocodable
     
     include ActiveSupport::Callbacks
 
-    define_callbacks :file_saved, :file_ready
+    define_callbacks :file_saved, :file_ready, :phocode_hdr, :phocode_composite, :phocode_tone_mapping
     
     #cattr_accessor :phocoder_options
     #self.phocoder_options = options
@@ -208,7 +208,7 @@ module ActsAsPhocodable
       iu = find_by_phocoder_output_id params[:output][:id]
       Rails.logger.debug "the item = #{iu}"
       img_params = params[:output]
-      iu.filename = File.basename(params[:output][:url]) if iu.filename.blank?
+      iu.filename = File.basename(params[:output][:url]) #if iu.filename.blank?
       if ActsAsPhocodable.storeage_mode == "local"
         iu.save_url(params[:output][:url])
       end
@@ -464,18 +464,19 @@ module ActsAsPhocodable
       # during a single request
       return if @phocoding
       @phocoding = true
-      
-      Rails.logger.debug "trying to phocode for #{Phocoder.base_url} "
-      Rails.logger.debug "callback url = #{callback_url}"
-      response = Phocoder::Job.create(phocoder_hdr_params)
-      Rails.logger.debug "the response from phocode_hdr = #{response.body.to_json}"
-      job = self.encodable_jobs.new
-      job.phocoder_output_id = response.body["job"]["hdr"]["id"]
-      job.phocoder_job_id = response.body["job"]["id"]
-      job.phocoder_status = "phocoding"
-      self.encodable_jobs << job
-      self.encodable_status = "phocoding"
-      self.save #false need to do save(false) here if we're calling phocode on after_save
+      run_callbacks :phocode_hdr do
+        Rails.logger.debug "trying to phocode for #{Phocoder.base_url} "
+        Rails.logger.debug "callback url = #{callback_url}"
+        response = Phocoder::Job.create(phocoder_hdr_params)
+        Rails.logger.debug "the response from phocode_hdr = #{response.body.to_json}"
+        job = self.encodable_jobs.new
+        job.phocoder_output_id = response.body["job"]["hdr"]["id"]
+        job.phocoder_job_id = response.body["job"]["id"]
+        job.phocoder_status = "phocoding"
+        self.encodable_jobs << job
+        self.encodable_status = "phocoding"
+        self.save #false need to do save(false) here if we're calling phocode on after_save
+      end
      
     end
     
@@ -490,23 +491,24 @@ module ActsAsPhocodable
       # during a single request
       return if @phocoding
       @phocoding = true
-      
-      destroy_thumbnails
-      Rails.logger.debug "trying to phocode for #{Phocoder.base_url} "
-      Rails.logger.debug "callback url = #{callback_url}"
-      response = Phocoder::Job.create(phocoder_tone_mapping_params)
-      Rails.logger.debug "tone_mapping response = #{response.body.to_json}"
-      puts "tone_mapping response = #{response.body.to_json}"
-      job = self.encodable_jobs.new
-      job.phocoder_output_id = response.body["job"]["tone_mapping"]["id"]
-      job.phocoder_job_id = response.body["job"]["id"]
-      job.phocoder_status = "phocoding"
-      self.encodable_jobs << job
-      self.encodable_status = "phocoding"
-      self.save #false need to do save(false) here if we're calling phocode on after_save
-      response_thumbs = response.body["job"]["thumbnails"]
-      Rails.logger.debug "trying to decode #{response_thumbs.size} response_thumbs = #{response_thumbs.to_json}"
-      create_thumbnails_from_response(response_thumbs,response.body["job"]["id"])
+      run_callbacks :phocode_tone_mapping do
+        destroy_thumbnails
+        Rails.logger.debug "trying to phocode for #{Phocoder.base_url} "
+        Rails.logger.debug "callback url = #{callback_url}"
+        response = Phocoder::Job.create(phocoder_tone_mapping_params)
+        Rails.logger.debug "tone_mapping response = #{response.body.to_json}"
+        puts "tone_mapping response = #{response.body.to_json}"
+        job = self.encodable_jobs.new
+        job.phocoder_output_id = response.body["job"]["tone_mapping"]["id"]
+        job.phocoder_job_id = response.body["job"]["id"]
+        job.phocoder_status = "phocoding"
+        self.encodable_jobs << job
+        self.encodable_status = "phocoding"
+        self.save #false need to do save(false) here if we're calling phocode on after_save
+        response_thumbs = response.body["job"]["thumbnails"]
+        Rails.logger.debug "trying to decode #{response_thumbs.size} response_thumbs = #{response_thumbs.to_json}"
+        create_thumbnails_from_response(response_thumbs,response.body["job"]["id"])
+      end
     end
     
     
@@ -520,24 +522,25 @@ module ActsAsPhocodable
       # during a single request
       return if @phocoding
       @phocoding = true
-      
-      destroy_thumbnails
-      Rails.logger.debug "trying to phocode for #{Phocoder.base_url} "
-      Rails.logger.debug "callback url = #{callback_url}"
-      response = Phocoder::Job.create(phocoder_composite_params)
-      Rails.logger.debug "composite response = #{response.body.to_json}"
-      puts "composite response = #{response.body.to_json}"
-      job = self.encodable_jobs.new
-      job.phocoder_output_id = response.body["job"]["composite"]["id"]
-      job.phocoder_job_id = response.body["job"]["id"]
-      job.phocoder_status = "phocoding"
-      self.encodable_jobs << job
-      self.encodable_status = "phocoding"
-      self.save #false need to do save(false) here if we're calling phocode on after_save
-      response_thumbs = response.body["job"]["thumbnails"]
-      Rails.logger.debug "trying to decode #{response_thumbs.size} response_thumbs = #{response_thumbs.to_json}"
-      puts "trying to decode #{response_thumbs.size} response_thumbs = #{response_thumbs.to_json}"
-      create_thumbnails_from_response(response_thumbs,response.body["job"]["id"])
+      run_callbacks :phocode_composite do
+        destroy_thumbnails
+        Rails.logger.debug "trying to phocode for #{Phocoder.base_url} "
+        Rails.logger.debug "callback url = #{callback_url}"
+        response = Phocoder::Job.create(phocoder_composite_params)
+        Rails.logger.debug "composite response = #{response.body.to_json}"
+        puts "composite response = #{response.body.to_json}"
+        job = self.encodable_jobs.new
+        job.phocoder_output_id = response.body["job"]["composite"]["id"]
+        job.phocoder_job_id = response.body["job"]["id"]
+        job.phocoder_status = "phocoding"
+        self.encodable_jobs << job
+        self.encodable_status = "phocoding"
+        self.save #false need to do save(false) here if we're calling phocode on after_save
+        response_thumbs = response.body["job"]["thumbnails"]
+        Rails.logger.debug "trying to decode #{response_thumbs.size} response_thumbs = #{response_thumbs.to_json}"
+        puts "trying to decode #{response_thumbs.size} response_thumbs = #{response_thumbs.to_json}"
+        create_thumbnails_from_response(response_thumbs,response.body["job"]["id"])
+      end
     end
     
     
