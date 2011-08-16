@@ -6,9 +6,11 @@ class EncodableJob < ActiveRecord::Base
     Rails.logger.debug "tying to call update from phocoder for params = #{params.to_json}"
     puts "tying to call update from phocoder for params = #{params.to_json}"
     if !params[:output].blank?
-      Rails.logger.debug "find_by_phocoder_output_id #{params[:output][:id]}"
-      puts "find_by_phocoder_output_id #{params[:output][:id]}"
-      job = self.find_by_phocoder_output_id params[:output][:id]
+      Rails.logger.debug "find_by_phocoder_job_id_and_phocoder_output_id_and_encodable_type #{params[:job][:id]} - #{params[:output][:id]} ,#{params[:class]}"
+      puts "find_by_phocoder_job_id_and_phocoder_output_id_and_encodable_type #{params[:job][:id]} - #{params[:output][:id]} ,#{params[:class]}"
+      job = self.find_by_phocoder_job_id_and_phocoder_output_id_and_encodable_type params[:job][:id],params[:output][:id],params[:class]
+      
+      
       Rails.logger.debug "the job = #{job}"
       img_params = params[:output]
       encodable = job.encodable
@@ -17,7 +19,7 @@ class EncodableJob < ActiveRecord::Base
         encodable.save_url(params[:output][:url])
       end
     else
-      job = find_by_phocoder_input_id params[:input][:id]
+      job = find_by_phocoder_job_id_and_phocoder_input_id_and_encodable_type params[:job][:id],params[:input][:id],params[:class]
       puts "found job = #{job.to_json}"
       puts "job.encodable = #{job.encodable}"
       img_params = params[:input]
