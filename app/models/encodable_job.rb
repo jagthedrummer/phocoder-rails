@@ -19,6 +19,7 @@ class EncodableJob < ActiveRecord::Base
         encodable.save_url(params[:output][:url])
       end
     else
+      puts "find_by_phocoder_job_id_and_phocoder_input_id_and_encodable_type #{params[:job][:id]}, #{params[:input][:id]}, #{params[:class]}" 
       job = find_by_phocoder_job_id_and_phocoder_input_id_and_encodable_type params[:job][:id],params[:input][:id],params[:class]
       puts "found job = #{job.to_json}"
       puts "job.encodable = #{job.encodable}"
