@@ -12,3 +12,5 @@ coverage/
 # This needs to be here to make sure that we don't leak an API key
 spec/dummy/config/phocodable.yml
 .loadpath
+# Make sure that we're not locking gems for users
+Gemfile.lock
