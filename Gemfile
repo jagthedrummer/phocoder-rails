@@ -4,6 +4,8 @@ gem "rails", "~>3.0.0"
 gem "capybara", ">= 0.3.9"
 gem "webrat"
 
+puts "phocoder-rails : RUBY_VERSION = #{RUBY_VERSION}"
+puts RUBY_VERSION < '1.9'
 
 #
 
