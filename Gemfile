@@ -16,9 +16,9 @@ gem 'phocoder-rb'
 gem 'zencoder'
 gem 'aws-s3', :require => 'aws/s3'
 
-if RUBY_VERSION < '1.9'
-  gem "ruby-debug", ">= 0.10.3"
-end
+#if RUBY_VERSION < '1.9'
+#  gem "ruby-debug", ">= 0.10.3"
+#end
  
 #gem "rspec", "~> 2.1.0"
 #gem "rspec-rails", ">= 2.0.0.beta"
