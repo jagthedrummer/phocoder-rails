@@ -5,7 +5,7 @@
 
 Gem::Specification.new do |s|
   s.name = %q{phocoder-rails}
-  s.version = "0.0.17"
+  s.version = "0.0.18"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = [%q{Jeremy Green}]
@@ -121,7 +121,7 @@ Gem::Specification.new do |s|
   s.homepage = %q{http://github.com/jagthedrummer/phocoder-rails}
   s.licenses = [%q{MIT}]
   s.require_paths = [%q{lib}]
-  s.rubygems_version = %q{1.8.7}
+  s.rubygems_version = %q{1.8.5}
   s.summary = %q{Rails engine for easy integration with phocoder.com}
   s.test_files = [
     "spec/controllers/phocoder_controller_spec.rb",
