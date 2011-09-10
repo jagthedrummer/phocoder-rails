@@ -52,7 +52,7 @@ module ActsAsPhocodable
   
   # The local directory where files should be stored
   mattr_accessor :local_base_dir
-  self.javascript_library = '/tmp'
+  self.local_base_dir = '/tmp'
   
   # The config file that tells phocoder where to find
   # config options.
@@ -776,9 +776,11 @@ module ActsAsPhocodable
       if new_file.is_a? File
         self.filename = File.basename new_file.path
         self.content_type = MIME::Types.type_for(self.filename).first.content_type
+        self.file_size = new_file.size
       else
         self.filename = new_file.original_filename
         self.content_type = new_file.content_type  
+        self.file_size = new_file.size
       end
       
       if new_file.respond_to? :tempfile
@@ -948,6 +950,10 @@ module ActsAsPhocodable
       )
       self.encodable_status = "s3"
       self.save
+      obj_data = AWS::S3::S3Object.find(s3_key,s3_bucket_name)
+      if obj_data.size == file_size # it made it into s3 safely
+        remove_local_file
+      end
       self.encode
     end
     
