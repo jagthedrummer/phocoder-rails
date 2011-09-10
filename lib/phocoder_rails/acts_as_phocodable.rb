@@ -796,9 +796,10 @@ module ActsAsPhocodable
     end
     
     def save_local_file
+      return if @saved_file.blank?
+      Rails.logger.debug "==================================================================================================="
+      Rails.logger.debug "about to save the local file"
       run_callbacks :file_saved do
-        
-        return if @saved_file.blank?
         FileUtils.mkdir_p local_dir
         FileUtils.cp @saved_file.path, local_path
         FileUtils.chmod 0755, local_path
@@ -951,8 +952,12 @@ module ActsAsPhocodable
       self.encodable_status = "s3"
       self.save
       obj_data = AWS::S3::S3Object.find(s3_key,s3_bucket_name)
+      Rails.logger.debug "----------------------------------------------------------------------------------------------------"
       if obj_data.size == file_size # it made it into s3 safely
+        Rails.logger.debug " we are about to remove local file!"
         remove_local_file
+      else
+        Rails.logger.debug "we can't delete the local file #{file_size} : #{obj_data.size}"
       end
       self.encode
     end
