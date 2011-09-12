@@ -100,7 +100,7 @@ module PhocoderHelper
       #this happens if the main image has been notified, but not this thumbnail
       return pending_phocoder_thumbnail(image_upload,thumbnail,false,thumbnail_atts)
     end
-    image_tag thumb.public_url, :size=>"#{thumb.width}x#{thumb.height}"  
+    image_tag thumb.public_url, {:size=>"#{thumb.width}x#{thumb.height}"}.merge(options)
   end
   
   
