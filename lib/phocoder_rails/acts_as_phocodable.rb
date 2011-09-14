@@ -150,7 +150,7 @@ module ActsAsPhocodable
     
     include ActiveSupport::Callbacks
 
-    define_callbacks :file_saved, :file_ready, :phocode_hdr, :phocode_composite, :phocode_tone_mapping
+    define_callbacks :local_file_saved, :file_saved, :file_ready, :phocode_hdr, :phocode_composite, :phocode_tone_mapping
     
     #cattr_accessor :phocoder_options
     #self.phocoder_options = options
@@ -800,16 +800,18 @@ module ActsAsPhocodable
       Rails.logger.debug "==================================================================================================="
       Rails.logger.debug "about to save the local file"
       run_callbacks :file_saved do
-        FileUtils.mkdir_p local_dir
-        FileUtils.cp @saved_file.path, local_path
-        FileUtils.chmod 0755, local_path
-        self.encodable_status = "local"
-        if self.respond_to? :upload_host      
-          self.upload_host = %x{hostname}.strip
+        run_callbacks :local_file_saved do
+          FileUtils.mkdir_p local_dir
+          FileUtils.cp @saved_file.path, local_path
+          FileUtils.chmod 0755, local_path
+          self.encodable_status = "local"
+          if self.respond_to? :upload_host      
+            self.upload_host = %x{hostname}.strip
+          end
+          @saved_file = nil
+          @saved_a_new_file = true
+          self.save
         end
-        @saved_file = nil
-        @saved_a_new_file = true
-        self.save
         if ActsAsPhocodable.storeage_mode == "s3" and ActsAsPhocodable.processing_mode == "automatic"
           self.save_s3_file
         end
