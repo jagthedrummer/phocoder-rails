@@ -22,7 +22,7 @@ class PhocoderController < ApplicationController
     # 3.0.3 seems to break this and make routes all screwy  
     #@image_upload = params[:class].constantize.update_from_phocoder(params)
 
-
+ 
     #@image_upload = ImageUpload.update_from_phocoder(params)
     respond_to do |format|
       #format.html  { render :json => {} }

@@ -13,7 +13,12 @@ class EncodableJob < ActiveRecord::Base
       
       Rails.logger.debug "the job = #{job}"
       img_params = params[:output]
-      encodable = job.encodable
+      begin
+        encodable = job.encodable
+      rescue NoMethodError => ex
+        # here we try to fall back if we can't find an Encodable
+        encodable = params[:class].constantize.find params[:id]
+      end       
       encodable.filename = File.basename(params[:output][:url]) if encodable.filename.blank?
       if ActsAsPhocodable.storeage_mode == "local"
         encodable.save_url(params[:output][:url])
@@ -36,11 +41,15 @@ class EncodableJob < ActiveRecord::Base
     #job.file_size = img_params[:file_size]
     #job.width = img_params[:width]
     #job.height = img_params[:height]
-    job.phocoder_status = encodable.encodable_status = "ready"
+    encodable.encodable_status = "ready"
     encodable.save
     encodable.fire_ready_callback
-    job.save
-    job
+    # may not have a job if the EncodableJob didn't get created for some reason
+    if job
+      job.phocoder_status = "ready"
+      job.save
+      job
+    end
   end
   
   
