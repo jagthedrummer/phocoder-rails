@@ -46,6 +46,14 @@ describe PhocoderController do
       @image_upload.file_size.should == 2
     end
     
+    # sometimes an encodable job doesn't get created.  Why?
+    it "should fall back if no encodable job can be found" do
+      post 'phocoder_notification_update', {:class=>"ImageUpload",:id=>@image_upload.id, :job=>{:id => 2}, :output=>{:id=>2,:file_size=>2,:width=>2,:height=>2,:url=>"http://production.webapeel.com/octolabs/themes/octolabs/images/octologo.png"},:format=>"json" }
+      response.should be_success
+      @image_upload.reload
+      @image_upload.file_size.should == 2
+    end
+    
   end
   
  
@@ -104,6 +112,8 @@ describe PhocoderController do
       @thumb.file_size.should == 1
     end    
     
-  end
+  end # describe POST
+  
+  
   
 end

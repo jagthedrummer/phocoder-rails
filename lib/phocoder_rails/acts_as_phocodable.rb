@@ -734,7 +734,7 @@ module ActsAsPhocodable
     
     def save_url(url)
       Rails.logger.debug "We are about to download : #{url} to #{local_dir} - #{local_path}"
-      FileUtils.mkdir(local_dir) if !File.exists?(local_dir)
+      FileUtils.mkdir_p(local_dir) if !File.exists?(local_dir)
       FileUtils.touch local_path
       writeOut = open(local_path, "wb")
       writeOut.write(open(url).read)
