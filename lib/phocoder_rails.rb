@@ -7,5 +7,6 @@ module PhocoderRails
   require 'aws/s3'
   
   require 'phocoder_rails/acts_as_phocodable'
+  require 'phocoder_rails/errors'
   #require 'phocoder_rails/base'
 end
