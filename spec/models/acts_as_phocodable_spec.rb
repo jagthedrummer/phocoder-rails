@@ -51,7 +51,7 @@ describe ActsAsPhocodable do
 #          :filename=>"big_eye_tiny.jpg"
 #        ) 
 #        }
-        
+    ImageUpload.destroy_all
     @attr = {
       :file => fixture_file_upload(fixture_path + '/big_eye_tiny.jpg','image/jpeg')
     }
@@ -280,8 +280,190 @@ describe ActsAsPhocodable do
     File.exists?(expected_local_path).should_not be_true
   end
      
+     
+     
+  it "should call phocoder for images and be able to add new thumbs on the fly" do
+    iu = ImageUpload.new(@attr)
+    
+    Phocoder::Job.should_receive(:create).and_return(mock(Phocoder::Response,:body=>{
+      "job"=>{
+        "id"=>1,
+        "inputs"=>["id"=>1],
+        "thumbnails"=>[{"label"=>"small","filename"=>"small-test-file.jpg","id"=>1}]
+      }
+    }))
+    iu.save
+    expected_local_path = File.join('/tmp','image_uploads',iu.id.to_s,iu.filename)
+    File.exists?(expected_local_path).should be_true
+    # phocode is called after save in this mode
+    #iu.phocode
+    ImageUpload.count.should == 2 #it should have created a thumbnail record
+    
+    
+    #this thumbnail doesn't exist yet
+    lambda{
+      nt = iu.thumbnail_for("new_test")
+    }.should raise_error(Exception)
+    
+    
+    Phocoder::Job.should_receive(:create).and_return(mock(Phocoder::Response,:body=>{
+      "job"=>{
+        "id"=>2,
+        "inputs"=>["id"=>2],
+        "thumbnails"=>[{"label"=>"anothertest","filename"=>"test-test-file.jpg","id"=>2}]
+      }
+    }))
+     
+    iu.clear_phocoding
+    at = iu.thumbnail_for({:label=>"anothertest",:width=>60,:height=>60})
+    at.should_not be_nil
+    ImageUpload.count.should == 3
+    
+    # now to make sure that it doesn't try to recode exsiting thumbs
+    iu.clear_phocoding
+    at = iu.thumbnail_for({:label=>"anothertest",:width=>60,:height=>60})
+    at.should_not be_nil
+    ImageUpload.count.should == 3
+    
+    
+    iu.destroy
+    ImageUpload.count.should == 0
+    File.exists?(expected_local_path).should_not be_true
+  end
+  
+  
+  
+  it "should call phocoder for images and be able to add new thumbs on the fly with no label" do
+    iu = ImageUpload.new(@attr)
+    
+    Phocoder::Job.should_receive(:create).and_return(mock(Phocoder::Response,:body=>{
+      "job"=>{
+        "id"=>1,
+        "inputs"=>["id"=>1],
+        "thumbnails"=>[{"label"=>"small","filename"=>"small-test-file.jpg","id"=>1}]
+      }
+    }))
+    iu.save
+    expected_local_path = File.join('/tmp','image_uploads',iu.id.to_s,iu.filename)
+    File.exists?(expected_local_path).should be_true
+    # phocode is called after save in this mode
+    #iu.phocode
+    ImageUpload.count.should == 2 #it should have created a thumbnail record
+    
+    
+    #this thumbnail doesn't exist yet
+    lambda{
+      nt = iu.thumbnail_for("new_test")
+    }.should raise_error(Exception)
+    
+    
+    Phocoder::Job.should_receive(:create).and_return(mock(Phocoder::Response,:body=>{
+      "job"=>{
+        "id"=>2,
+        "inputs"=>["id"=>2],
+        "thumbnails"=>[{"label"=>"60x60","filename"=>"test-test-file.jpg","id"=>2}]
+      }
+    }))
+     
+    iu.clear_phocoding
+    at = iu.thumbnail_for({:width=>60,:height=>60})
+    at.should_not be_nil
+    ImageUpload.count.should == 3
+    
+    # now to make sure that it doesn't try to recode exsiting thumbs
+    iu.clear_phocoding
+    at = iu.thumbnail_for({:width=>60,:height=>60})
+    at.should_not be_nil
+    ImageUpload.count.should == 3
+    
+    iu.destroy
+    ImageUpload.count.should == 0
+    File.exists?(expected_local_path).should_not be_true
+  end
               
-            
+  
+  it "should call phocoder for images and be able to add new thumbs on the fly with just a size string label" do
+    iu = ImageUpload.new(@attr)
+    
+    Phocoder::Job.should_receive(:create).and_return(mock(Phocoder::Response,:body=>{
+      "job"=>{
+        "id"=>1,
+        "inputs"=>["id"=>1],
+        "thumbnails"=>[{"label"=>"small","filename"=>"small-test-file.jpg","id"=>1}]
+      }
+    }))
+    iu.save
+    expected_local_path = File.join('/tmp','image_uploads',iu.id.to_s,iu.filename)
+    File.exists?(expected_local_path).should be_true
+    # phocode is called after save in this mode
+    #iu.phocode
+    ImageUpload.count.should == 2 #it should have created a thumbnail record
+      
+    #this thumbnail doesn't exist yet
+    lambda{
+      nt = iu.thumbnail_for("new_test")
+    }.should raise_error(Exception)
+    
+    
+    Phocoder::Job.should_receive(:create).and_return(mock(Phocoder::Response,:body=>{
+      "job"=>{
+        "id"=>2,
+        "inputs"=>["id"=>2],
+        "thumbnails"=>[{"label"=>"60x60","filename"=>"test-test-file.jpg","id"=>2}]
+      }
+    }))
+    
+    iu.clear_phocoding
+    at = iu.thumbnail_for("60x60")
+    at.should_not be_nil
+    ImageUpload.count.should == 3
+    
+    Phocoder::Job.should_receive(:create).and_return(mock(Phocoder::Response,:body=>{
+      "job"=>{
+        "id"=>2,
+        "inputs"=>["id"=>2],
+        "thumbnails"=>[{"label"=>"80x","filename"=>"test-test-file.jpg","id"=>3}]
+      }
+    }))
+    
+    iu.clear_phocoding
+    at = iu.thumbnail_for("80x")
+    at.should_not be_nil
+    ImageUpload.count.should == 4
+   
+    Phocoder::Job.should_receive(:create).and_return(mock(Phocoder::Response,:body=>{
+      "job"=>{
+        "id"=>2,
+        "inputs"=>["id"=>2],
+        "thumbnails"=>[{"label"=>"x90","filename"=>"test-test-file.jpg","id"=>4}]
+      }
+    }))
+   
+    iu.clear_phocoding
+    at = iu.thumbnail_for("x90")
+    at.should_not be_nil
+    ImageUpload.count.should == 5
+    
+    Phocoder::Job.should_receive(:create).and_return(mock(Phocoder::Response,:body=>{
+      "job"=>{
+        "id"=>2,
+        "inputs"=>["id"=>2],
+        "thumbnails"=>[{"label"=>"100x100!","filename"=>"test-test-file.jpg","id"=>5}]
+      }
+    }))
+   
+    iu.clear_phocoding
+    at = iu.thumbnail_for("100x100!")
+    at.should_not be_nil
+    ImageUpload.count.should == 6
+    
+    iu.destroy
+    ImageUpload.count.should == 0
+    File.exists?(expected_local_path).should_not be_true
+  end
+ 
+  
+  
   
   it "should call zencoder for videos" do
     iu = ImageUpload.new(@vid_attr)  

@@ -5,11 +5,11 @@
 
 Gem::Specification.new do |s|
   s.name = %q{phocoder-rails}
-  s.version = "0.0.25"
+  s.version = "0.0.26"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = [%q{Jeremy Green}]
-  s.date = %q{2011-10-07}
+  s.date = %q{2011-10-24}
   s.description = %q{Rails engine for easy integration with phocoder.com}
   s.email = %q{jagthedrummer@gmail.com}
   s.extra_rdoc_files = [
@@ -52,6 +52,7 @@ Gem::Specification.new do |s|
     "lib/phocoder_rails.rb",
     "lib/phocoder_rails/acts_as_phocodable.rb",
     "lib/phocoder_rails/engine.rb",
+    "lib/phocoder_rails/errors.rb",
     "phocoder-rails.gemspec",
     "public/images/building.gif",
     "public/images/error.png",

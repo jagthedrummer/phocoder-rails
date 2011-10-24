@@ -127,6 +127,9 @@ module ActsAsPhocodable
     "wmv" => "wmv"
   }
   
+  mattr_accessor :label_size_regex
+  self.label_size_regex = /(\d*)x(\d*)([!>]?)/
+  
   def image?(content_type)
     image_types.include?(content_type)
   end
@@ -413,9 +416,9 @@ module ActsAsPhocodable
     def dedupe_input_thumbs(input_thumbs)
       needed_thumbs = []
       input_thumbs.each do |it|
-        t = thumbnail_for it[:label]
+        t = thumbnails.find_by_thumbnail(it[:label])
         if t.blank?
-          needed_thumbs << it
+          needed_thumbs << it 
         end
       end
       needed_thumbs
@@ -753,10 +756,43 @@ module ActsAsPhocodable
       #puts "calling destory thumbnails for #{self.thumbnails.count}"
     end
     
-    def thumbnail_for(thumbnail_name)
+    def create_atts_from_label_string(label_string)
+      match = label_string.match ActsAsPhocodable.label_size_regex
+      atts = {:label => label_string}
+      if !match[1].blank?
+        atts[:width] = match[1]
+      end
+      if !match[2].blank?
+        atts[:height] = match[2]
+      end
+      if !match[3].blank?
+        if match[3] == "!"
+          atts[:aspect_mode] = "crop"
+        elsif match[3] == ">"
+          atts[:aspect_mode] = "preserve"
+        end
+      end
+      atts
+    end
+    
+    def thumbnail_for(thumbnail_hash_or_name)
+      thumbnail_name = thumbnail_hash_or_name.is_a?(Hash) ? thumbnail_hash_or_name[:label] : thumbnail_hash_or_name 
+      if thumbnail_name.blank? and thumbnail_hash_or_name.is_a?(Hash)
+        thumbnail_name = "#{thumbnail_hash_or_name[:width]}x#{thumbnail_hash_or_name[:height]}"
+        puts "thumbnail_name = #{thumbnail_name}"
+        thumbnail_hash_or_name[:label] = thumbnail_name
+      end
       thumb = thumbnails.find_by_thumbnail(thumbnail_name)
       if thumb.blank? and ActsAsPhocodable.storeage_mode == "offline"
         thumb = self
+      elsif thumb.blank? and thumbnail_hash_or_name.is_a? Hash
+        thumb = self.phocode([thumbnail_hash_or_name]).first
+      elsif thumb.blank? and thumbnail_hash_or_name.is_a?(String) and thumbnail_hash_or_name.match ActsAsPhocodable.label_size_regex
+        atts = create_atts_from_label_string(thumbnail_hash_or_name)
+        thumb = self.phocode([atts]).first
+      end
+      if thumb.blank?
+        raise ThumbnailNotFoundError.new("No thumbnail was found for label '#{thumbnail_name}'")
       end
       thumb
       #a dirty hack for now to keep things working.  
