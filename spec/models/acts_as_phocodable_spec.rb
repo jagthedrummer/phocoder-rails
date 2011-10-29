@@ -618,4 +618,39 @@ describe ActsAsPhocodable do
   end
   
   
+  it "in spawn s3 mode it should save the file to an AWS S3 storage location, call phocoder, then destroy" do
+    # In testing we use the spawn :yield strategy, which is really just the same as
+    # automatic (inline) processing.  It works for testing, and hopefully works in production.
+    # Hopefully...
+    ActsAsPhocodable.storeage_mode = "s3"
+    ActsAsPhocodable.processing_mode = "spawn"
+    ImageUpload.establish_aws_connection
+    
+    iu = ImageUpload.new(@attr)
+    Phocoder::Job.stub!(:create).and_return(mock(Phocoder::Response,:body=>{
+      "job"=>{
+        "id"=>1,
+        "inputs"=>[{"id"=>1}],
+        "thumbnails"=>[{"label"=>"small","filename"=>"small-test-file.jpg","id"=>1}]
+      }
+    }))
+    
+    #now store in S3 + phocode
+    iu.save
+    
+    bucket = iu.s3_bucket_name
+    key = iu.s3_key
+    lambda{
+      o = AWS::S3::S3Object.find(key,bucket)
+    }.should_not raise_error(Exception)
+    
+    iu.destroy
+    #after destroy the file should not be in S3 anymore
+    lambda{
+      o = AWS::S3::S3Object.find(key,bucket)
+    }.should raise_error(Exception)
+    
+  end
+  
+  
 end

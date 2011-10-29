@@ -851,6 +851,11 @@ module ActsAsPhocodable
         if ActsAsPhocodable.storeage_mode == "s3" and ActsAsPhocodable.processing_mode == "automatic"
           self.save_s3_file
         end
+        if ActsAsPhocodable.storeage_mode == "s3" and ActsAsPhocodable.processing_mode == "spawn"
+          spawn_block do # :method => :thread # <-- I think that should be set at the config/environment level
+            self.save_s3_file
+          end
+        end
         if ActsAsPhocodable.processing_mode == "automatic" and ActsAsPhocodable.storeage_mode != "offline"
           self.encode
         end
