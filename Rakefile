@@ -39,6 +39,8 @@ end
 RSpec::Core::RakeTask.new(:rcov) do |spec|
   spec.pattern = 'spec/**/*_spec.rb'
   spec.rcov = true
+  spec.spec_opts = ['--color']
+  spec.rcov_opts = ['--exclude', '^spec,/gems/,/\.bundler/']
 end
 
 task :default => :spec
