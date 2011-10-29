@@ -36,4 +36,5 @@ Dummy::Application.configure do
   config.acts_as_phocodable.storage_mode = "local"
   config.acts_as_phocodable.config_file = "config/phocodable.yml"
   
+  Spawn::default_options({ :method => :yield })
 end
