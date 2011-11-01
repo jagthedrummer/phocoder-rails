@@ -39,4 +39,5 @@ group :test do
   gem "rcov", ">= 0"
   gem 'autotest', '4.4.4'
   gem 'redgreen', '1.2.2'
+  gem "webmock"
 end

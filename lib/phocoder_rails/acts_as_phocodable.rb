@@ -1000,12 +1000,16 @@ module ActsAsPhocodable
         Rails.logger.debug " we are about to remove local file!"
         remove_local_file
       else
-        Rails.logger.debug "we can't delete the local file #{file_size} : #{obj_data.size}"
+        msg = "The file was not saved to S3 sucessfully.  Orig size: #{file_size} - S3 size: #{obj_data.size}"
+        Rails.logger.debug msg
+        raise ActsAsPhocodable::Error.new msg
       end
       self.encode
     end
     
+    
     def remove_s3_file
+      #puts "trying to delete #{s3_key} #{s3_bucket_name}"
       #if ActsAsPhocodable.storeage_mode == "s3"
         AWS::S3::S3Object.delete s3_key, s3_bucket_name
       #end

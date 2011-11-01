@@ -1,0 +1,12 @@
+<p id="notice"><%= notice %></p>
+
+<p>
+  <b>Filename:</b>
+  <%= @image.filename %>
+</p>
+
+<%= phocoder_thumbnail @image,"medium" %>
+
+<br/>
+
+<%= link_to 'Back', images_path %>

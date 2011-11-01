@@ -4,7 +4,11 @@
   <title>Dummy</title>
   <%= stylesheet_link_tag :all %>
   <%= javascript_include_tag :defaults %>
+  <%= phocoder_includes %>
   <%= csrf_meta_tag %>
+  <script type="text/javascript">
+    new Phocodable.Updater().init();
+  </script>
 </head>
 <body>
 

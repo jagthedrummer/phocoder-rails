@@ -35,23 +35,26 @@ describe PhocoderController do
     it "should update an input" do
       post 'phocoder_notification_update', {:class=>"ImageUpload",:id=>1, :job=>{:id => 1},:input=>{:id=>1,:file_size=>2,:width=>2,:height=>2,:url=>"http://production.webapeel.com/octolabs/themes/octolabs/images/octologo.png"},:format=>"json" }
       response.should be_success
-      @image_upload.reload
-      @image_upload.file_size.should == 2
+      #@image_upload.reload
+      #@image_upload.file_size.should == 2
     end
     
     it "should update an output" do
+      EncodableJob.should_receive(:update_from_phocoder)
       post 'phocoder_notification_update', {:class=>"ImageUpload",:id=>1, :job=>{:id => 1}, :output=>{:id=>1,:file_size=>2,:width=>2,:height=>2,:url=>"http://production.webapeel.com/octolabs/themes/octolabs/images/octologo.png"},:format=>"json" }
       response.should be_success
-      @image_upload.reload
-      @image_upload.file_size.should == 2
+      #@image_upload.reload
+      #@image_upload.file_size.should == 2
     end
     
     # sometimes an encodable job doesn't get created.  Why?
     it "should fall back if no encodable job can be found" do
+      EncodableJob.should_receive(:update_from_phocoder)
       post 'phocoder_notification_update', {:class=>"ImageUpload",:id=>@image_upload.id, :job=>{:id => 2}, :output=>{:id=>2,:file_size=>2,:width=>2,:height=>2,:url=>"http://production.webapeel.com/octolabs/themes/octolabs/images/octologo.png"},:format=>"json" }
       response.should be_success
-      @image_upload.reload
-      @image_upload.file_size.should == 2
+      # This is a controller test, not integration test
+      #@image_upload.reload
+      #@image_upload.file_size.should == 2
     end
     
   end
@@ -80,26 +83,26 @@ describe PhocoderController do
     
     
     it "should update an output" do
-      Zencoder::Job.should_receive(:details).and_return(mock(Zencoder::Response,:body=>{
-        "job" => {"id"=>2, 
-                  "state" => "finished", 
-                  "input_media_file" => {"width" => 2,"height" => 2, 
-                                         "duration_in_ms" => 2, "file_size_bytes" => 2 } ,
-                  "output_media_files" => [{"width" => 1, "height" => 1, "duration_in_ms" => 1, "file_size_bytes" => 1, "id" => 2 }],
-                  "thumbnails" => [{ "url" => "http://farm2.static.flickr.com/1243/5168720424_ea33e31d96.jpg", "id" => 1 }]
-        }
-       }))
-      
-       Phocoder::Job.should_receive(:create).and_return(mock(Phocoder::Response,:body=>{
-        "job"=>{
-        "id"=>1,
-        "inputs"=>["id"=>1],
-        "thumbnails"=>[{"label"=>"small","filename"=>"small-test-file.jpg","id"=>1}]
-      }
-      }))
+      #Zencoder::Job.should_receive(:details).and_return(mock(Zencoder::Response,:body=>{
+      #  "job" => {"id"=>2, 
+      #            "state" => "finished", 
+      #            "input_media_file" => {"width" => 2,"height" => 2, 
+      #                                   "duration_in_ms" => 2, "file_size_bytes" => 2 } ,
+      #            "output_media_files" => [{"width" => 1, "height" => 1, "duration_in_ms" => 1, "file_size_bytes" => 1, "id" => 2 }],
+      #            "thumbnails" => [{ "url" => "http://farm2.static.flickr.com/1243/5168720424_ea33e31d96.jpg", "id" => 1 }]
+      #  }
+      # }))
+      #
+      # Phocoder::Job.should_receive(:create).and_return(mock(Phocoder::Response,:body=>{
+      #  "job"=>{
+      #  "id"=>1,
+      #  "inputs"=>["id"=>1],
+      #  "thumbnails"=>[{"label"=>"small","filename"=>"small-test-file.jpg","id"=>1}]
+      #}
+      #}))
                   
       
-      
+      EncodableJob.should_receive(:update_from_zencoder)
       #@image_upload.should_receive(:create_zencoder_image_thumb).and_return(nil)
       post 'zencoder_notification_update', {:class=>"ImageUpload",:id=>@thumb.id,
                                             "job"=>{"state"=>"finished","id"=>2},
@@ -107,9 +110,10 @@ describe PhocoderController do
                                             :format=>"json" 
                                            }
       response.should be_success
+      # Comment this out for now.  This is a controller test, not an integration test.
       # we don't get direct info on the input, just the thumb
-      @thumb.reload
-      @thumb.file_size.should == 1
+      #@thumb.reload
+      #@thumb.file_size.should == 1
     end    
     
   end # describe POST
