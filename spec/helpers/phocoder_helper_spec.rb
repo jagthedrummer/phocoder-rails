@@ -114,7 +114,7 @@ describe PhocoderHelper do
     describe "phcoder_thumbnail for local mode before processing" do
   
       it "should return a self updading 'pending' img" do
-        phocoder_image_thumbnail(@image,"small").should match("text/javascript")
+        phocoder_image_thumbnail(@image,"small").should match(/data-phocoder-waiting="true"/)
       end
   
       it "should return an error for an unknown thumbnail name" do
@@ -145,7 +145,7 @@ describe PhocoderHelper do
       #end
       
       it "should return a pending img for a known thumbnail that is not ready" do
-        phocoder_image_thumbnail(@image,"small").should match("text/javascript")
+        phocoder_image_thumbnail(@image,"small").should match(/data-phocoder-waiting="true"/)
       end
       
       it "should return a local url for a known thumbnail" do
@@ -181,7 +181,7 @@ describe PhocoderHelper do
   
     it "should render a pending img for a vid that is not ready" do
       vid = ImageUpload.new(:content_type=>'video/quicktime',:zencoder_status=>'s3',:id=>1,:filename=>"test.mov")
-      phocoder_video_thumbnail(vid,"small",true).should match("text/javascript")
+      phocoder_video_thumbnail(vid,"small",true).should match(/data-phocoder-waiting="true"/)
     end
     
     it "should render an image for a video that is ready but live_video = false" do

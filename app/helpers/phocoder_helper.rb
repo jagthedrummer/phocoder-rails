@@ -157,50 +157,51 @@ module PhocoderHelper
   
   def pending_phocoder_thumbnail(photo,thumbnail,live_video,thumbnail_atts,spinner='waiting')
     random = ActiveSupport::SecureRandom.hex(16)
-    elemId = "#{photo.class.to_s}_#{photo.id.to_s}_#{random}"
     #updater = remote_function(:update=>elemId)
+    elemId = "#{photo.class.to_s}_#{photo.id.to_s}_#{thumbnail}_#{random}"
     width = thumbnail_atts[:width]
     height = thumbnail_atts[:height]
-    tag = %[<span id="#{elemId}">
-              #{ image_tag "#{spinner}.gif", :size=>"#{width}x#{height}" }
-              ]
-    if ActsAsPhocodable.javascript_library == 'prototype'
-      tag += prototype_updater(photo,thumbnail,random)
-    else
-      tag += jquery_updater(photo,thumbnail,random)
-    end
-    tag += %[</span>]
-    tag.html_safe
+    tag = image_tag "#{spinner}.gif", :size=>"#{width}x#{height}", :id => elemId, "data-phocoder-waiting" => true
+    #tag = %[<span id="#{elemId}">
+    #          #{ image_tag "#{spinner}.gif", :size=>"#{width}x#{height}" }
+    #          ]
+    #if ActsAsPhocodable.javascript_library == 'prototype'
+    #  tag += prototype_updater(photo,thumbnail,random)
+    #else
+    #  tag += jquery_updater(photo,thumbnail,random)
+    #end
+    #tag += %[</span>]
+    #tag.html_safe
   end
 
 
-  def jquery_updater(photo,thumbnail,random)
-    %[
-            <script type="text/javascript">
-              setTimeout(function() {
-                $.ajax({ type: 'POST',
-                         url : '/phocoder/thumbnail_update.js',
-                         dataType : 'script',
-                         data : { class:'#{photo.class.to_s}', id:#{photo.id.to_s},thumbnail:'#{thumbnail}',random:'#{random}' }
-                });
-              },#{preview_reload_timeout});
-            </script>   
-    ]
-  end
+  #def jquery_updater(photo,thumbnail,random)
+  #  %[
+  #          <script type="text/javascript">
+  #            setTimeout(function() {
+  #              $.ajax({ type: 'POST',
+  #                       url : '/phocoder/thumbnail_update.js',
+  #                       dataType : 'script',
+  #                       data : { class:'#{photo.class.to_s}', id:#{photo.id.to_s},thumbnail:'#{thumbnail}',random:'#{random}' }
+  #              });
+  #            },#{preview_reload_timeout});
+  #          </script>   
+  #  ]
+  #end
 
 
 
-  def prototype_updater(photo,thumbnail,random)
-    %[
-            <script type="text/javascript">
-              setTimeout(function() {
-                new Ajax.Request( '/phocoder/thumbnail_update', {
-                    evalScripts:true,
-                    parameters: { class:'#{photo.class.to_s}', id:#{photo.id.to_s},thumbnail:'#{thumbnail}',random:'#{random}' }
-                });
-              },#{preview_reload_timeout});
-            </script>   
-    ]
-  end
+  #def prototype_updater(photo,thumbnail,random)
+  #  %[
+  #          <script type="text/javascript">
+  #            setTimeout(function() {
+  #              new Ajax.Request( '/phocoder/thumbnail_update', {
+  #                  evalScripts:true,
+  #                  parameters: { class:'#{photo.class.to_s}', id:#{photo.id.to_s},thumbnail:'#{thumbnail}',random:'#{random}' }
+  #              });
+  #            },#{preview_reload_timeout});
+  #          </script>   
+  #  ]
+  #end
 
 end
