@@ -29,7 +29,7 @@ Dir["#{File.dirname(__FILE__)}/support/**/*.rb"].each { |f| require f }
 RSpec.configure do |config|
   
   # run only the debug tests
-  # config.filter_run :debug => true
+   config.filter_run :debug => true
   
   # Remove this line if you don't want RSpec's should and should_not
   # methods or matchers

@@ -68,39 +68,81 @@ module PhocoderHelper
 #  end
   
   
-  def phocoder_video_thumbnail(image_upload,thumbnail="small",live_video = true,options={})
-    thumbnail_atts = image_upload.class.thumbnail_attributes_for thumbnail
-    if image_upload.encodable_status != 'ready'
-      pending_phocoder_thumbnail(image_upload,thumbnail,true,thumbnail_atts)
-    elsif live_video
-      phocoder_video_embed(image_upload,thumbnail_atts,options)
-    else # Video stuff needs work.
-      tag =  %[<span class="phocoder_video_poster">]
-      tag += phocoder_image_thumbnail(image_upload, thumbnail,options)
-      tag += %[<img src="/images/play_small.png" alt="Play" width="25" height="25" class="play"/>]
-      tag += "</span>"
-      tag.html_safe
+  # Passing a thumbnail is STRONGLY ADVISED
+  # Unless you are abosultely sure that you are only accepting web safe image formats you'll want to supply a thumbnail arg
+  # 
+  def phocoder_image_thumbnail(image_upload,thumbnail="small",options={})
+    return display_image(image_upload,options) if thumbnail.blank?
+    thumbnail = find_or_create_thumbnail(image_upload,thumbnail,options)
+    return display_image_thumbnail(image_upload,thumbnail,options) if thumbnail
+    return error_div "Could not find a thumbnail for: class=#{image_upload.class} thumbnail=#{thumbnail.to_json}"
+  end
+  
+  def find_or_create_thumbnail(image_upload,thumbnail="small",options={})
+    if thumbnail.is_a? String
+      thumbnail = image_upload.thumbnail_for(thumbnail)
+    end
+    thumbnail
+  end
+  
+  def display_image(image_upload,options={})
+    
+  end
+  
+  # image     = the original upload
+  # thumbnail = a record representing the dimensions of the thumbnail
+  # options   = some other stuff
+  def display_image_thumbnail(image_upload,thumbnail,options)
+    puts "Thumbnail = #{thumbnail.to_json}"
+    if ActsAsPhocodable.storeage_mode == "offline"
+      offline_phocoder_image_thumbnail(image_upload,thumbnail,options)
+    elsif thumbnail.encodable_status != "ready"
+      pending_phocoder_thumbnail(image_upload,thumbnail,false,options)
+    else
+      image_tag thumbnail.public_url, {:width => thumbnail[:width],:height => thumbnail[:height]}.merge(options) 
     end
   end
   
-  
-  
-  def phocoder_video_embed(image_upload,thumbnail_atts,options={} )
-    options.merge!(:video => image_upload, :width=>image_upload.calc_width(thumbnail_atts),:height=>image_upload.calc_height(thumbnail_atts))
-    render(:partial => 'phocoder/video_embed', :locals => options)
+  # A special handler when the mode is 'offline'
+  # The thumbnail record will contain the proper dimensions, but the path will be no good.
+  # This combines the path of the original with the dimensions of the original and serves from the local store.
+  def offline_phocoder_image_thumbnail(photo,thumbnail_atts,options={})
+    image_tag photo.local_url, {:width => thumbnail_atts[:width],:height => thumbnail_atts[:height]}.merge(options) 
+    #if thumbnail_atts.blank?
+    #  image_tag photo.local_url, options
+    #elsif thumbnail_atts[:aspect_mode] == "stretch" 
+    #  
+    #else
+    #  "<div style='overflow:hidden;background:#ccc;width:#{thumbnail_atts[:width]}px;height:#{thumbnail_atts[:height]}px'>#{image_tag(photo.local_url,{:width => thumbnail_atts[:width]}.merge(options))}</div>".html_safe
+    #end
   end
   
   
-  def offline_phocoder_video_embed(image_upload,thumbnail_atts,options={} )
-    options.merge!(:video => image_upload, :width=>image_upload.calc_width(thumbnail_atts),:height=>image_upload.calc_height(thumbnail_atts))
-    render(:partial => 'phocoder/offline_video_embed', :locals => options)
+  
+  
+  def pending_phocoder_thumbnail(photo,thumbnail,options,spinner='waiting')
+    random = ActiveSupport::SecureRandom.hex(16)
+    elemId = "#{photo.class.to_s}_#{photo.id.to_s}_#{thumbnail.thumbnail}_#{random}"
+    width = thumbnail.width
+    height = thumbnail.height
+    tag = image_tag "#{spinner}.gif", :size=>"#{width}x#{height}", :id => elemId, "data-phocoder-waiting" => true
   end
   
+  
+  
+  
+  
+  
+  
+  
+  def phocoder_image_thumbnail_offline(image_upload,thumbnail="small",options={})  
+    
+  end
   
   # for now we'll assume that a thumbnail is needed
   # some files aren't displayable in a native way (NEF etc...)
   # 
-  def phocoder_image_thumbnail(image_upload,thumbnail="small",options={})  
+  def old_phocoder_image_thumbnail(image_upload,thumbnail="small",options={})  
     puts "thumbnail = #{thumbnail}"
     thumbnail_atts = image_upload.class.thumbnail_attributes_for thumbnail
     if ActsAsPhocodable.storeage_mode == "offline" and (thumbnail.blank? or !thumbnail_atts.blank?)
@@ -140,39 +182,38 @@ module PhocoderHelper
   end
   
   
-  def offline_phocoder_image_thumbnail(photo,thumbnail_atts,options={})
-    if thumbnail_atts.blank?
-      image_tag photo.local_url, options
-    #elsif thumbnail_atts[:aspect_mode].blank? or thumbnail_atts[:aspect_mode] == "preserve" 
-      #implement handling for a certain size
-      #image_tag photo.local_url, :width => thumbnail_atts[:width]
-    elsif thumbnail_atts[:aspect_mode] == "stretch" 
-      image_tag photo.local_url, {:width => thumbnail_atts[:width],:height => thumbnail_atts[:height]}.merge(options)
-    else
-    #elsif thumbnail_atts[:aspect_mode] == "pad" or thumbnail_atts[:aspect_mode] == "crop"
-      "<div style='overflow:hidden;background:#ccc;width:#{thumbnail_atts[:width]}px;height:#{thumbnail_atts[:height]}px'>#{image_tag(photo.local_url,{:width => thumbnail_atts[:width]}.merge(options))}</div>".html_safe
+  
+  
+  
+  
+  def phocoder_video_thumbnail(image_upload,thumbnail="small",live_video = true,options={})
+    thumbnail_atts = image_upload.class.thumbnail_attributes_for thumbnail
+    if image_upload.encodable_status != 'ready'
+      pending_phocoder_thumbnail(image_upload,thumbnail,true,thumbnail_atts)
+    elsif live_video
+      phocoder_video_embed(image_upload,thumbnail_atts,options)
+    else # Video stuff needs work.
+      tag =  %[<span class="phocoder_video_poster">]
+      tag += phocoder_image_thumbnail(image_upload, thumbnail,options)
+      tag += %[<img src="/images/play_small.png" alt="Play" width="25" height="25" class="play"/>]
+      tag += "</span>"
+      tag.html_safe
     end
   end
   
   
-  def pending_phocoder_thumbnail(photo,thumbnail,live_video,thumbnail_atts,spinner='waiting')
-    random = ActiveSupport::SecureRandom.hex(16)
-    #updater = remote_function(:update=>elemId)
-    elemId = "#{photo.class.to_s}_#{photo.id.to_s}_#{thumbnail}_#{random}"
-    width = thumbnail_atts[:width]
-    height = thumbnail_atts[:height]
-    tag = image_tag "#{spinner}.gif", :size=>"#{width}x#{height}", :id => elemId, "data-phocoder-waiting" => true
-    #tag = %[<span id="#{elemId}">
-    #          #{ image_tag "#{spinner}.gif", :size=>"#{width}x#{height}" }
-    #          ]
-    #if ActsAsPhocodable.javascript_library == 'prototype'
-    #  tag += prototype_updater(photo,thumbnail,random)
-    #else
-    #  tag += jquery_updater(photo,thumbnail,random)
-    #end
-    #tag += %[</span>]
-    #tag.html_safe
+  
+  def phocoder_video_embed(image_upload,thumbnail_atts,options={} )
+    options.merge!(:video => image_upload, :width=>image_upload.calc_width(thumbnail_atts),:height=>image_upload.calc_height(thumbnail_atts))
+    render(:partial => 'phocoder/video_embed', :locals => options)
   end
+  
+  
+  def offline_phocoder_video_embed(image_upload,thumbnail_atts,options={} )
+    options.merge!(:video => image_upload, :width=>image_upload.calc_width(thumbnail_atts),:height=>image_upload.calc_height(thumbnail_atts))
+    render(:partial => 'phocoder/offline_video_embed', :locals => options)
+  end
+ 
 
 
   #def jquery_updater(photo,thumbnail,random)
