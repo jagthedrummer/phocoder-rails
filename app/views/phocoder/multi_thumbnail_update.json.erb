@@ -1,0 +1,7 @@
+{
+  <% @outputs.each_with_index do |output,i| %>
+    <% @img = output[:encodable] %>
+    <% @random = output[:random] %>
+    "<%= output[:elem_id] %>" : "<%= escape_javascript(render(:partial=>"thumbnail_update.html.erb", :locals => {:params => output} )) %>" <%= "," if i != 0  %>
+  <% end %>
+}

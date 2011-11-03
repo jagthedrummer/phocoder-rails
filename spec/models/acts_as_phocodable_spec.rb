@@ -529,7 +529,11 @@ describe ActsAsPhocodable do
     #}))
     thumb.save
     
-    
+    stub_request(:get, "http://production.webapeel.com/octolabs/themes/octolabs/images/octologo.png").
+      with(:headers => {'Accept'=>'*/*'}).
+      to_return(:status => 200, :body => webmock_file("octologo.png"), :headers => {})
+     
+     
     ImageUpload.update_from_phocoder({:output=>{:id=>1,:width=>10,:height=>20,:file_size=>30,:url=>"http://production.webapeel.com/octolabs/themes/octolabs/images/octologo.png" }})
     
     thumb.reload
@@ -557,32 +561,25 @@ describe ActsAsPhocodable do
       "job"=>{
         "id"=>1,
         "inputs"=>[{"id"=>1}],
-        "thumbnails"=>[{"label"=>"small","filename"=>"small-test-file.jpg","id"=>1}]
+        "thumbnails"=>[{"label"=>"small","filename"=>"small-test-thumbnail.jpg","id"=>1}]
       }
     }))
     
-    #now store in S3 + phocode
+    #This save will work since we're in delayed mode
     iu.save
-    
-    #it should not be in S3 yet
-    lambda{
-      o = AWS::S3::S3Object.find(key,bucket)
-    }.should raise_error(Exception)
+    # No thumbnail should be created yet
+    iu.thumbnails.size.should == 0
+    # Mock the AWS reqeust for storing 
+    AWS::S3::S3Object.should_receive(:store).and_return(nil)
+    # Mock the AWS request for checking file size
+    AWS::S3::S3Object.should_receive(:find).and_return( mock(:size => 19494) )
     
     iu.save_s3_file
-    
-    bucket = iu.s3_bucket_name
-    key = iu.s3_key
-    lambda{
-      o = AWS::S3::S3Object.find(key,bucket)
-    }.should_not raise_error(Exception)
-    
+    # Now we should have a thumb
+    iu.thumbnails.size.should == 1
+    # Mock the AWS reqeust for deleting the file and it's thumbnail
+    AWS::S3::S3Object.should_receive(:delete).twice.and_return(nil)
     iu.destroy
-    #after destroy the file should not be in S3 anymore
-    lambda{
-      o = AWS::S3::S3Object.find(key,bucket)
-    }.should raise_error(Exception)
-    
   end
   
   
@@ -600,21 +597,15 @@ describe ActsAsPhocodable do
       }
     }))
     
+    # Mock the AWS reqeust for storing 
+    AWS::S3::S3Object.should_receive(:store).and_return(nil)
+    # Mock the AWS request for checking file size
+    AWS::S3::S3Object.should_receive(:find).and_return( mock(:size => 19494) )
     #now store in S3 + phocode
     iu.save
-    
-    bucket = iu.s3_bucket_name
-    key = iu.s3_key
-    lambda{
-      o = AWS::S3::S3Object.find(key,bucket)
-    }.should_not raise_error(Exception)
+    iu.thumbnails.size.should == 1 
     
     iu.destroy
-    #after destroy the file should not be in S3 anymore
-    lambda{
-      o = AWS::S3::S3Object.find(key,bucket)
-    }.should raise_error(Exception)
-    
   end
   
   
@@ -635,21 +626,16 @@ describe ActsAsPhocodable do
       }
     }))
     
+    # Mock the AWS reqeust for storing 
+    AWS::S3::S3Object.should_receive(:store).and_return(nil)
+    # Mock the AWS request for checking file size
+    AWS::S3::S3Object.should_receive(:find).and_return( mock(:size => 19494) )
+    
     #now store in S3 + phocode
     iu.save
+    iu.thumbnails.size.should == 1
     
-    bucket = iu.s3_bucket_name
-    key = iu.s3_key
-    lambda{
-      o = AWS::S3::S3Object.find(key,bucket)
-    }.should_not raise_error(Exception)
-    
-    iu.destroy
-    #after destroy the file should not be in S3 anymore
-    lambda{
-      o = AWS::S3::S3Object.find(key,bucket)
-    }.should raise_error(Exception)
-    
+    iu.destroy 
   end
   
   

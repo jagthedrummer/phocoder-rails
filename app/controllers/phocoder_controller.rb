@@ -1,6 +1,6 @@
 class PhocoderController < ApplicationController
   
-  protect_from_forgery :except=>[:phocoder_notification_update,:zencoder_notification_update,:thumbnail_update]  
+  protect_from_forgery :except=>[:phocoder_notification_update,:zencoder_notification_update,:thumbnail_update,:multi_thumbnail_update]  
   
   def phocoder_notification_update
     full_params = nil
@@ -63,6 +63,27 @@ class PhocoderController < ApplicationController
     @live_vide = params[:live_video]
     respond_to do |format|
       format.js {}
+    end
+  end
+  
+  def multi_thumbnail_update
+    @outputs = []
+    params[:encodables].each do |encodable|
+      # Format ex : Image_1_medium_db0ce8ba5d55c25eee7c767220d654fe
+      # Format is : class_id_thumbnail_random
+      match = encodable.match /^(.*)_(.*)_(.*)_(.*)$/
+      hash = { 
+        :elem_id     => encodable,
+        :class_name  => match[1],
+        :id          => match[2],
+        :thumbnail   => match[3],
+        :random      => match[4],
+        :encodable   => Kernel.const_get(match[1]).find(match[2]) 
+      }
+      @outputs << hash
+    end
+    respond_to do |format|
+      format.json {}
     end
   end
   

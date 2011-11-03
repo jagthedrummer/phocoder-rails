@@ -3,7 +3,7 @@ ENV["RAILS_ENV"] = "test"
 
 require File.expand_path("../dummy/config/environment.rb",  __FILE__)
 require "rspec/rails"
-
+require 'webmock/rspec'
 
 ActionMailer::Base.delivery_method = :test
 ActionMailer::Base.perform_deliveries = true
@@ -28,8 +28,8 @@ Dir["#{File.dirname(__FILE__)}/support/**/*.rb"].each { |f| require f }
 
 RSpec.configure do |config|
   
-  #run only the debug tests
-  #config.filter_run :debug => true
+  # run only the debug tests
+  # config.filter_run :debug => true
   
   # Remove this line if you don't want RSpec's should and should_not
   # methods or matchers
@@ -60,3 +60,16 @@ RSpec.configure do |config|
   }
 end
 
+ # webmock
+def webmock_site_base_dir
+  "../fixtures" 
+end
+
+def webmock_filename(f)
+  File.join Rails.root, webmock_site_base_dir, f
+end
+
+def webmock_file(f = nil)
+  f ||= "%s.xml" % @site.anchor
+  File.new webmock_filename(f)
+end
