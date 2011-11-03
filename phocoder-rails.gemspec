@@ -5,11 +5,11 @@
 
 Gem::Specification.new do |s|
   s.name = %q{phocoder-rails}
-  s.version = "0.0.27"
+  s.version = "0.0.28"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = [%q{Jeremy Green}]
-  s.date = %q{2011-10-29}
+  s.date = %q{2011-11-03}
   s.description = %q{Rails engine for easy integration with phocoder.com}
   s.email = %q{jagthedrummer@gmail.com}
   s.extra_rdoc_files = [
@@ -32,6 +32,7 @@ Gem::Specification.new do |s|
     "app/views/phocoder/_offline_video_embed.html.erb",
     "app/views/phocoder/_thumbnail_update.html.erb",
     "app/views/phocoder/_video_embed.html.erb",
+    "app/views/phocoder/multi_thumbnail_update.json.erb",
     "app/views/phocoder/thumbnail_update.js.erb",
     "config/routes.rb",
     "lib/generators/phocoder_rails/model_update_generator.rb",
@@ -59,6 +60,7 @@ Gem::Specification.new do |s|
     "public/images/play_small.png",
     "public/images/storing.gif",
     "public/images/waiting.gif",
+    "public/javascripts/phocodable.js",
     "public/javascripts/video-js-2.0.2/.DS_Store",
     "public/javascripts/video-js-2.0.2/LICENSE.txt",
     "public/javascripts/video-js-2.0.2/README.markdown",
@@ -73,8 +75,16 @@ Gem::Specification.new do |s|
     "spec/controllers/phocoder_controller_spec.rb",
     "spec/dummy/Rakefile",
     "spec/dummy/app/controllers/application_controller.rb",
+    "spec/dummy/app/controllers/images_controller.rb",
     "spec/dummy/app/helpers/application_helper.rb",
+    "spec/dummy/app/helpers/images_helper.rb",
+    "spec/dummy/app/models/image.rb",
+    "spec/dummy/app/models/image_thumbnail.rb",
     "spec/dummy/app/models/image_upload.rb",
+    "spec/dummy/app/views/images/_form.html.erb",
+    "spec/dummy/app/views/images/index.html.erb",
+    "spec/dummy/app/views/images/new.html.erb",
+    "spec/dummy/app/views/images/show.html.erb",
     "spec/dummy/app/views/layouts/application.html.erb",
     "spec/dummy/config.ru",
     "spec/dummy/config/application.rb",
@@ -94,6 +104,7 @@ Gem::Specification.new do |s|
     "spec/dummy/db/migrate/001_create_image_uploads.rb",
     "spec/dummy/db/migrate/20110523165213_add_parent_type_to_image_uploads.rb",
     "spec/dummy/db/migrate/20110523165522_create_encodable_jobs.rb",
+    "spec/dummy/db/migrate/20111101024507_create_images.rb",
     "spec/dummy/db/schema.rb",
     "spec/dummy/public/404.html",
     "spec/dummy/public/422.html",
@@ -104,17 +115,20 @@ Gem::Specification.new do |s|
     "spec/dummy/public/javascripts/controls.js",
     "spec/dummy/public/javascripts/dragdrop.js",
     "spec/dummy/public/javascripts/effects.js",
+    "spec/dummy/public/javascripts/jquery-1.6.4.js",
     "spec/dummy/public/javascripts/prototype.js",
     "spec/dummy/public/javascripts/rails.js",
     "spec/dummy/public/stylesheets/.gitkeep",
     "spec/dummy/script/rails",
     "spec/engine_spec.rb",
     "spec/fixtures/big_eye_tiny.jpg",
+    "spec/fixtures/octologo.png",
     "spec/fixtures/test.txt",
     "spec/fixtures/video-test.mov",
     "spec/helpers/phocoder_helper_spec.rb",
     "spec/integration/navigation_spec.rb",
     "spec/models/acts_as_phocodable_spec.rb",
+    "spec/models/encodable_job_spec.rb",
     "spec/phocoder_rails_spec.rb",
     "spec/routing/phocoder_routing_spec.rb",
     "spec/spec_helper.rb"
@@ -127,7 +141,11 @@ Gem::Specification.new do |s|
   s.test_files = [
     "spec/controllers/phocoder_controller_spec.rb",
     "spec/dummy/app/controllers/application_controller.rb",
+    "spec/dummy/app/controllers/images_controller.rb",
     "spec/dummy/app/helpers/application_helper.rb",
+    "spec/dummy/app/helpers/images_helper.rb",
+    "spec/dummy/app/models/image.rb",
+    "spec/dummy/app/models/image_thumbnail.rb",
     "spec/dummy/app/models/image_upload.rb",
     "spec/dummy/config/application.rb",
     "spec/dummy/config/boot.rb",
@@ -144,11 +162,13 @@ Gem::Specification.new do |s|
     "spec/dummy/db/migrate/001_create_image_uploads.rb",
     "spec/dummy/db/migrate/20110523165213_add_parent_type_to_image_uploads.rb",
     "spec/dummy/db/migrate/20110523165522_create_encodable_jobs.rb",
+    "spec/dummy/db/migrate/20111101024507_create_images.rb",
     "spec/dummy/db/schema.rb",
     "spec/engine_spec.rb",
     "spec/helpers/phocoder_helper_spec.rb",
     "spec/integration/navigation_spec.rb",
     "spec/models/acts_as_phocodable_spec.rb",
+    "spec/models/encodable_job_spec.rb",
     "spec/phocoder_rails_spec.rb",
     "spec/routing/phocoder_routing_spec.rb",
     "spec/spec_helper.rb"
