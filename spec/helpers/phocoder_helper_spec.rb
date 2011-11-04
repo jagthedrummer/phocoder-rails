@@ -1,6 +1,6 @@
 require File.expand_path(File.dirname(__FILE__) + '/../spec_helper')
 
-describe PhocoderHelper, :debug=>true do
+describe PhocoderHelper do #, :debug=>true
   
   before(:each) do
     @attr = { :file => fixture_file_upload(fixture_path + '/big_eye_tiny.jpg','image/jpeg'),:width => 200,:height=>197 }
@@ -70,22 +70,71 @@ describe PhocoderHelper, :debug=>true do
   
   describe "phocoder_image_thumbnail" do
     
-    it "should call display_image when the thumbnail is blank" do
-      helper.should_receive(:display_image).and_return(nil)
+    it "should call phocoder_image_offline if mode is offline" do
+      ActsAsPhocodable.storeage_mode = "offline"
+      helper.should_receive(:phocoder_image_offline).and_return(nil)
       helper.phocoder_image_thumbnail(@image,nil,{})
     end
     
-    it "should call find_or_create_thumbnail and then call display_thumbnail if a thumbnail is found" do
-      helper.should_receive(:find_or_create_thumbnail).and_return(@image)
-      helper.should_receive(:display_image_thumbnail).and_return(nil)
-      helper.phocoder_image_thumbnail(@image,"test_thumb",{})
+    it "should call phocoder_image_online if mode is not offline" do
+      ActsAsPhocodable.storeage_mode = "local"
+      helper.should_receive(:phocoder_image_online).and_return(nil)
+      helper.phocoder_image_thumbnail(@image,nil,{})
     end
     
-    it "should call find_or_create_thumbnail and then call error_div if a thumbnail is not found" do
-      helper.should_receive(:find_or_create_thumbnail).and_return(nil)
-      helper.should_receive(:error_div).and_return(nil)
-      helper.phocoder_image_thumbnail(@image,"test_thumb",{})
+    #it "should call display_image when the thumbnail is blank" do
+    #  helper.should_receive(:display_image).and_return(nil)
+    #  helper.phocoder_image_thumbnail(@image,nil,{})
+    #end
+    
+    #it "should call find_or_create_thumbnail and then call display_thumbnail if a thumbnail is found" do
+    #  helper.should_receive(:find_or_create_thumbnail).and_return(@image)
+    #  helper.should_receive(:display_image_thumbnail).and_return(nil)
+    #  helper.phocoder_image_thumbnail(@image,"test_thumb",{})
+    #end
+    
+    #it "should call find_or_create_thumbnail and then call error_div if a thumbnail is not found" do
+    #  helper.should_receive(:find_or_create_thumbnail).and_return(nil)
+    #  helper.should_receive(:error_div).and_return(nil)
+    #  helper.phocoder_image_thumbnail(@image,"test_thumb",{})
+    #end
+  end
+  
+  describe "phocoder_image_offline" do
+    it "should return an image tag when image.web_safe? and thumbnail.blank?" do
+      output = phocoder_image_offline(@image,nil,{})
+      output.should match /<img/
+      output.should_not match /width/
+      output.should match @image.filename # the path in the thumbnail
     end
+    
+    it "should return an error when !image.web_safe? and thumbnail.blank?" do
+      @image.content_type = "image/x-nikon-nef"
+      @image.web_safe?.should be_false
+      output = helper.phocoder_image_offline(@image,nil,{})
+      output.should match /phocoder_error/
+      output.should match @image.content_type
+    end
+    
+    it "should call find_or_create_thumbnail when !thumbnail.blank?" do
+      helper.should_receive(:find_or_create_thumbnail).and_return(@image)
+      helper.phocoder_image_offline(@image,"small",{})
+    end
+    
+    it "should return an error if a thumbnail is no found" do
+      output = helper.phocoder_image_offline(@image,"bad-thumb",{})
+      output.should match /phocoder_error/
+      output.should match /bad-thumb/
+    end
+    
+    it "should return an image for the thumbnail if it's found and ready?" do
+      pending "do this look at moving the stuff below.  Refactor that shit!"
+    end
+    
+    it "should return a pending image for the thumbnail if it's found and !ready?" do
+      pending "do this"
+    end
+    
   end
   
   describe "display_image" do 

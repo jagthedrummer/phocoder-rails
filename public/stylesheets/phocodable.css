@@ -11,3 +11,9 @@ span.phocoder_video_poster .play{
 	left:5px;
 	border:0px !important;
 }
+
+.phocoder_error{
+  border:1px solid red;
+  background:#fee;
+  padding:10px;
+}

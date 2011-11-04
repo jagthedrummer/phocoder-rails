@@ -72,22 +72,56 @@ module PhocoderHelper
   # Unless you are abosultely sure that you are only accepting web safe image formats you'll want to supply a thumbnail arg
   # 
   def phocoder_image_thumbnail(image_upload,thumbnail="small",options={})
-    return display_image(image_upload,options) if thumbnail.blank?
-    thumbnail = find_or_create_thumbnail(image_upload,thumbnail,options)
-    return display_image_thumbnail(image_upload,thumbnail,options) if thumbnail
-    return error_div "Could not find a thumbnail for: class=#{image_upload.class} thumbnail=#{thumbnail.to_json}"
+    if ActsAsPhocodable.storeage_mode == "offline"
+      phocoder_image_offline(image_upload,thumbnail,options)
+    else
+      phocoder_image_online(image_upload,thumbnail,options)
+    end
+    #return display_image(image_upload,options) if thumbnail.blank?
+    #thumbnail = find_or_create_thumbnail(image_upload,thumbnail,options)
+    #return display_image_thumbnail(image_upload,thumbnail,options) if thumbnail
+    #return error_div "Could not find a thumbnail for: class=#{image_upload.class} thumbnail=#{thumbnail.to_json}"
+  end
+  
+  def phocoder_image_offline(image_upload,thumbnail="small",options={})
+    if !image_upload.web_safe?
+      error_div "#{image_upload.filename} can not be displayed directly because it is not web safe. Content type = #{image_upload.content_type}"
+    elsif thumbnail.blank? 
+      image_tag(image_upload.public_url,options)   
+    else
+      begin
+        thumb = find_or_create_thumbnail(image_upload,thumbnail,options)
+        if thumb.encodable_status == "ready"
+          # since we're in offline mode here we don't actually have files created for the thumbnail
+          # so we return an image with the path to the 
+          image_tag image_upload.public_url, {:width => thumbnail[:width],:height => thumbnail[:height]}.merge(options) 
+        else
+          pending_phocoder_thumbnail(image_upload,thumb,false,options)
+        end
+      rescue ActsAsPhocodable::ThumbnailNotFoundError
+        error_div "'#{thumbnail}' is not a valid thumbnail name or size string."
+      end
+    end
+  end
+  
+  def phocoder_image_online(image_upload,thumbnail="small",options={})
+    
+  end
+  
+  def display_image(image_upload,options={})
+    if ActsAsPhocodable.storeage_mode == "offline"
+      offline_phocoder_image_thumbnail(image_upload,image_upload,options)
+    end
   end
   
   def find_or_create_thumbnail(image_upload,thumbnail="small",options={})
     if thumbnail.is_a? String
-      thumbnail = image_upload.thumbnail_for(thumbnail)
+      thumb = image_upload.thumbnail_for(thumbnail)
     end
-    thumbnail
+    thumb
   end
   
-  def display_image(image_upload,options={})
-    
-  end
+  
   
   # image     = the original upload
   # thumbnail = a record representing the dimensions of the thumbnail
@@ -128,7 +162,11 @@ module PhocoderHelper
     tag = image_tag "#{spinner}.gif", :size=>"#{width}x#{height}", :id => elemId, "data-phocoder-waiting" => true
   end
   
-  
+  def error_phocoder_thumbnail(photo,thumbnail,options,spinner='error')
+    width = thumbnail.try :width
+    height = thumbnail.try :height
+    tag = image_tag "#{spinner}.gif", :size=>"#{width}x#{height}"
+  end
   
   
   
@@ -169,7 +207,7 @@ module PhocoderHelper
   
   
   def error_div(msg)
-    %[<div style="border:1px solid red;background:#fee;padding:10px;">#{msg}</div>].html_safe
+    %[<div class="phocoder_error">#{msg}</div>].html_safe
   end
   
   

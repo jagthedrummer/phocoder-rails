@@ -59,43 +59,57 @@ module ActsAsPhocodable
   mattr_accessor :config_file
   self.config_file = "config/phocodable.yml"
   
-  # The list of content types that will trigger image handling.
-  mattr_accessor :image_types
-  self.image_types = [
-      'image/jpeg',
-      'image/pjpeg',
-      'image/jpg',
-      'image/gif',
-      'image/png',
-      'image/x-png',
-      'image/jpg',
-      'image/x-ms-bmp',
-      'image/bmp',
-      'image/x-bmp',
-      'image/x-bitmap',
-      'image/x-xbitmap',
-      'image/x-win-bitmap',
-      'image/x-windows-bmp',
-      'image/ms-bmp',
-      'application/bmp',
-      'application/x-bmp',
-      'application/x-win-bitmap',
-      'application/preview',
-      'image/jp_',
-      'application/jpg',
-      'application/x-jpg',
-      'image/pipeg',
-      'image/vnd.swiftview-jpeg',
-      'image/x-xbitmap',
-      'application/png',
-      'application/x-png',
-      'image/gi_',
-      'image/x-citrix-pjpeg',
-      'image/x-nikon-nef',
-      'image/tiff',
-      'image/x-olympus-orf',
-      'image/x-dcraw'
+  
+  # The list of image content types that are considered web safe
+  # These can be displayed directly, skipping processing if in offline mode
+  mattr_accessor :web_safe_image_types
+  self.web_safe_image_types = [
+    'image/jpeg',
+    'image/jpg',
+    'image/gif',
+    'image/png',
+    'image/x-png',
+    'image/jpg',
+    'application/png',
+    'application/x-png'
   ]
+  
+  # The list of image content types that are not considered web safe
+  # These can not be displayed directly
+  mattr_accessor :other_image_types
+  self.other_image_types = [
+    'image/pjpeg',
+    'image/x-ms-bmp',
+    'image/bmp',
+    'image/x-bmp',
+    'image/x-bitmap',
+    'image/x-xbitmap',
+    'image/x-win-bitmap',
+    'image/x-windows-bmp',
+    'image/ms-bmp',
+    'application/bmp',
+    'application/x-bmp',
+    'application/x-win-bitmap',
+    'application/preview',
+    'image/jp_',
+    'application/jpg',
+    'application/x-jpg',
+    'image/pipeg',
+    'image/vnd.swiftview-jpeg',
+    'image/x-xbitmap',
+    'image/gi_',
+    'image/x-citrix-pjpeg',
+    'image/x-nikon-nef',
+    'image/tiff',
+    'image/x-olympus-orf',
+    'image/x-dcraw'
+  ]
+  
+  # The list of content types that will trigger image handling.
+  def image_types
+    web_safe_image_types + other_image_types
+  end
+
   
   # The list of content types that will trigger video handling.
   mattr_accessor :video_types
@@ -127,11 +141,17 @@ module ActsAsPhocodable
     "wmv" => "wmv"
   }
   
+  # TODO : This needs to be fixed.
+  # It currently matches anything with an 'x' in it
   mattr_accessor :label_size_regex
   self.label_size_regex = /(\d*)x(\d*)([!>]?)/
   
   def image?(content_type)
     image_types.include?(content_type)
+  end
+  
+  def web_safe?(content_type)
+    web_safe_image_types.include?(content_type)
   end
   
   def video?(content_type)
@@ -327,6 +347,10 @@ module ActsAsPhocodable
     
     def image?
       self.class.image?(content_type)
+    end
+    
+    def web_safe?
+      self.class.web_safe?(content_type)
     end
     
     def video?
