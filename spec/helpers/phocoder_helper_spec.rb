@@ -101,12 +101,6 @@ describe PhocoderHelper do #, :debug=>true
   end
   
   describe "phocoder_image_offline" do
-    it "should return an image tag when image.web_safe? and thumbnail.blank?" do
-      output = phocoder_image_offline(@image,nil,{})
-      output.should match /<img/
-      output.should_not match /width/
-      output.should match @image.filename # the path in the thumbnail
-    end
     
     it "should return an error when !image.web_safe? and thumbnail.blank?" do
       @image.content_type = "image/x-nikon-nef"
@@ -116,6 +110,13 @@ describe PhocoderHelper do #, :debug=>true
       output.should match @image.content_type
     end
     
+    it "should return an image tag when image.web_safe? and thumbnail.blank?" do
+      output = phocoder_image_offline(@image,nil,{})
+      output.should match /<img/
+      output.should_not match /width/
+      output.should match @image.filename # the path in the thumbnail
+    end
+        
     it "should call find_or_create_thumbnail when !thumbnail.blank?" do
       helper.should_receive(:find_or_create_thumbnail).and_return(@image)
       helper.phocoder_image_offline(@image,"small",{})
@@ -127,14 +128,49 @@ describe PhocoderHelper do #, :debug=>true
       output.should match /bad-thumb/
     end
     
-    it "should return an image for the thumbnail if it's found and ready?" do
-      pending "do this look at moving the stuff below.  Refactor that shit!"
-    end
+    #it "should return an image for the thumbnail if it's found and ready?" do
+    #  pending "do this look at moving the stuff below.  Refactor that shit!"
+    #end
     
-    it "should return a pending image for the thumbnail if it's found and !ready?" do
-      pending "do this"
-    end
+    #it "should return a pending image for the thumbnail if it's found and !ready?" do
+    #  pending "do this"
+    #end
     
+  end
+  
+  describe "phocoder_image_online" do
+    
+    describe "when no thumbnail is passed" do
+      it "should return an error div if !image.web_safe" do
+        @image.content_type = "image/x-nikon-nef"
+        @image.web_safe?.should be_false
+        output = helper.phocoder_image_online(@image,nil,{})
+        output.should match /phocoder_error/
+        output.should match @image.content_type
+      end
+      it "should return an img tag with no width and height if !image.ready? and image.web_safe?" do
+        @image.encodable_status = 'phocoding'
+        output = phocoder_image_online(@image,nil,{})
+        output.should match /<img/
+        output.should_not match /width/
+        output.should match @image.filename # the path in the original
+      end
+      it "should return an img tag with width and height if image.ready? and image.web_safe?" do
+        @image.encodable_status = 'ready'
+        output = phocoder_image_online(@image,nil,{})
+        output.should match /<img/
+        output.should match /width/
+        output.should match @image.filename # the path in the original
+      end
+    end #describe "when no thumbnail is passed" do
+    describe "when a thumbnail string is passed" do
+      it "should " do
+        helper.should_receive(:find_or_create_thumbnail).and_return(@image)
+        helper.phocoder_image_offline(@image,"small",{})
+      end
+    end
+    describe "when a thumbnail hash is passed" do
+    end
   end
   
   describe "display_image" do 

@@ -90,14 +90,10 @@ module PhocoderHelper
       image_tag(image_upload.public_url,options)   
     else
       begin
+        # since we're in offline mode here we don't actually have files created for the thumbnail
+        # so we return an image with the path to the original, we don't care about encodable_status
         thumb = find_or_create_thumbnail(image_upload,thumbnail,options)
-        if thumb.encodable_status == "ready"
-          # since we're in offline mode here we don't actually have files created for the thumbnail
-          # so we return an image with the path to the 
-          image_tag image_upload.public_url, {:width => thumbnail[:width],:height => thumbnail[:height]}.merge(options) 
-        else
-          pending_phocoder_thumbnail(image_upload,thumb,false,options)
-        end
+        image_tag image_upload.public_url, {:width => thumbnail[:width],:height => thumbnail[:height]}.merge(options)
       rescue ActsAsPhocodable::ThumbnailNotFoundError
         error_div "'#{thumbnail}' is not a valid thumbnail name or size string."
       end
@@ -105,7 +101,13 @@ module PhocoderHelper
   end
   
   def phocoder_image_online(image_upload,thumbnail="small",options={})
-    
+    if !image_upload.web_safe?
+      error_div "#{image_upload.filename} can not be displayed directly because it is not web safe. Content type = #{image_upload.content_type}"
+    elsif thumbnail.blank? and !image_upload.ready?
+      image_tag(image_upload.public_url,options)
+    elsif thumbnail.blank?
+      image_tag(image_upload.public_url,options.merge(:width => image_upload.width, :height => image_upload.height))
+    end
   end
   
   def display_image(image_upload,options={})
