@@ -1,7 +1,13 @@
 require File.expand_path(File.dirname(__FILE__) + '/../spec_helper')
 
-describe PhocoderHelper do
+describe PhocoderHelper do #, :debug=>true
   
+  before(:each) do
+    @attr = { :file => fixture_file_upload(fixture_path + '/big_eye_tiny.jpg','image/jpeg'),:width => 200,:height=>197 }
+    @image = ImageUpload.new(@attr)
+    ActsAsPhocodable.storeage_mode = "local"
+    ActsAsPhocodable.processing_mode = "automatic"
+  end
   
   describe "phocoder_includes" do
     it "should include a javascript tag" do
@@ -62,66 +68,207 @@ describe PhocoderHelper do
     end
   end
   
-  
-  describe "phocoder_video_thumbnail" do
-  end
-  
-  
-  
-  describe "phocoder_image_thumbnail" do 
-  
-    before(:each) do
-      #Phocoder::Job.stub!(:create).and_return(mock(Phocoder::Response,:body=>{
-      #  "job"=>{ "id"=>1, "inputs"=>["id"=>1], "thumbnails"=>[] }
-      #}))
-      @attr = { :file => fixture_file_upload(fixture_path + '/big_eye_tiny.jpg','image/jpeg') }
-      @image = ImageUpload.new(@attr)
+  describe "phocoder_image_thumbnail" do
+    
+    it "should call phocoder_image_offline if mode is offline" do
+      ActsAsPhocodable.storeage_mode = "offline"
+      helper.should_receive(:phocoder_image_offline).and_return(nil)
+      helper.phocoder_image_thumbnail(@image,nil,{})
     end
     
-    #after(:each) do
-    #  @image.destroy
+    it "should call phocoder_image_online if mode is not offline" do
+      ActsAsPhocodable.storeage_mode = "local"
+      helper.should_receive(:phocoder_image_online).and_return(nil)
+      helper.phocoder_image_thumbnail(@image,nil,{})
+    end
+    
+    #it "should call display_image when the thumbnail is blank" do
+    #  helper.should_receive(:display_image).and_return(nil)
+    #  helper.phocoder_image_thumbnail(@image,nil,{})
     #end
     
+    #it "should call find_or_create_thumbnail and then call display_thumbnail if a thumbnail is found" do
+    #  helper.should_receive(:find_or_create_thumbnail).and_return(@image)
+    #  helper.should_receive(:display_image_thumbnail).and_return(nil)
+    #  helper.phocoder_image_thumbnail(@image,"test_thumb",{})
+    #end
     
+    #it "should call find_or_create_thumbnail and then call error_div if a thumbnail is not found" do
+    #  helper.should_receive(:find_or_create_thumbnail).and_return(nil)
+    #  helper.should_receive(:error_div).and_return(nil)
+    #  helper.phocoder_image_thumbnail(@image,"test_thumb",{})
+    #end
+  end
+  
+  describe "phocoder_image_offline" do
+    
+    it "should return an error when !image.web_safe? and thumbnail.blank?" do
+      @image.content_type = "image/x-nikon-nef"
+      @image.web_safe?.should be_false
+      output = helper.phocoder_image_offline(@image,nil,{})
+      output.should match /phocoder_error/
+      output.should match @image.content_type
+    end
+    
+    it "should return an image tag when image.web_safe? and thumbnail.blank?" do
+      output = phocoder_image_offline(@image,nil,{})
+      output.should match /<img/
+      output.should_not match /width/
+      output.should match @image.filename # the path in the thumbnail
+    end
+        
+    it "should call find_or_create_thumbnail when !thumbnail.blank?" do
+      helper.should_receive(:find_or_create_thumbnail).and_return(@image)
+      helper.phocoder_image_offline(@image,"small",{})
+    end
+    
+    it "should return an error if a thumbnail is no found" do
+      output = helper.phocoder_image_offline(@image,"bad-thumb",{})
+      output.should match /phocoder_error/
+      output.should match /bad-thumb/
+    end
+    
+    #it "should return an image for the thumbnail if it's found and ready?" do
+    #  pending "do this look at moving the stuff below.  Refactor that shit!"
+    #end
+    
+    #it "should return a pending image for the thumbnail if it's found and !ready?" do
+    #  pending "do this"
+    #end
+    
+  end
+  
+  describe "phocoder_image_online" do
+    
+    describe "when no thumbnail is passed" do
+      it "should return an error div if !image.web_safe" do
+        @image.content_type = "image/x-nikon-nef"
+        @image.web_safe?.should be_false
+        output = helper.phocoder_image_online(@image,nil,{})
+        output.should match /phocoder_error/
+        output.should match @image.content_type
+      end
+      it "should return an img tag with no width and height if !image.ready? and image.web_safe?" do
+        @image.encodable_status = 'phocoding'
+        output = phocoder_image_online(@image,nil,{})
+        output.should match /<img/
+        output.should_not match /width/
+        output.should match @image.filename # the path in the original
+      end
+      it "should return an img tag with width and height if image.ready? and image.web_safe?" do
+        @image.encodable_status = 'ready'
+        output = phocoder_image_online(@image,nil,{})
+        output.should match /<img/
+        output.should match /width/
+        output.should match @image.filename # the path in the original
+      end
+    end #describe "when no thumbnail is passed" do
+    describe "when a thumbnail is passed" do
+      it "should return an img tag for a thumbnail that can be resolved (by label or size string or by being an option hash) and is ready" do
+        ActsAsPhocodable.storeage_mode = "local"
+        @tattr = { :file => fixture_file_upload(fixture_path + '/big_eye_tiny.jpg','image/jpeg'), :width => 100, :height => 100 }
+        @thumb = ImageUpload.new(@tattr)
+        @thumb.filename = "big_eye_tiny_small.jpg"
+        @thumb.encodable_status = "ready"
+        helper.should_receive(:find_or_create_thumbnail).and_return(@thumb)
+        output = helper.phocoder_image_online(@image,"small",{})
+        output.should match /<img/
+        output.should match /width="100"/
+        output.should match @thumb.filename # the path in the thumbnail
+      end
+      it "should call pending_phcoder_thumbnail if the thumb is not ready" do
+        ActsAsPhocodable.storeage_mode = "local"
+        @tattr = { :file => fixture_file_upload(fixture_path + '/big_eye_tiny.jpg','image/jpeg'), :width => 100, :height => 100 }
+        @thumb = ImageUpload.new(@tattr)
+        @thumb.filename = "big_eye_tiny_small.jpg"
+        @thumb.encodable_status = "phocoding"
+        helper.should_receive(:find_or_create_thumbnail).and_return(@thumb)
+        helper.should_receive(:pending_phocoder_thumbnail)
+        output = helper.phocoder_image_online(@image,"small",{})
+      end
+      it "should return an error div if the thumb can not be resolved" do
+        output = helper.phocoder_image_offline(@image,"bad-thumb",{})
+        output.should match /phocoder_error/
+        output.should match /bad-thumb/
+      end
+    end
+  end # describe "when a thumbnail is passed" do
+  
+  describe "display_image" do 
+    
+  end
+  
+  describe "find_or_create_thumbnail" do
+    it "should call @image.thumbnail_for if the thumbnail attribute is a String" do
+      @image.should_receive(:thumbnail_for)
+      helper.find_or_create_thumbnail(@image,"some_thumb")
+    end
+  end
+  
+#  describe "display_image_thumbnail" do
+#    it "in offline mode it should call offline_phocoder_image_thumbnail" do
+#      ActsAsPhocodable.storeage_mode = "offline"
+#      helper.should_receive(:offline_phocoder_image_thumbnail).and_return(nil)
+#      helper.display_image_thumbnail(@image,@image,{})
+#    end
+#    
+#    it "if the thumbnail is ready, should return an image tag with the path and dimensions of the thumbnail" do
+#      
+#    end
+#    
+#    it "if the thumbnail is not ready, should call pending_phocoder_thumbnail" do
+#      ActsAsPhocodable.storeage_mode = "local"
+#      @tattr = { :file => fixture_file_upload(fixture_path + '/big_eye_tiny.jpg','image/jpeg'), :width => 100, :height => 100 }
+#      @thumb = ImageUpload.new(@tattr)
+#      @thumb.filename = "big_eye_tiny_thumbnail.jpg"
+#      @thumb.encodable_status = "phocoding"
+#      helper.should_receive(:pending_phocoder_thumbnail).and_return(nil)
+#      helper.display_image_thumbnail(@image,@thumb,{})
+#      #puts "-------- #{@thumb.public_url} ---- #{ActsAsPhocodable.storeage_mode}"
+#      #output = helper.display_image_thumbnail(@image,@thumb,{})
+#      #output.should match /<img/
+#      #output.should match /width="100"/
+#      #output.should match /big_eye_tiny_thumbnail.jpg/ # the path in the thumbnail
+#    end
+#  end
+
+#  describe "offline_phocoder_image_thumbnail" do
+#    it "should render a thumbnail with the path to the original but the dimensions of the thumbnail" do
+#      @tattr = { :file => fixture_file_upload(fixture_path + '/big_eye_tiny.jpg','image/jpeg'),:filename=>"big_eye_tiny_thumbnail.jpg", :width => 100, :height => 100 }
+#      @thumb = ImageUpload.new(@tattr)
+#      @thumb.filename = "big_eye_tiny_thumbnail.jpg"
+#      output = helper.offline_phocoder_image_thumbnail(@image,@thumb,{})
+#      output.should match /<img/
+#      output.should match /width="100"/
+#      output.should match /big_eye_tiny.jpg/ # the path in the @att at the top of the file
+#    end  
+#  end
+  
+  describe "pending_phocoder_thumbnail" do
+    it "should return an image tag that points to a waiting image with the dimensions of the thumbnail" do
+      @tattr = { :file => fixture_file_upload(fixture_path + '/big_eye_tiny.jpg','image/jpeg'), :width => 100, :height => 100 }
+      @thumb = ImageUpload.new(@tattr)
+      @thumb.filename = "big_eye_tiny_thumbnail.jpg"
+      output = helper.pending_phocoder_thumbnail(@image,@thumb,{})
+      output.should match /<img/
+      output.should match /width="100"/
+      output.should match /waiting\.gif/ # the path in the thumbnail
+    end
+  end
+  
+  ####################
+  # These are more like integration tests, but whatever at least it's tested....
+  ####################
+  
+
+  describe "phocoder_image_thumbnail" do 
+  
     it "should return a preview_reload_timeout" do
       preview_reload_timeout.should == 10000
     end
     
-    describe "phcoder_thumbnail for offline mode" do
     
-      before(:each) do ActsAsPhocodable.storeage_mode = "offline" end
-      #set it back to the default
-      after(:each) do ActsAsPhocodable.storeage_mode = "local" end
-      
-     
-      it "should return an img with a local url with no size for a nil thumbnail" do
-        phocoder_image_thumbnail(@image,nil).should match(@image.local_url)
-        phocoder_image_thumbnail(@image,nil).should_not match("width")
-      end
     
-      it "should return an img with a local url and a width for a known thumbnail" do
-        phocoder_image_thumbnail(@image,"small").should match(@image.local_url)
-        phocoder_image_thumbnail(@image,"small").should match("width")
-      end
-      
-      it "should return an error for an unknown thumbnail name" do
-        phocoder_image_thumbnail(@image,"smallish-thing").should match("red")
-      end
-  
-    end
-  
-  
-    describe "phcoder_thumbnail for local mode before processing" do
-  
-      it "should return a self updading 'pending' img" do
-        phocoder_image_thumbnail(@image,"small").should match(/data-phocoder-waiting="true"/)
-      end
-  
-      it "should return an error for an unknown thumbnail name" do
-        phocoder_image_thumbnail(@image,"smallish-thing").should match("red")
-      end
-  
-    end
   
     describe "phcoder_thumbnail for local mode after processing" do
       before(:each) do
@@ -139,10 +286,6 @@ describe PhocoderHelper do
         #@thumb.destroy
       end
       
-      # For now we need a thumbnail since it might be a NEF
-      #it "should return a local url for a nil thumbnail" do
-      #  phocoder_image_thumbnail(@image,nil).should match(@image.public_url)
-      #end
       
       it "should return a pending img for a known thumbnail that is not ready" do
         phocoder_image_thumbnail(@image,"small").should match(/data-phocoder-waiting="true"/)
@@ -161,6 +304,11 @@ describe PhocoderHelper do
     end
 
   end # describe "image operations" do 
+  
+  
+  describe "phocoder_video_thumbnail" do
+  end
+  
   
   
   describe "video preview functions" do 
