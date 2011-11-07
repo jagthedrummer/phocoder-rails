@@ -275,11 +275,36 @@ module ActsAsPhocodable
     iu.parent.check_zencoder_details
   end
   
-  def thumbnail_attributes_for(thumbnail = "small")
-    atts = self.phocoder_thumbnails.select{|atts| atts[:label] == thumbnail }
-    atts.first
+  def thumbnail_attributes_for(thumbnail_name = "small")
+    atts = self.phocoder_thumbnails.select{|atts| atts[:label] == thumbnail_name }.first
+    if atts.blank?
+      atts = create_atts_from_label_string(thumbnail_name)
+    end
+    if atts.blank?
+      raise ThumbnailAttributesNotFoundError.new("No thumbnail attributes were found for label '#{thumbnail_name}'")
+    end
+    atts
   end
   
+  def create_atts_from_label_string(label_string)
+    match = label_string.match ActsAsPhocodable.label_size_regex
+    return nil if match.blank?
+    atts = {:label => label_string}
+    if !match[1].blank?
+      atts[:width] = match[1]
+    end
+    if !match[2].blank?
+      atts[:height] = match[2]
+    end
+    if !match[3].blank?
+      if match[3] == "!"
+        atts[:aspect_mode] = "crop"
+      elsif match[3] == ">"
+        atts[:aspect_mode] = "preserve"
+      end
+    end
+    atts
+  end
   
   def read_phocodable_configuration
     config_path =  File.join(::Rails.root.to_s, ActsAsPhocodable.config_file)
@@ -781,22 +806,11 @@ module ActsAsPhocodable
     end
     
     def create_atts_from_label_string(label_string)
-      match = label_string.match ActsAsPhocodable.label_size_regex
-      atts = {:label => label_string}
-      if !match[1].blank?
-        atts[:width] = match[1]
-      end
-      if !match[2].blank?
-        atts[:height] = match[2]
-      end
-      if !match[3].blank?
-        if match[3] == "!"
-          atts[:aspect_mode] = "crop"
-        elsif match[3] == ">"
-          atts[:aspect_mode] = "preserve"
-        end
-      end
-      atts
+      self.class.create_atts_from_label_string(label_string)
+    end
+    
+    def thumbnail_attributes_for(thumbnail_name)
+      self.class.thumbnail_attributes_for(thumbnail_name)
     end
     
     def thumbnail_for(thumbnail_hash_or_name)

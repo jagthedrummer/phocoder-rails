@@ -92,9 +92,9 @@ module PhocoderHelper
       begin
         # since we're in offline mode here we don't actually have files created for the thumbnail
         # so we return an image with the path to the original, we don't care about encodable_status
-        thumb = find_or_create_thumbnail(image_upload,thumbnail,options)
+        thumbnail = find_thumbnail_attributes(image_upload,thumbnail,options)
         image_tag image_upload.public_url, {:width => thumbnail[:width],:height => thumbnail[:height]}.merge(options)
-      rescue ActsAsPhocodable::ThumbnailNotFoundError
+      rescue ActsAsPhocodable::ThumbnailAttributesNotFoundError
         error_div "'#{thumbnail}' is not a valid thumbnail name or size string."
       end
     end
@@ -126,6 +126,14 @@ module PhocoderHelper
 #      offline_phocoder_image_thumbnail(image_upload,image_upload,options)
 #    end
 #  end
+  def find_thumbnail_attributes(image_upload,thumbnail,options)
+     if thumbnail.is_a? String
+       thumb_atts = image_upload.thumbnail_attributes_for(thumbnail)
+     elsif thumbnail.is_a? Hash
+       thumb_atts = thumbnail
+     end
+     thumb_atts
+  end
   
   def find_or_create_thumbnail(image_upload,thumbnail="small",options={})
     if thumbnail.is_a? String

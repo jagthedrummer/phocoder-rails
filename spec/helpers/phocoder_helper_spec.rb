@@ -117,12 +117,13 @@ describe PhocoderHelper do #, :debug=>true
       output.should match @image.filename # the path in the thumbnail
     end
         
-    it "should call find_or_create_thumbnail when !thumbnail.blank?" do
-      helper.should_receive(:find_or_create_thumbnail).and_return(@image)
-      helper.phocoder_image_offline(@image,"small",{})
+    it "should return an img tag when the thumbnail can be resolved" do
+      output = helper.phocoder_image_offline(@image,"small",{})
+      output.should match /<img/
+      output.should match /width=\"100\"/
     end
-    
-    it "should return an error if a thumbnail is no found" do
+        
+    it "should return an error if thumbnail attributes are not found" do
       output = helper.phocoder_image_offline(@image,"bad-thumb",{})
       output.should match /phocoder_error/
       output.should match /bad-thumb/
