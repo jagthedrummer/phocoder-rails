@@ -41,5 +41,6 @@ module ActsAsPhocodable
 
   class HTTPError < Error; end
   class ThumbnailNotFoundError < Error; end
+  class ThumbnailAttributesNotFoundError < Error; end
   
 end

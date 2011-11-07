@@ -117,12 +117,13 @@ describe PhocoderHelper do #, :debug=>true
       output.should match @image.filename # the path in the thumbnail
     end
         
-    it "should call find_or_create_thumbnail when !thumbnail.blank?" do
-      helper.should_receive(:find_or_create_thumbnail).and_return(@image)
-      helper.phocoder_image_offline(@image,"small",{})
+    it "should return an img tag when the thumbnail can be resolved" do
+      output = helper.phocoder_image_offline(@image,"small",{})
+      output.should match /<img/
+      output.should match /width=\"100\"/
     end
-    
-    it "should return an error if a thumbnail is no found" do
+        
+    it "should return an error if thumbnail attributes are not found" do
       output = helper.phocoder_image_offline(@image,"bad-thumb",{})
       output.should match /phocoder_error/
       output.should match /bad-thumb/
@@ -169,7 +170,7 @@ describe PhocoderHelper do #, :debug=>true
         @tattr = { :file => fixture_file_upload(fixture_path + '/big_eye_tiny.jpg','image/jpeg'), :width => 100, :height => 100 }
         @thumb = ImageUpload.new(@tattr)
         @thumb.filename = "big_eye_tiny_small.jpg"
-        @thumb.encodable_status = "ready"
+        @thumb.encodable_status = @image.encodable_status = "ready"
         helper.should_receive(:find_or_create_thumbnail).and_return(@thumb)
         output = helper.phocoder_image_online(@image,"small",{})
         output.should match /<img/
@@ -182,19 +183,41 @@ describe PhocoderHelper do #, :debug=>true
         @thumb = ImageUpload.new(@tattr)
         @thumb.filename = "big_eye_tiny_small.jpg"
         @thumb.encodable_status = "phocoding"
+        @image.encodable_status = "ready"
         helper.should_receive(:find_or_create_thumbnail).and_return(@thumb)
         helper.should_receive(:pending_phocoder_thumbnail)
         output = helper.phocoder_image_online(@image,"small",{})
       end
+      it "should call pending_phcoder_thumbnail if the image is not ready" do
+        ActsAsPhocodable.storeage_mode = "local"
+        @image.encodable_status = "phocoding"
+        helper.should_receive(:pending_phocoder_thumbnail)
+        output = helper.phocoder_image_online(@image,"small",{})
+      end
       it "should return an error div if the thumb can not be resolved" do
-        output = helper.phocoder_image_offline(@image,"bad-thumb",{})
+        output = helper.phocoder_image_online(@image,"bad-thumb",{})
+        output.should match /phocoder_error/
+        output.should match /bad-thumb/
+      end
+      it "should return an error div if the thumb can not be resolved when the image is ready" do
+        @image.encodable_status = "ready"
+        output = helper.phocoder_image_online(@image,"bad-thumb",{})
         output.should match /phocoder_error/
         output.should match /bad-thumb/
       end
     end
   end # describe "when a thumbnail is passed" do
   
-  describe "display_image" do 
+  describe "find_thumbnail_attributes" do 
+    it "should call @image.thumbnail_attributes_for if the thumbnail argument is a String" do
+      atts = {:foo => "bar" }
+      @image.should_receive(:thumbnail_attributes_for).and_return(atts)
+      helper.find_thumbnail_attributes(@image,"small",{}).should == atts
+    end
+    it "should return the thumbnail argument if it is a Hash" do
+      atts = {:foo => "bar" }
+      helper.find_thumbnail_attributes(@image,atts,{}).should == atts
+    end
     
   end
   
@@ -349,5 +372,15 @@ describe PhocoderHelper do #, :debug=>true
     end
   
   end # describe "video preview functions" do 
+
+  describe "offline_phocoder_video_embed" do
+    it "should render a video tag" do
+      vid = ImageUpload.new(:content_type=>'video/quicktime',:zencoder_status=>'ready',:id=>1,:filename=>"test.mov",:encodable_status=>"ready")
+      vid.stub!(:thumbnail_for).and_return(vid)
+      vid.video?.should be_true
+      offline_phocoder_video_embed(vid,"small",{}).should match("video-js")
+    end
+    
+  end
   
 end
