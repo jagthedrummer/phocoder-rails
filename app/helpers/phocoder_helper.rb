@@ -104,9 +104,19 @@ module PhocoderHelper
     if thumbnail.blank? and !image_upload.web_safe?
       error_div "#{image_upload.filename} can not be displayed directly because it is not web safe. Content type = #{image_upload.content_type}"
     elsif thumbnail.blank? and !image_upload.ready?
+      # don't know width and height yet
       image_tag(image_upload.public_url,options)
     elsif thumbnail.blank?
+      # now we have width and height
       image_tag(image_upload.public_url,options.merge(:width => image_upload.width, :height => image_upload.height))
+    elsif !image_upload.ready?
+      begin 
+        # We can only look for attributes now to show a pending message with the correct dimensions
+        thumb_atts = find_thumbnail_attributes(image_upload,thumbnail,options)
+        pending_phocoder_thumbnail(image_upload,thumb_atts,false,options)
+      rescue ActsAsPhocodable::ThumbnailAttributesNotFoundError
+        error_div "'#{thumbnail}' is not a valid thumbnail name or size string."
+      end
     else
       begin
         thumb = find_or_create_thumbnail(image_upload,thumbnail,options)
