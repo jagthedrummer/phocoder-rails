@@ -185,7 +185,7 @@ module PhocoderHelper
   
   
   # Thumbnail should either be an ActiveRecord or a Hash
-  def pending_phocoder_thumbnail(photo,thumbnail,options,spinner='waiting')
+  def pending_phocoder_thumbnail(photo,thumbnail,options,live_video=false,spinner='waiting')
     random = ActiveSupport::SecureRandom.hex(16)
     
     if thumbnail.is_a? Hash

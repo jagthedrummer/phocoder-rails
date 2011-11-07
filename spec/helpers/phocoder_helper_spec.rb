@@ -185,14 +185,16 @@ describe PhocoderHelper do #, :debug=>true
         @thumb.encodable_status = "phocoding"
         @image.encodable_status = "ready"
         helper.should_receive(:find_or_create_thumbnail).and_return(@thumb)
-        helper.should_receive(:pending_phocoder_thumbnail)
+        #helper.should_receive(:pending_phocoder_thumbnail)
         output = helper.phocoder_image_online(@image,"small",{})
+        output.should match /waiting\.gif/ # the path in the thumbnail
       end
       it "should call pending_phcoder_thumbnail if the image is not ready" do
         ActsAsPhocodable.storeage_mode = "local"
         @image.encodable_status = "phocoding"
-        helper.should_receive(:pending_phocoder_thumbnail)
+        #helper.should_receive(:pending_phocoder_thumbnail)
         output = helper.phocoder_image_online(@image,"small",{})
+        output.should match /waiting\.gif/ # the path in the thumbnail
       end
       it "should return an error div if the thumb can not be resolved" do
         output = helper.phocoder_image_online(@image,"bad-thumb",{})
