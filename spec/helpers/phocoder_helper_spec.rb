@@ -165,7 +165,7 @@ describe PhocoderHelper do #, :debug=>true
       end
     end #describe "when no thumbnail is passed" do
     describe "when a thumbnail is passed" do
-      it "should return an img tag for a thumbnail that can be resolved (by label or size string or by being an option hash) and is ready" do
+      it "should return an img tag for a thumbnail that can be resolved by label and is ready" do
         ActsAsPhocodable.storeage_mode = "local"
         @tattr = { :file => fixture_file_upload(fixture_path + '/big_eye_tiny.jpg','image/jpeg'), :width => 100, :height => 100 }
         @thumb = ImageUpload.new(@tattr)
@@ -177,6 +177,15 @@ describe PhocoderHelper do #, :debug=>true
         output.should match /width="100"/
         output.should match @thumb.filename # the path in the thumbnail
       end
+      
+      it "should create a thumbnail and return an img tag for a new size string" do
+        ActsAsPhocodable.storeage_mode = "local"
+        output = helper.phocoder_image_online(@image,"100x100",{})
+        output.should match /<img/
+        output.should match /width="100"/
+        output.should match /waiting\.gif/ # the path in the thumbnail
+      end
+      
       it "should call pending_phcoder_thumbnail if the thumb is not ready" do
         ActsAsPhocodable.storeage_mode = "local"
         @tattr = { :file => fixture_file_upload(fixture_path + '/big_eye_tiny.jpg','image/jpeg'), :width => 100, :height => 100 }
@@ -227,6 +236,10 @@ describe PhocoderHelper do #, :debug=>true
     it "should call @image.thumbnail_for if the thumbnail attribute is a String" do
       @image.should_receive(:thumbnail_for)
       helper.find_or_create_thumbnail(@image,"some_thumb")
+    end
+    it "should create a new thumbnail for a new size string" do
+      thumb = helper.find_or_create_thumbnail(@image,"100x100")
+      thumb.encodable_status.should_not == "ready"
     end
   end
   

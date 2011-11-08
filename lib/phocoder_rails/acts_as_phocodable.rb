@@ -144,7 +144,10 @@ module ActsAsPhocodable
   # TODO : This needs to be fixed.
   # It currently matches anything with an 'x' in it
   mattr_accessor :label_size_regex
-  self.label_size_regex = /(\d*)x(\d*)([!>]?)/
+  self.label_size_regex = /(\d*)x(\d*)(pad|crop|stretch|preserve)?/ # 
+  
+  mattr_accessor :size_string_regex
+  self.size_string_regex = /(\d*)x(\d*)([!>]?)/
   
   def image?(content_type)
     image_types.include?(content_type)
@@ -168,6 +171,7 @@ module ActsAsPhocodable
     
     include InstanceMethods
     attr_reader :saved_file
+    attr_accessor :phocoding
     after_save :save_local_file
     before_destroy :cleanup #:remove_local_file,:destroy_thumbnails,:remove_s3_file
     
@@ -278,7 +282,7 @@ module ActsAsPhocodable
   def thumbnail_attributes_for(thumbnail_name = "small")
     atts = self.phocoder_thumbnails.select{|atts| atts[:label] == thumbnail_name }.first
     if atts.blank?
-      atts = create_atts_from_label_string(thumbnail_name)
+      atts = create_atts_from_size_string(thumbnail_name)
     end
     if atts.blank?
       raise ThumbnailAttributesNotFoundError.new("No thumbnail attributes were found for label '#{thumbnail_name}'")
@@ -286,10 +290,18 @@ module ActsAsPhocodable
     atts
   end
   
-  def create_atts_from_label_string(label_string)
+  def create_label_from_size_string(size_string)
+    if size_string.match ActsAsPhocodable.size_string_regex
+      size_string = size_string.gsub("!","crop")
+      size_string = size_string.gsub(">","preserve")
+    end
+    size_string
+  end
+  
+  def create_atts_from_size_string(label_string)
     match = label_string.match ActsAsPhocodable.label_size_regex
     return nil if match.blank?
-    atts = {:label => label_string}
+    atts = {}
     if !match[1].blank?
       atts[:width] = match[1]
     end
@@ -297,14 +309,15 @@ module ActsAsPhocodable
       atts[:height] = match[2]
     end
     if !match[3].blank?
-      if match[3] == "!"
-        atts[:aspect_mode] = "crop"
-      elsif match[3] == ">"
-        atts[:aspect_mode] = "preserve"
-      end
+      atts[:aspect_mode] = match[3]
     end
+    atts[:label] = label_string
+    #atts[:label] = "#{atts[:width]}x#{atts[:height]}"
+    #atts[:label] += "_#{atts[:aspect_mode]}" if atts[:aspect_mode]
     atts
   end
+  
+  
   
   def read_phocodable_configuration
     config_path =  File.join(::Rails.root.to_s, ActsAsPhocodable.config_file)
@@ -426,6 +439,7 @@ module ActsAsPhocodable
     end
     
     def create_thumbnails_from_response(response_thumbs,job_id)
+      new_thumbs = []
       response_thumbs.each do |thumb_params|
         puts "creating a thumb for #{thumb_params["label"]}"
         # we do this the long way around just in case some of these
@@ -453,13 +467,15 @@ module ActsAsPhocodable
         thumb.encodable_jobs << tjob
         thumb.encodable_status = "phocoding"
         thumb.save
+        new_thumbs << thumb
         Rails.logger.debug "    thumb.errors = #{thumb.errors.to_json}"
         puts "    thumb.errors = #{thumb.errors.to_json}"
       end
+      new_thumbs
     end
     
     def clear_phocoding
-      @phocoding = false
+      phocoding = false
     end
     
     def dedupe_input_thumbs(input_thumbs)
@@ -485,8 +501,8 @@ module ActsAsPhocodable
       return if input_thumbs.size == 0
       # We do this because sometimes save will get called more than once
       # during a single request
-      return if @phocoding
-      @phocoding = true
+      return if phocoding
+      phocoding = true
       
       Rails.logger.debug "trying to phocode for #{Phocoder.base_url} "
       Rails.logger.debug "callback url = #{callback_url}"
@@ -514,8 +530,8 @@ module ActsAsPhocodable
       
       # We do this because sometimes save will get called more than once
       # during a single request
-      return if @phocoding
-      @phocoding = true
+      return if phocoding
+      phocoding = true
       run_callbacks :phocode_hdr do
         Rails.logger.debug "trying to phocode for #{Phocoder.base_url} "
         Rails.logger.debug "callback url = #{callback_url}"
@@ -541,8 +557,8 @@ module ActsAsPhocodable
       
       # We do this because sometimes save will get called more than once
       # during a single request
-      return if @phocoding
-      @phocoding = true
+      return if phocoding
+      phocoding = true
       run_callbacks :phocode_tone_mapping do
         destroy_thumbnails
         Rails.logger.debug "trying to phocode for #{Phocoder.base_url} "
@@ -572,8 +588,8 @@ module ActsAsPhocodable
       
       # We do this because sometimes save will get called more than once
       # during a single request
-      return if @phocoding
-      @phocoding = true
+      return if phocoding
+      phocoding = true
       run_callbacks :phocode_composite do
         destroy_thumbnails
         Rails.logger.debug "trying to phocode for #{Phocoder.base_url} "
@@ -805,8 +821,8 @@ module ActsAsPhocodable
       #puts "calling destory thumbnails for #{self.thumbnails.count}"
     end
     
-    def create_atts_from_label_string(label_string)
-      self.class.create_atts_from_label_string(label_string)
+    def create_atts_from_size_string(label_string)
+      self.class.create_atts_from_size_string(label_string)
     end
     
     def thumbnail_attributes_for(thumbnail_name)
@@ -815,6 +831,9 @@ module ActsAsPhocodable
     
     def thumbnail_for(thumbnail_hash_or_name)
       thumbnail_name = thumbnail_hash_or_name.is_a?(Hash) ? thumbnail_hash_or_name[:label] : thumbnail_hash_or_name 
+      if thumbnail_name.match ActsAsPhocodable.size_string_regex
+        thumbnail_name = self.class.create_label_from_size_string(thumbnail_name)
+      end
       if thumbnail_name.blank? and thumbnail_hash_or_name.is_a?(Hash)
         thumbnail_name = "#{thumbnail_hash_or_name[:width]}x#{thumbnail_hash_or_name[:height]}"
         puts "thumbnail_name = #{thumbnail_name}"
@@ -826,7 +845,7 @@ module ActsAsPhocodable
       elsif thumb.blank? and thumbnail_hash_or_name.is_a? Hash
         thumb = self.phocode([thumbnail_hash_or_name]).first
       elsif thumb.blank? and thumbnail_hash_or_name.is_a?(String) and thumbnail_hash_or_name.match ActsAsPhocodable.label_size_regex
-        atts = create_atts_from_label_string(thumbnail_hash_or_name)
+        atts = create_atts_from_size_string(thumbnail_name)
         thumb = self.phocode([atts]).first
       end
       if thumb.blank?
