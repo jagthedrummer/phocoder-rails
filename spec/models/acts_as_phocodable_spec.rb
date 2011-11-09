@@ -129,6 +129,26 @@ describe ActsAsPhocodable do
     iu.phocodable_config[:base_url].should == "http://actsasphocodableexample.chaos.webapeel.com"
   end
   
+  
+  describe "create_label_from_size_string" do
+    it "should transform 50x50! => 50x50_crop" do
+      ImageUpload.create_label_from_size_string("50x50!").should == "50x50crop" 
+    end
+    it "should transform 50x50> => 50x50_preserve" do
+      ImageUpload.create_label_from_size_string("50x50>").should == "50x50preserve" 
+    end
+  end
+  
+  describe "create_atts_from_size_string" do
+    it "should return the right hash" do
+      atts = ImageUpload.create_atts_from_size_string("100x200crop")
+      atts[:width].should == "100"
+      atts[:height].should == "200"
+      atts[:aspect_mode].should == "crop"
+    end
+  end
+  
+  
   it "should create phocoder params based on the acts_as_phocodable :thumbnail options" do
     iu = ImageUpload.new(@attr)
     phorams = iu.phocoder_params
@@ -448,7 +468,7 @@ describe ActsAsPhocodable do
       "job"=>{
         "id"=>2,
         "inputs"=>["id"=>2],
-        "thumbnails"=>[{"label"=>"100x100!","filename"=>"test-test-file.jpg","id"=>5}]
+        "thumbnails"=>[{"label"=>"","filename"=>"test.jpg","id"=>5}]
       }
     }))
    
@@ -587,7 +607,7 @@ describe ActsAsPhocodable do
     ActsAsPhocodable.storeage_mode = "s3"
     ActsAsPhocodable.processing_mode = "automatic"
     ImageUpload.establish_aws_connection
-    
+    puts "======================================="
     iu = ImageUpload.new(@attr)
     Phocoder::Job.stub!(:create).and_return(mock(Phocoder::Response,:body=>{
       "job"=>{
@@ -603,6 +623,8 @@ describe ActsAsPhocodable do
     AWS::S3::S3Object.should_receive(:find).and_return( mock(:size => 19494) )
     #now store in S3 + phocode
     iu.save
+    puts "======================================="
+    puts iu.thumbnails.to_json
     iu.thumbnails.size.should == 1 
     
     iu.destroy

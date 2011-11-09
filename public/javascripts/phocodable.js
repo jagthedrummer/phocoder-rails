@@ -17,6 +17,8 @@ Phocodable.JQueryUpdater = function(){
     params = _self.build_update_params();
     console.debug(params);
     if(params.length == 0){
+      console.debug("ending because params are blank")
+      
       return;
     }
     $.ajax({  type: 'POST',

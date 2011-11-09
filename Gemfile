@@ -15,7 +15,8 @@ gem "webrat"
 gem 'phocoder-rb'
 gem 'zencoder'
 gem 'aws-s3', :require => 'aws/s3'
-gem "spawn", :git => "git://github.com/jagthedrummer/spawn.git"
+#gem "spawn", :git => "git://github.com/jagthedrummer/spawn.git"
+gem "spawn", :git => 'git://github.com/tra/spawn', :branch => "edge"
 #if RUBY_VERSION < '1.9'
 #  gem "ruby-debug", ">= 0.10.3"
 #end
