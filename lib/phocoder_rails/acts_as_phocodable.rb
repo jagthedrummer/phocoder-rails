@@ -170,6 +170,7 @@ module ActsAsPhocodable
   def acts_as_phocodable(options = { })
     
     include InstanceMethods
+    include Spawn
     attr_reader :saved_file
     attr_accessor :phocoding
     after_save :save_local_file
@@ -458,6 +459,8 @@ module ActsAsPhocodable
         
         thumb.thumbnail = thumb_params["label"]
         thumb.filename = thumb_params["filename"]
+        thumb.width = thumb_params["width"]
+        thumb.height = thumb_params["height"]
         tjob = thumb.encodable_jobs.new
         
         tjob.phocoder_output_id = thumb_params["id"]
@@ -514,7 +517,7 @@ module ActsAsPhocodable
       job.phocoder_job_id = response.body["job"]["id"]
       job.phocoder_status = "phocoding"
       self.encodable_jobs << job
-      self.encodable_status = "phocoding"
+      self.encodable_status = "phocoding" unless self.encodable_status == "ready" # the unless clause allows new thumbs to be created on the fly without jacking with the status
       self.save #false need to do save(false) here if we're calling phocode on after_save
       response_thumbs = response.body["job"]["thumbnails"]
       Rails.logger.debug "trying to decode #{response_thumbs.size} response_thumbs = #{response_thumbs.to_json}"
@@ -910,8 +913,12 @@ module ActsAsPhocodable
           self.save_s3_file
         end
         if ActsAsPhocodable.storeage_mode == "s3" and ActsAsPhocodable.processing_mode == "spawn"
-          spawn_block do # :method => :thread # <-- I think that should be set at the config/environment level
+          spawn do # :method => :thread # <-- I think that should be set at the config/environment level
+            Rails.logger.debug "------------beginning of spawn block"
+            puts               "------------beginning of spawn block"
             self.save_s3_file
+            Rails.logger.debug "------------end of spawn block"
+            puts               "------------end of spawn block"
           end
         end
         if ActsAsPhocodable.storeage_mode == "local" and ActsAsPhocodable.processing_mode == "automatic" 

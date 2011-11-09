@@ -187,7 +187,8 @@ module PhocoderHelper
   # Thumbnail should either be an ActiveRecord or a Hash
   def pending_phocoder_thumbnail(photo,thumbnail,options,live_video=false,spinner='waiting')
     random = ActiveSupport::SecureRandom.hex(16)
-    
+    Rails.logger.debug "======================================================"
+    Rails.logger.debug "building pending thumbnail for #{thumbnail.class} #{thumbnail.to_json}"
     if thumbnail.is_a? Hash
       thumb_name = thumbnail[:label]
      else
