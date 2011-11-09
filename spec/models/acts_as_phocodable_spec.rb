@@ -141,7 +141,7 @@ describe ActsAsPhocodable do
   
   describe "create_atts_from_size_string" do
     it "should return the right hash" do
-      atts = ImageUpload.create_atts_from_size_string("100x200_crop")
+      atts = ImageUpload.create_atts_from_size_string("100x200crop")
       atts[:width].should == "100"
       atts[:height].should == "200"
       atts[:aspect_mode].should == "crop"
@@ -607,7 +607,7 @@ describe ActsAsPhocodable do
     ActsAsPhocodable.storeage_mode = "s3"
     ActsAsPhocodable.processing_mode = "automatic"
     ImageUpload.establish_aws_connection
-    
+    puts "======================================="
     iu = ImageUpload.new(@attr)
     Phocoder::Job.stub!(:create).and_return(mock(Phocoder::Response,:body=>{
       "job"=>{
@@ -623,6 +623,8 @@ describe ActsAsPhocodable do
     AWS::S3::S3Object.should_receive(:find).and_return( mock(:size => 19494) )
     #now store in S3 + phocode
     iu.save
+    puts "======================================="
+    puts iu.thumbnails.to_json
     iu.thumbnails.size.should == 1 
     
     iu.destroy

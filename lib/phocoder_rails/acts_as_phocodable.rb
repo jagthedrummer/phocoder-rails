@@ -831,7 +831,7 @@ module ActsAsPhocodable
     
     def thumbnail_for(thumbnail_hash_or_name)
       thumbnail_name = thumbnail_hash_or_name.is_a?(Hash) ? thumbnail_hash_or_name[:label] : thumbnail_hash_or_name 
-      if thumbnail_name.match ActsAsPhocodable.size_string_regex
+      if thumbnail_name and thumbnail_name.match ActsAsPhocodable.size_string_regex
         thumbnail_name = self.class.create_label_from_size_string(thumbnail_name)
       end
       if thumbnail_name.blank? and thumbnail_hash_or_name.is_a?(Hash)
@@ -890,6 +890,7 @@ module ActsAsPhocodable
     
     def save_local_file
       return if @saved_file.blank?
+      puts "saving the local file!!!!!!"
       Rails.logger.debug "==================================================================================================="
       Rails.logger.debug "about to save the local file"
       run_callbacks :file_saved do
@@ -913,7 +914,7 @@ module ActsAsPhocodable
             self.save_s3_file
           end
         end
-        if ActsAsPhocodable.processing_mode == "automatic" and ActsAsPhocodable.storeage_mode != "offline"
+        if ActsAsPhocodable.storeage_mode == "local" and ActsAsPhocodable.processing_mode == "automatic" 
           self.encode
         end
         

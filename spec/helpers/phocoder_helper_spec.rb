@@ -237,8 +237,28 @@ describe PhocoderHelper do #, :debug=>true
       @image.should_receive(:thumbnail_for)
       helper.find_or_create_thumbnail(@image,"some_thumb")
     end
-    it "should create a new thumbnail for a new size string" do
+    # This is kind of an integration test.  maybe it should go somewhere else...
+    it "should create a new thumbnail (by calling phocode) for a new size string" do
+      #@image.should_receive(:phocode).and_return([{ :label => "100x100" }])
+      
+      Phocoder::Job.should_receive(:create).and_return(mock(Phocoder::Response,:body=>{
+        "job"=>{
+          "id"=>1,
+          "inputs"=>["id"=>1],
+          "thumbnails"=>[{"label"=>"small","filename"=>"small-test-file.jpg","id"=>1}]
+        }
+      }))
+      @image.save
+      Phocoder::Job.should_receive(:create).and_return(mock(Phocoder::Response,:body=>{
+        "job"=>{
+          "id"=>1,
+          "inputs"=>["id"=>1],
+          "thumbnails"=>[{"label"=>"100x100","filename"=>"100x100-test-file.jpg","id"=>1}]
+        }
+      }))
       thumb = helper.find_or_create_thumbnail(@image,"100x100")
+      
+      puts thumb.to_json
       thumb.encodable_status.should_not == "ready"
     end
   end
