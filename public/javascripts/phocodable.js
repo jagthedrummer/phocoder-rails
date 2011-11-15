@@ -7,7 +7,7 @@ Phocodable.JQueryUpdater = function(){
   this.img_selector = "img[data-phocoder-waiting]";
   
   this.init = function(options){
-    console.log("Phocodable.Updater.init()");
+    //console.log("Phocodable.Updater.init()");
     if(options == null){ options = {}; }
     this.jslib = options.jslib || "jquery";
     setTimeout(this.update,200);
@@ -15,9 +15,9 @@ Phocodable.JQueryUpdater = function(){
   
   this.update = function(){
     params = _self.build_update_params();
-    console.debug(params);
+    //console.debug(params);
     if(params.length == 0){
-      console.debug("ending because params are blank")
+      //console.debug("ending because params are blank")
       
       return;
     }
@@ -71,7 +71,7 @@ Phocodable.Updater = function(){
   this.img_selector = "img[data-phocoder-waiting]";
   
   this.init = function(options){
-    console.log("Phocodable.Updater.init()");
+    //console.log("Phocodable.Updater.init()");
     if(options == null){ options = {}; }
     this.jslib = options.jslib || "jquery";
     setTimeout(this.update,2000);
@@ -79,7 +79,7 @@ Phocodable.Updater = function(){
   
   this.update = function(){
     params = _self.build_update_params();
-    console.debug(params);
+    //console.debug(params);
   }
   
   this.build_update_params = function(){
