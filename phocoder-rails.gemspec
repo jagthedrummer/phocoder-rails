@@ -5,11 +5,11 @@
 
 Gem::Specification.new do |s|
   s.name = %q{phocoder-rails}
-  s.version = "0.0.33"
+  s.version = "0.0.34"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = [%q{Jeremy Green}]
-  s.date = %q{2011-11-15}
+  s.date = %q{2011-12-29}
   s.description = %q{Rails engine for easy integration with phocoder.com}
   s.email = %q{jagthedrummer@gmail.com}
   s.extra_rdoc_files = [
@@ -179,8 +179,6 @@ Gem::Specification.new do |s|
 
     if Gem::Version.new(Gem::VERSION) >= Gem::Version.new('1.2.0') then
       s.add_runtime_dependency(%q<rails>, [">= 3.0.0"])
-      s.add_runtime_dependency(%q<capybara>, [">= 0.3.9"])
-      s.add_runtime_dependency(%q<webrat>, [">= 0"])
       s.add_runtime_dependency(%q<phocoder-rb>, [">= 0"])
       s.add_runtime_dependency(%q<zencoder>, [">= 0"])
       s.add_runtime_dependency(%q<aws-s3>, [">= 0"])
@@ -191,8 +189,6 @@ Gem::Specification.new do |s|
       s.add_development_dependency(%q<rcov>, [">= 0"])
     else
       s.add_dependency(%q<rails>, [">= 3.0.0"])
-      s.add_dependency(%q<capybara>, [">= 0.3.9"])
-      s.add_dependency(%q<webrat>, [">= 0"])
       s.add_dependency(%q<phocoder-rb>, [">= 0"])
       s.add_dependency(%q<zencoder>, [">= 0"])
       s.add_dependency(%q<aws-s3>, [">= 0"])
@@ -204,8 +200,6 @@ Gem::Specification.new do |s|
     end
   else
     s.add_dependency(%q<rails>, [">= 3.0.0"])
-    s.add_dependency(%q<capybara>, [">= 0.3.9"])
-    s.add_dependency(%q<webrat>, [">= 0"])
     s.add_dependency(%q<phocoder-rb>, [">= 0"])
     s.add_dependency(%q<zencoder>, [">= 0"])
     s.add_dependency(%q<aws-s3>, [">= 0"])
