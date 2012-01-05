@@ -14,6 +14,7 @@ Phocodable.JQueryUpdater = function(){
   };
   
   this.update = function(){
+    //console.log("starting update!!");
     params = _self.build_update_params();
     //console.debug(params);
     if(params.length == 0){
@@ -25,11 +26,15 @@ Phocodable.JQueryUpdater = function(){
               url : '/phocoder/multi_thumbnail_update.json',
               dataType : 'json',
               data : { encodables : params },
+              error : function(jqXHR, textStatus, errorThrown) { 
+                //console.log(jqXHR); console.log(textStatus); console.log(errorThrown); 
+              },
               success : _self.update_response
     });
   }
   
   this.update_response = function(data, textStatus, jqXHR){
+    //console.log("starting update_response");
     $.each(data,function(key,value){
       $("#"+key).replaceWith(value);
     });
