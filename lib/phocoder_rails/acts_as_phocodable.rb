@@ -178,7 +178,7 @@ module ActsAsPhocodable
     
     include ActiveSupport::Callbacks
 
-    define_callbacks :local_file_saved, :file_saved, :file_ready, :phocode_hdr, :phocode_composite, :phocode_tone_mapping
+    define_callbacks :local_file_saved, :file_saved, :file_ready, :phocode_hdr, :phocode_hdrhtml, :phocode_composite, :phocode_tone_mapping
     
     #cattr_accessor :phocoder_options
     #self.phocoder_options = options
@@ -552,6 +552,33 @@ module ActsAsPhocodable
     end
     
     
+    def phocode_hdrhtml
+      #if self.thumbnails.count >= self.class.phocoder_thumbnails.size
+      #  raise "This item already has thumbnails!"
+      #  return
+      #end
+      
+      # We do this because sometimes save will get called more than once
+      # during a single request
+      return if phocoding
+      phocoding = true
+      run_callbacks :phocode_hdrhtml do
+        Rails.logger.debug "trying to phocode for #{Phocoder.base_url} "
+        Rails.logger.debug "callback url = #{callback_url}"
+        response = Phocoder::Job.create(phocoder_hdrhtml_params)
+        Rails.logger.debug "the response from phocode_hdrhtml = #{response.body.to_json}"
+        job = self.encodable_jobs.new
+        job.phocoder_output_id = response.body["job"]["hdrhtml"]["id"]
+        job.phocoder_job_id = response.body["job"]["id"]
+        job.phocoder_status = "phocoding"
+        self.encodable_jobs << job
+        self.encodable_status = "phocoding"
+        self.save #false need to do save(false) here if we're calling phocode on after_save
+      end
+     
+    end
+    
+    
     def phocode_tone_mapping
       #if self.thumbnails.count >= self.class.phocoder_thumbnails.size
       #  raise "This item already has thumbnails!"
@@ -678,6 +705,10 @@ module ActsAsPhocodable
     
     
     def phocoder_hdr_params
+      { }
+    end
+    
+    def phocoder_hdrhtml_params
       { }
     end
     
