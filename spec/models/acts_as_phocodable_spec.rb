@@ -95,8 +95,7 @@ describe ActsAsPhocodable do
     ActsAsPhocodable.base_url = "http://new-domain.com"
     ActsAsPhocodable.base_url.should == "http://new-domain.com"
   end
-  
-  
+    
   it "should default to the normal config file" do 
     ActsAsPhocodable.config_file.should == "config/phocodable.yml"
   end
@@ -108,15 +107,20 @@ describe ActsAsPhocodable do
     ActsAsPhocodable.config_file = "config/phocodable.yml"
     ActsAsPhocodable.config_file.should == "config/phocodable.yml"
   end
-  
-    
+      
   it "should read the config file" do
     ActsAsPhocodable.config_file == "config/phocodable.yml"
-    iu = ImageUpload.new
-    iu.phocodable_config.should_not be_nil
+    ActsAsPhocodable.config = nil
+    ActsAsPhocodable.config.should be_nil
+    
+    ActsAsPhocodable.read_phocodable_configuration
+    ActsAsPhocodable.config.should_not be_nil
+    ActsAsPhocodable.config.to_json.should_not == "{}"
+    #iu = ImageUpload.new
+    #iu.phocodable_config.should_not be_nil
   end
-  
-  
+        
+        
   it "should read actual configs" do
     ActsAsPhocodable.config_file == "config/phocodable.yml"
     iu = ImageUpload.new()
@@ -147,8 +151,7 @@ describe ActsAsPhocodable do
       atts[:aspect_mode].should == "crop"
     end
   end
-  
-  
+      
   it "should create phocoder params based on the acts_as_phocodable :thumbnail options" do
     iu = ImageUpload.new(@attr)
     phorams = iu.phocoder_params
@@ -171,7 +174,7 @@ describe ActsAsPhocodable do
   it "should create zencooder params based on the acts_as_phocodable :videos options" do
     iu = ImageUpload.new(@vid_attr)
     zenrams = iu.zencoder_params
-    puts zenrams.to_json
+    #puts zenrams.to_json
     zenrams.should_not be_nil
     zenrams[:input].should == iu.public_url
     zenrams[:outputs].size.should == 2
@@ -187,7 +190,7 @@ describe ActsAsPhocodable do
     ActsAsPhocodable.storeage_mode = "s3"
     iu = ImageUpload.new(@vid_attr)
     zenrams = iu.zencoder_params
-    puts zenrams.to_json
+    #puts zenrams.to_json
     zenrams.should_not be_nil
     zenrams[:input].should == iu.public_url
     zenrams[:outputs].size.should == 2
@@ -501,7 +504,7 @@ describe ActsAsPhocodable do
     
     #iu.reload #make sure it knows aobut the thumbnail
     iu.destroy
-    puts "ImageUpload.first = #{ImageUpload.first.to_json}"
+    #puts "ImageUpload.first = #{ImageUpload.first.to_json}"
     ImageUpload.count.should == 0
     File.exists?(expected_local_path).should_not be_true
   end
@@ -558,7 +561,7 @@ describe ActsAsPhocodable do
     
     thumb.reload
     #expected_local_path = File.expand_path(File.join(File.dirname(File.expand_path(__FILE__)),'..','dummy','public','ImageUpload',iu.id.to_s,thumb.filename))
-    puts "thumb.local_path = #{thumb.local_path} - #{thumb.id}"
+    #puts "thumb.local_path = #{thumb.local_path} - #{thumb.id}"
     File.exists?(thumb.local_path).should be_true
     thumb.width.should == 10
     thumb.height.should == 20
@@ -607,7 +610,7 @@ describe ActsAsPhocodable do
     ActsAsPhocodable.storeage_mode = "s3"
     ActsAsPhocodable.processing_mode = "automatic"
     ImageUpload.establish_aws_connection
-    puts "======================================="
+    #puts "======================================="
     iu = ImageUpload.new(@attr)
     Phocoder::Job.stub!(:create).and_return(mock(Phocoder::Response,:body=>{
       "job"=>{
@@ -623,8 +626,8 @@ describe ActsAsPhocodable do
     AWS::S3::S3Object.should_receive(:find).and_return( mock(:size => 19494) )
     #now store in S3 + phocode
     iu.save
-    puts "======================================="
-    puts iu.thumbnails.to_json
+    #puts "======================================="
+    #puts iu.thumbnails.to_json
     iu.thumbnails.size.should == 1 
     
     iu.destroy
