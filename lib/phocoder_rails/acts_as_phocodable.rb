@@ -59,6 +59,23 @@ module ActsAsPhocodable
   mattr_accessor :config_file
   self.config_file = "config/phocodable.yml"
   
+  # The actual configuration parameters
+  mattr_accessor :config
+  self.config = nil
+  
+  def self.phocodable_config
+    #puts "checking phocodable_config for #{self.config}"
+    self.read_phocodable_configuration if self.config.nil?
+    self.config
+  end
+  
+  def self.read_phocodable_configuration
+    
+    config_path =  File.join(::Rails.root.to_s, ActsAsPhocodable.config_file)
+    puts "#{self.config} - looking for a config in #{config_path}"
+    self.config =  YAML.load(ERB.new(File.read(config_path)).result)[::Rails.env.to_s].symbolize_keys
+    #self.apply_phocodable_configuration
+  end
   
   # The list of image content types that are considered web safe
   # These can be displayed directly, skipping processing if in offline mode
@@ -319,13 +336,15 @@ module ActsAsPhocodable
   end
   
   
-  
   def read_phocodable_configuration
-    config_path =  File.join(::Rails.root.to_s, ActsAsPhocodable.config_file)
-    puts "looking for a config in #{config_path}"
-    self.phocodable_configuration =  YAML.load(ERB.new(File.read(config_path)).result)[::Rails.env.to_s].symbolize_keys
+    #raise "This method is going away!"
+    #puts "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+    #puts "This method is going away!"
+    #puts "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+    self.phocodable_configuration = ActsAsPhocodable.phocodable_config
     self.apply_phocodable_configuration
   end
+  
   
   def apply_phocodable_configuration
     if self.phocodable_configuration[:base_url]
@@ -442,7 +461,7 @@ module ActsAsPhocodable
     def create_thumbnails_from_response(response_thumbs,job_id)
       new_thumbs = []
       response_thumbs.each do |thumb_params|
-        puts "creating a thumb for #{thumb_params["label"]}"
+        #puts "creating a thumb for #{thumb_params["label"]}"
         # we do this the long way around just in case some of these
         # atts are attr_protected
         thumb = nil
@@ -472,7 +491,7 @@ module ActsAsPhocodable
         thumb.save
         new_thumbs << thumb
         Rails.logger.debug "    thumb.errors = #{thumb.errors.to_json}"
-        puts "    thumb.errors = #{thumb.errors.to_json}"
+        #puts "    thumb.errors = #{thumb.errors.to_json}"
       end
       new_thumbs
     end
@@ -493,9 +512,9 @@ module ActsAsPhocodable
     end
     
     def phocode(input_thumbs = self.parent_class.phocoder_thumbnails)
-      puts " input_thumbs.count = #{input_thumbs.size}"
+      #puts " input_thumbs.count = #{input_thumbs.size}"
       input_thumbs = dedupe_input_thumbs(input_thumbs)
-      puts " after dedupe input_thumbs.count = #{input_thumbs.size}"
+      #puts " after dedupe input_thumbs.count = #{input_thumbs.size}"
       #if self.thumbnails.count >= self.class.phocoder_thumbnails.size
       #  raise "This item already has thumbnails!"
       #  return
@@ -511,7 +530,7 @@ module ActsAsPhocodable
       Rails.logger.debug "callback url = #{callback_url}"
       response = Phocoder::Job.create(phocoder_params(input_thumbs))
       Rails.logger.debug "the phocode response = #{response.to_json}" if Rails.env != "test"
-      puts "the phocode response = #{response.to_json}" if Rails.env != "test"
+      #puts "the phocode response = #{response.to_json}" if Rails.env != "test"
       job = self.encodable_jobs.new
       job.phocoder_input_id = response.body["job"]["inputs"].first["id"]
       job.phocoder_job_id = response.body["job"]["id"]
@@ -521,7 +540,7 @@ module ActsAsPhocodable
       self.save #false need to do save(false) here if we're calling phocode on after_save
       response_thumbs = response.body["job"]["thumbnails"]
       Rails.logger.debug "trying to decode #{response_thumbs.size} response_thumbs = #{response_thumbs.to_json}"
-      puts "trying to decode #{response_thumbs.size} response_thumbs = #{response_thumbs.to_json}"
+      #puts "trying to decode #{response_thumbs.size} response_thumbs = #{response_thumbs.to_json}"
       create_thumbnails_from_response(response_thumbs,response.body["job"]["id"])
     end
     
@@ -595,7 +614,7 @@ module ActsAsPhocodable
         Rails.logger.debug "callback url = #{callback_url}"
         response = Phocoder::Job.create(phocoder_tone_mapping_params)
         Rails.logger.debug "tone_mapping response = #{response.body.to_json}"
-        puts "tone_mapping response = #{response.body.to_json}"
+        #puts "tone_mapping response = #{response.body.to_json}"
         job = self.encodable_jobs.new
         job.phocoder_output_id = response.body["job"]["tone_mapping"]["id"]
         job.phocoder_job_id = response.body["job"]["id"]
@@ -626,7 +645,7 @@ module ActsAsPhocodable
         Rails.logger.debug "callback url = #{callback_url}"
         response = Phocoder::Job.create(phocoder_composite_params)
         Rails.logger.debug "composite response = #{response.body.to_json}"
-        puts "composite response = #{response.body.to_json}"
+        #puts "composite response = #{response.body.to_json}"
         job = self.encodable_jobs.new
         job.phocoder_output_id = response.body["job"]["composite"]["id"]
         job.phocoder_job_id = response.body["job"]["id"]
@@ -636,7 +655,7 @@ module ActsAsPhocodable
         self.save #false need to do save(false) here if we're calling phocode on after_save
         response_thumbs = response.body["job"]["thumbnails"]
         Rails.logger.debug "trying to decode #{response_thumbs.size} response_thumbs = #{response_thumbs.to_json}"
-        puts "trying to decode #{response_thumbs.size} response_thumbs = #{response_thumbs.to_json}"
+        #puts "trying to decode #{response_thumbs.size} response_thumbs = #{response_thumbs.to_json}"
         create_thumbnails_from_response(response_thumbs,response.body["job"]["id"])
       end
     end
@@ -670,7 +689,7 @@ module ActsAsPhocodable
         self.thumbnails << thumb
         thumb.encodable_status = "zencoding"
         thumb.save
-        puts "    thumb.errors = #{thumb.errors.to_json}"
+        #puts "    thumb.errors = #{thumb.errors.to_json}"
       end
       
       self.save
@@ -826,7 +845,7 @@ module ActsAsPhocodable
     end
     
     def phocodable_config
-      puts "looking for config!"
+      #puts "looking for config!"
       self.class.config
     end
     
@@ -845,7 +864,7 @@ module ActsAsPhocodable
     
     def destroy_thumbnails
       if self.class.phocoder_thumbnails.size == 0 and self.class.zencoder_videos.size == 0 
-        puts "we're skipping destory_thumbnails since we don't do any processing "
+        #puts "we're skipping destory_thumbnails since we don't do any processing "
         return
       end
       #puts "calling destory thumbnails for #{self.thumbnails.count} - #{self.thumbnails.size}"
@@ -870,7 +889,7 @@ module ActsAsPhocodable
       end
       if thumbnail_name.blank? and thumbnail_hash_or_name.is_a?(Hash)
         thumbnail_name = "#{thumbnail_hash_or_name[:width]}x#{thumbnail_hash_or_name[:height]}"
-        puts "thumbnail_name = #{thumbnail_name}"
+        #puts "thumbnail_name = #{thumbnail_name}"
         thumbnail_hash_or_name[:label] = thumbnail_name
       end
       thumb = thumbnails.find_by_thumbnail(thumbnail_name)
@@ -924,7 +943,7 @@ module ActsAsPhocodable
     
     def save_local_file
       return if @saved_file.blank?
-      puts "saving the local file!!!!!!"
+      #puts "saving the local file!!!!!!"
       Rails.logger.debug "==================================================================================================="
       Rails.logger.debug "about to save the local file"
       run_callbacks :file_saved do
@@ -946,10 +965,10 @@ module ActsAsPhocodable
         if ActsAsPhocodable.storeage_mode == "s3" and ActsAsPhocodable.processing_mode == "spawn"
           spawn do # :method => :thread # <-- I think that should be set at the config/environment level
             Rails.logger.debug "------------beginning of spawn block"
-            puts               "------------beginning of spawn block"
+            #puts               "------------beginning of spawn block"
             self.save_s3_file
             Rails.logger.debug "------------end of spawn block"
-            puts               "------------end of spawn block"
+            #puts               "------------end of spawn block"
           end
         end
         if ActsAsPhocodable.storeage_mode == "local" and ActsAsPhocodable.processing_mode == "automatic" 
@@ -1017,7 +1036,7 @@ module ActsAsPhocodable
     # This should generate a fully qualified http://something-something
     # type of a reference.  Depending on storeage_mode/base_url settings.
     def public_url
-      puts "our base_url = #{base_url} and our local_url = #{local_url}"
+      #puts "our base_url = #{base_url} and our local_url = #{local_url}"
       if ActsAsPhocodable.storeage_mode == "local" or ActsAsPhocodable.storeage_mode == "offline" 
         base_url + local_url
       else
