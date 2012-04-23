@@ -10,7 +10,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20111101024507) do
+ActiveRecord::Schema.define(:version => 20120423030345) do
 
   create_table "encodable_jobs", :force => true do |t|
     t.string   "encodable_type"
@@ -76,6 +76,17 @@ ActiveRecord::Schema.define(:version => 20111101024507) do
     t.string   "upload_host"
     t.string   "parent_type"
     t.string   "encodable_status"
+    t.integer  "bits_per_pixel"
+    t.string   "camera_make"
+    t.string   "camera_model"
+    t.integer  "orientation"
+    t.string   "exposure_time"
+    t.string   "f_number"
+    t.string   "iso_speed_rating"
+    t.string   "exposure_bias_value"
+    t.string   "focal_length"
+    t.string   "focal_length_in_35mm_film"
+    t.integer  "subsec_time"
   end
 
   create_table "images", :force => true do |t|

@@ -31,7 +31,9 @@ class EncodableJob < ActiveRecord::Base
       img_params = params[:input]
       encodable = job.encodable
     end
-    [:file_size,:width,:height,:taken_at,:lat,:lng,:saturated_pixels,:gauss].each do |att|
+    [:file_size,:width,:height,:taken_at,:lat,:lng,:saturated_pixels,:gauss,:bits_per_pixel,:camera_make, 
+     :camera_model, :orientation, :exposure_time, :f_number, :iso_speed_rating, :exposure_bias_value, 
+     :focal_length, :focal_length_in_35mm_film, :subsec_time].each do |att|
       setter = att.to_s + "="
       if encodable.respond_to? setter and !img_params[att].blank?
         encodable.send setter, img_params[att]
