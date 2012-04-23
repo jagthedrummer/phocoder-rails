@@ -5,11 +5,11 @@
 
 Gem::Specification.new do |s|
   s.name = %q{phocoder-rails}
-  s.version = "0.0.41"
+  s.version = "0.0.42"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = [%q{Jeremy Green}]
-  s.date = %q{2012-03-24}
+  s.date = %q{2012-04-23}
   s.description = %q{Rails engine for easy integration with phocoder.com}
   s.email = %q{jagthedrummer@gmail.com}
   s.extra_rdoc_files = [
@@ -105,6 +105,7 @@ Gem::Specification.new do |s|
     "spec/dummy/db/migrate/20110523165213_add_parent_type_to_image_uploads.rb",
     "spec/dummy/db/migrate/20110523165522_create_encodable_jobs.rb",
     "spec/dummy/db/migrate/20111101024507_create_images.rb",
+    "spec/dummy/db/migrate/20120423030345_add_exif_data_to_image_uploads.rb",
     "spec/dummy/db/schema.rb",
     "spec/dummy/public/404.html",
     "spec/dummy/public/422.html",
@@ -163,6 +164,7 @@ Gem::Specification.new do |s|
     "spec/dummy/db/migrate/20110523165213_add_parent_type_to_image_uploads.rb",
     "spec/dummy/db/migrate/20110523165522_create_encodable_jobs.rb",
     "spec/dummy/db/migrate/20111101024507_create_images.rb",
+    "spec/dummy/db/migrate/20120423030345_add_exif_data_to_image_uploads.rb",
     "spec/dummy/db/schema.rb",
     "spec/engine_spec.rb",
     "spec/helpers/phocoder_helper_spec.rb",
