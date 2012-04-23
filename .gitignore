@@ -14,3 +14,4 @@ spec/dummy/config/phocodable.yml
 .loadpath
 # Make sure that we're not locking gems for users
 Gemfile.lock
+.redcar/
