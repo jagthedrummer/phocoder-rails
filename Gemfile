@@ -26,9 +26,9 @@ gem "spawn", :git => 'git://github.com/tra/spawn', :branch => "edge"
  
 group :development do
   gem 'rspec-rails', '2.4.1'
-  gem "bundler", "~> 1.0.0"
-  gem "jeweler", "~> 1.5.1"
-  gem "rcov", ">= 0"
+  gem "bundler"
+  gem "jeweler"
+  #gem "rcov", ">= 0"
 end
 
 group :test do
@@ -37,9 +37,9 @@ group :test do
   gem "sqlite3-ruby", :require => "sqlite3"
   gem 'rspec', '2.4.0'
   gem 'rspec-rails', '2.4.1'
-  gem "bundler", "~> 1.0.0"
-  gem "jeweler", "~> 1.5.1"
-  gem "rcov", ">= 0"
+  gem "bundler"
+  gem "jeweler"
+  #gem "rcov", ">= 0"
   gem 'autotest', '4.4.4'
   gem 'redgreen', '1.2.2'
   gem "webmock"
