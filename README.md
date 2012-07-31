@@ -28,6 +28,10 @@ rails g phocoder_rails:setup
 
 TBD
 
+* Setting storage mode
+* Setting processing mode (foreground / background processing)
+* Other?
+
 ## Generating a new model & scaffolding
 
 Letting PhocoderRails generate a new model and scaffold for you is probably the easiest way to get started
@@ -66,18 +70,20 @@ in your form named `file`.
 
 ## Model Configuration
 
-PhocoderRails allows you to easily set up your image processing in a simple declarative style.
+PhocoderRails allows you to easily set up your image processing in a simple declarative style.  The 
+`acts_as_phocodable` method hooks phocoder-rails into your model and allows you to easily decalre multiple
+thumbnails that will be generated any time a new model record is created.  Thumbnails can include cropping, 
+framing, and annotations.
 
-Here's an example of the ImageUpload class that would be generated with 
-`rails g phocoder_rails:scaffold image_upload` :
+Here's an ImageUpload class that shows and example of how to use `acts_as_phocodable` :
 
 ```ruby
 class ImageUpload < ActiveRecord::Base
 
   acts_as_phocodable :thumbnail_class => "ImageUploadThumbnail",
     :thumbnails => [
-      {:label=>"small",  :width=>100, :height=>100 },
-      {:label=>"medium", :width=>400, :height=>400,
+      {:label=>"small",  :width=>100, :height=>100, :aspect_mode => 'crop'},
+      {:label=>"medium", :width=>400, :height=>400, :aspect_mode => 'preserve',
         :frame=>{ :width=>20, :bottom=>50, :color=>'003' },
         :annotations=>[
                         {:text=>"Annotation Testing",:pointsize=>30,:fill_color=>'fff',:gravity=>"South",:y=>10},
@@ -88,3 +94,11 @@ class ImageUpload < ActiveRecord::Base
 
 end
 ```
+
+This will result in two 'thumbnail' images being created every time a new image is uploaded.  One will be 
+exactly 100x100 square, and the other one will be scaled proportionally to fit inside 400x400, with a 20
+pixel border on top, left, and right, and a 50 pixel border on bottom, with text annotations added on top
+and on the bottom of the image.  
+
+[Add images]
+
