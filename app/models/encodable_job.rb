@@ -2,9 +2,27 @@ class EncodableJob < ActiveRecord::Base
   
   belongs_to :encodable, :polymorphic=>true
   
+  scope :pending, :conditions => "phocoder_status != 'ready'"
+  
   def update_status
     job_data = Phocoder::Job.details(phocoder_job_id).body
-    self.class.update_from_phocoder job_data
+    #puts job_data.to_json
+    puts "    EncodableJob #{id} = #{job_data["aasm_state"]}"
+    if job_data["aasm_state"] == "complete"
+      self.phocoder_status = "ready"
+      self.encodable.encodable_status = "ready"
+      self.encodable.thumbnails.each do |t|
+        t.encodable_status = "ready"
+      end
+      self.save
+      self.encodable.save
+    end
+  end
+  
+  def self.update_pending_jobs
+    EncodableJob.pending.find_each do |e|
+      e.update_status
+    end
   end
   
   def self.update_from_phocoder(params)

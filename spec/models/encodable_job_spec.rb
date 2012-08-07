@@ -21,9 +21,12 @@ describe EncodableJob do
   
   describe "update_status" do
     it "should call Phocoder::Job.details and then call update_from_phocoder" do
-      Phocoder::Job.should_receive(:details).and_return(double :body => nil)
-      EncodableJob.should_receive(:update_from_phocoder).and_return(nil)
+      Phocoder::Job.should_receive(:details).and_return(double :body => {"aasm_state" => 'complete'} )
       @encodable_job.update_status
+      @encodable_job.reload
+      @image_upload.reload
+      @encodable_job.phocoder_status.should == "ready"
+      @image_upload.encodable_status.should == "ready"
     end
   end
   
