@@ -2,6 +2,11 @@ class EncodableJob < ActiveRecord::Base
   
   belongs_to :encodable, :polymorphic=>true
   
+  def update_status
+    job_data = Phocoder::Job.details(phocoder_job_id).body
+    self.class.update_from_phocoder job_data
+  end
+  
   def self.update_from_phocoder(params)
     Rails.logger.debug "tying to call update from phocoder for params = #{params.to_json}"
     puts "tying to call update from phocoder for params = #{params.to_json}"

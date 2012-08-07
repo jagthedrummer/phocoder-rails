@@ -408,14 +408,14 @@ describe PhocoderHelper do #, :debug=>true
   
   end # describe "video preview functions" do 
 
-  describe "offline_phocoder_video_embed" do
-    it "should render a video tag" do
-      vid = ImageUpload.new(:content_type=>'video/quicktime',:zencoder_status=>'ready',:id=>1,:filename=>"test.mov",:encodable_status=>"ready")
-      vid.stub!(:thumbnail_for).and_return(vid)
-      vid.video?.should be_true
-      offline_phocoder_video_embed(vid,"small",{}).should match("video-js")
-    end
-    
-  end
+  # describe "offline_phocoder_video_embed" do
+  #   it "should render a video tag" do
+  #     vid = ImageUpload.new(:content_type=>'video/quicktime',:zencoder_status=>'ready',:id=>1,:filename=>"test.mov",:encodable_status=>"ready")
+  #     vid.stub!(:thumbnail_for).and_return(vid)
+  #     vid.video?.should be_true
+  #     offline_phocoder_video_embed(vid,"small",{}).should match("video-js")
+  #   end
+  #   
+  # end
   
 end
