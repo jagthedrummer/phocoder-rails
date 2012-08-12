@@ -18,10 +18,12 @@ And then run:
 bundle install
 ```
 
-Then you need to generate the config files.
+Then you need to generate a config file and a migration for tracking job status.
 
 ```term
 rails g phocoder_rails:setup
+create db/migrate/xxxxxxxx_create_encodable_jobs.rb
+create config/phocodable.yml
 ```
 
 ## Base Configuration 
@@ -102,3 +104,5 @@ and on the bottom of the image.
 
 [Add images]
 
+
+## Storage and Processing Modes
