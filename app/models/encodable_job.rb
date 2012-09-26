@@ -2,6 +2,65 @@ class EncodableJob < ActiveRecord::Base
   
   belongs_to :encodable, :polymorphic=>true
   
+  scope :pending, :conditions => "phocoder_status != 'ready'"
+  
+  def update_status
+    job_data = Phocoder::Job.details(phocoder_job_id).body
+    #puts job_data.to_json
+    puts "    EncodableJob #{id} = #{job_data["aasm_state"]}"
+    if phocoder_input_id
+      job_data["inputs"].each do |input|
+        #puts "input = #{input.to_json}"
+        #puts "input id = #{input["id"]} my phocoder_input_id = #{phocoder_input_id}"
+        if input["id"] == phocoder_input_id
+          input.symbolize_keys!
+          params = {
+            :class => encodable_type,
+            :id => encodable_id,
+            :job => { :id => job_data["id"] },
+            :input => input
+          }
+          EncodableJob.update_from_phocoder(params)
+        end
+      end
+    elsif phocoder_output_id
+      outputs = (job_data["thumbnails"] || []) + 
+        (job_data["hdrs"] || []) + 
+        (job_data["tone_mappings"] || []) + 
+        (job_data["composites"] || []) + 
+        (job_data["hdr_htmls"] || [])
+      outputs.each do |output|
+        if output["id"] == phocoder_output_id
+          output.symbolize_keys!
+          output[:url] = output[:base_url] + output[:filename]
+          params = {
+            :class => encodable_type,
+            :id => encodable_id,
+            :job => { :id => job_data["id"] },
+            :output => output
+          }
+          EncodableJob.update_from_phocoder(params)
+        end
+      end
+    end
+    puts "+++++++++++++++"
+    # if job_data["aasm_state"] == "complete"
+    #   self.phocoder_status = "ready"
+    #   self.encodable.encodable_status = "ready"
+    #   self.encodable.thumbnails.each do |t|
+    #     t.encodable_status = "ready"
+    #   end
+    #   self.save
+    #   self.encodable.save
+    # end
+  end
+  
+  def self.update_pending_jobs
+    EncodableJob.pending.find_each do |e|
+      e.update_status
+    end
+  end
+  
   def self.update_from_phocoder(params)
     Rails.logger.debug "tying to call update from phocoder for params = #{params.to_json}"
     puts "tying to call update from phocoder for params = #{params.to_json}"
@@ -10,15 +69,17 @@ class EncodableJob < ActiveRecord::Base
       puts "find_by_phocoder_job_id_and_phocoder_output_id_and_encodable_type #{params[:job][:id]} - #{params[:output][:id]} ,#{params[:class]}"
       job = self.find_by_phocoder_job_id_and_phocoder_output_id_and_encodable_type params[:job][:id],params[:output][:id],params[:class]
       
-      
-      Rails.logger.debug "the job = #{job}"
+      puts "the job = #{job.to_json}"
+      Rails.logger.debug "the job = #{job.to_json}"
       img_params = params[:output]
       begin
         encodable = job.encodable
       rescue NoMethodError => ex
+        puts "something went wrong..."
         # here we try to fall back if we can't find an Encodable
         encodable = params[:class].constantize.find params[:id]
       end       
+      puts "encodable = #{encodable.to_json}"
       encodable.filename = File.basename(params[:output][:url]) if encodable.filename.blank?
       if ActsAsPhocodable.storeage_mode == "local"
         encodable.save_url(params[:output][:url])

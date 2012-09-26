@@ -47,7 +47,7 @@ describe ActsAsPhocodable do
   before(:each) do
 #        @attr = {
 #        :file => ActionDispatch::Http::UploadedFile.new(
-#          :tempfile=> Rack::Test::UploadedFile.new(fixture_path + '/big_eye_tiny.jpg', 'image/jpeg'),
+#          :tempfile=> Rack::Test::UploadedFile.new('/big_eye_tiny.jpg', 'image/jpeg'),
 #          :filename=>"big_eye_tiny.jpg"
 #        ) 
 #        }
@@ -599,6 +599,8 @@ describe ActsAsPhocodable do
     
     iu.save_s3_file
     # Now we should have a thumb
+    puts "@@@@@@@@@@@@@@@@@@@@@@@@@@@"
+    puts iu.thumbnails.map{|t| t.thumbnail }.to_json
     iu.thumbnails.size.should == 1
     # Mock the AWS reqeust for deleting the file and it's thumbnail
     AWS::S3::S3Object.should_receive(:delete).twice.and_return(nil)

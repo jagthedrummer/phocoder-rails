@@ -41,6 +41,7 @@ RSpec.configure do |config|
 
   config.fixture_path = "#{File.dirname(__FILE__)}/fixtures"
   
+  
   config.before(:all){
     
     #change this if sqlite is unavailable
