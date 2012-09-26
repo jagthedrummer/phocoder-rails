@@ -14,7 +14,7 @@ gem "rails", ">=3.0.0"
 
 gem 'phocoder-rb'
 gem 'zencoder'
-gem "mimetype-fu", "~> 0.1.2"
+gem "mimetype-fu", "~> 0.1.2", :require => 'mimetype_fu'
 gem 'aws-s3', :require => 'aws/s3'
 #gem "spawn", :git => "git://github.com/jagthedrummer/spawn.git"
 gem "spawn", :git => 'git://github.com/tra/spawn', :branch => "edge"

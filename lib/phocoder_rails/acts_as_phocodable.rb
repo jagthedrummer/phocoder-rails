@@ -921,15 +921,14 @@ module ActsAsPhocodable
       cleanup
       if new_file.is_a? File
         self.filename = File.basename new_file.path
-        self.content_type = MIME::Types.type_for(self.filename).first.content_type || File.mime_type?(self.filename)
+        self.content_type = MIME::Types.type_for(self.filename).first.content_type 
         self.file_size = new_file.size
       else
-        self.filename = new_file.original_filename || File.mime_type?(self.filename)
-
-        self.content_type = new_file.content_type  
+        self.filename = new_file.original_filename
+        self.content_type = new_file.content_type
         self.file_size = new_file.size
       end
-      
+      self.content_type = File.mime_type?(self.filename) if self.content_type.blank?
       if new_file.respond_to? :tempfile
         @saved_file = new_file.tempfile
       else

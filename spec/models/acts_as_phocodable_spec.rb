@@ -169,7 +169,17 @@ describe ActsAsPhocodable do
     phorams[:input][:url].should == iu.public_url
     phorams[:thumbnails].size.should == 1
   end
-    
+  
+  describe "automatically setting the content type" do
+    it "should work for jpgs" do
+      iu = ImageUpload.new(:file => fixture_file_upload(fixture_path + '/big_eye_tiny.jpg'))
+      iu.content_type.should == "image/jpeg"
+    end
+    it "should work for nefs" do
+      iu = ImageUpload.new(:file => fixture_file_upload(fixture_path + '/test_image.nef'))
+      iu.content_type.should == "image/x-nikon-nef"
+    end
+  end
   
   it "should create zencooder params based on the acts_as_phocodable :videos options" do
     iu = ImageUpload.new(@vid_attr)
@@ -599,8 +609,8 @@ describe ActsAsPhocodable do
     
     iu.save_s3_file
     # Now we should have a thumb
-    puts "@@@@@@@@@@@@@@@@@@@@@@@@@@@"
-    puts iu.thumbnails.map{|t| t.thumbnail }.to_json
+    #puts "@@@@@@@@@@@@@@@@@@@@@@@@@@@"
+    #puts iu.thumbnails.map{|t| t.thumbnail }.to_json
     iu.thumbnails.size.should == 1
     # Mock the AWS reqeust for deleting the file and it's thumbnail
     AWS::S3::S3Object.should_receive(:delete).twice.and_return(nil)
