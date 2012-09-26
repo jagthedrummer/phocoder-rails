@@ -928,7 +928,7 @@ module ActsAsPhocodable
         self.content_type = new_file.content_type
         self.file_size = new_file.size
       end
-      self.content_type = File.mime_type?(self.filename) if self.content_type.blank?
+      self.content_type = File.mime_type?(self.filename) if (self.content_type.blank? || self.content_type == "[]")
       if new_file.respond_to? :tempfile
         @saved_file = new_file.tempfile
       else
