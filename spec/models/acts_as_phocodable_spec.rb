@@ -53,13 +53,13 @@ describe ActsAsPhocodable do
 #        }
     ImageUpload.destroy_all
     @attr = {
-      :file => fixture_file_upload('/big_eye_tiny.jpg','image/jpeg')
+      :file => fixture_file_upload(fixture_path + '/big_eye_tiny.jpg','image/jpeg')
     }
     @vid_attr = {
-      :file => fixture_file_upload('/video-test.mov', 'video/quicktime')
+      :file => fixture_file_upload(fixture_path + '/video-test.mov', 'video/quicktime')
     }
     @txt_attr = {
-      :file => fixture_file_upload('/test.txt', 'text/plain')
+      :file => fixture_file_upload(fixture_path + '/test.txt', 'text/plain')
     }
   end
   
