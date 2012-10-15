@@ -3,7 +3,8 @@ require File.expand_path(File.dirname(__FILE__) + '/../spec_helper')
 describe PhocoderHelper do #, :debug=>true
   
   before(:each) do
-    @attr = { :file => fixture_file_upload(fixture_path + '/big_eye_tiny.jpg','image/jpeg'),:width => 200,:height=>197 }
+    @fixture_path = ""
+    @attr = { :file => fixture_file_upload(@fixture_path + '/big_eye_tiny.jpg','image/jpeg'),:width => 200,:height=>197 }
     @image = ImageUpload.new(@attr)
     ActsAsPhocodable.storeage_mode = "local"
     ActsAsPhocodable.processing_mode = "automatic"
@@ -29,7 +30,7 @@ describe PhocoderHelper do #, :debug=>true
   
   describe "phocoder_link" do
     before(:each) do
-      @attr = { :file => fixture_file_upload(fixture_path + '/big_eye_tiny.jpg','image/jpeg') }
+      @attr = { :file => fixture_file_upload(@fixture_path + '/big_eye_tiny.jpg','image/jpeg') }
       @image = ImageUpload.new(@attr)
     end
     it "should return raw text if the file is not ready" do
@@ -54,7 +55,7 @@ describe PhocoderHelper do #, :debug=>true
       helper.phocoder_thumbnail(vid)
     end
     it "should delegate to phocoder_image_thumbnail for images" do
-      img = ImageUpload.new({ :file => fixture_file_upload(fixture_path + '/big_eye_tiny.jpg','image/jpeg') })
+      img = ImageUpload.new({ :file => fixture_file_upload(@fixture_path + '/big_eye_tiny.jpg','image/jpeg') })
       helper.should_receive(:phocoder_image_thumbnail).and_return(nil)
       helper.phocoder_thumbnail(img)
     end
@@ -167,7 +168,7 @@ describe PhocoderHelper do #, :debug=>true
     describe "when a thumbnail is passed" do
       it "should return an img tag for a thumbnail that can be resolved by label and is ready" do
         ActsAsPhocodable.storeage_mode = "local"
-        @tattr = { :file => fixture_file_upload(fixture_path + '/big_eye_tiny.jpg','image/jpeg'), :width => 100, :height => 100 }
+        @tattr = { :file => fixture_file_upload(@fixture_path + '/big_eye_tiny.jpg','image/jpeg'), :width => 100, :height => 100 }
         @thumb = ImageUpload.new(@tattr)
         @thumb.filename = "big_eye_tiny_small.jpg"
         @thumb.encodable_status = @image.encodable_status = "ready"
@@ -188,7 +189,7 @@ describe PhocoderHelper do #, :debug=>true
       
       it "should call pending_phcoder_thumbnail if the thumb is not ready" do
         ActsAsPhocodable.storeage_mode = "local"
-        @tattr = { :file => fixture_file_upload(fixture_path + '/big_eye_tiny.jpg','image/jpeg'), :width => 100, :height => 100 }
+        @tattr = { :file => fixture_file_upload(@fixture_path + '/big_eye_tiny.jpg','image/jpeg'), :width => 100, :height => 100 }
         @thumb = ImageUpload.new(@tattr)
         @thumb.filename = "big_eye_tiny_small.jpg"
         @thumb.encodable_status = "phocoding"
@@ -276,7 +277,7 @@ describe PhocoderHelper do #, :debug=>true
 #    
 #    it "if the thumbnail is not ready, should call pending_phocoder_thumbnail" do
 #      ActsAsPhocodable.storeage_mode = "local"
-#      @tattr = { :file => fixture_file_upload(fixture_path + '/big_eye_tiny.jpg','image/jpeg'), :width => 100, :height => 100 }
+#      @tattr = { :file => fixture_file_upload(@fixture_path + '/big_eye_tiny.jpg','image/jpeg'), :width => 100, :height => 100 }
 #      @thumb = ImageUpload.new(@tattr)
 #      @thumb.filename = "big_eye_tiny_thumbnail.jpg"
 #      @thumb.encodable_status = "phocoding"
@@ -292,7 +293,7 @@ describe PhocoderHelper do #, :debug=>true
 
 #  describe "offline_phocoder_image_thumbnail" do
 #    it "should render a thumbnail with the path to the original but the dimensions of the thumbnail" do
-#      @tattr = { :file => fixture_file_upload(fixture_path + '/big_eye_tiny.jpg','image/jpeg'),:filename=>"big_eye_tiny_thumbnail.jpg", :width => 100, :height => 100 }
+#      @tattr = { :file => fixture_file_upload(@fixture_path + '/big_eye_tiny.jpg','image/jpeg'),:filename=>"big_eye_tiny_thumbnail.jpg", :width => 100, :height => 100 }
 #      @thumb = ImageUpload.new(@tattr)
 #      @thumb.filename = "big_eye_tiny_thumbnail.jpg"
 #      output = helper.offline_phocoder_image_thumbnail(@image,@thumb,{})
@@ -304,7 +305,7 @@ describe PhocoderHelper do #, :debug=>true
   
   describe "pending_phocoder_thumbnail" do
     it "should return an image tag that points to a waiting image with the dimensions of the thumbnail" do
-      @tattr = { :file => fixture_file_upload(fixture_path + '/big_eye_tiny.jpg','image/jpeg'), :width => 100, :height => 100 }
+      @tattr = { :file => fixture_file_upload(@fixture_path + '/big_eye_tiny.jpg','image/jpeg'), :width => 100, :height => 100 }
       @thumb = ImageUpload.new(@tattr)
       @thumb.filename = "big_eye_tiny_thumbnail.jpg"
       output = helper.pending_phocoder_thumbnail(@image,@thumb,{})
@@ -372,7 +373,7 @@ describe PhocoderHelper do #, :debug=>true
   describe "video preview functions" do 
 #    before(:each) do
 #      @vid_attr = {
-#        :file => fixture_file_upload(fixture_path + '/video-test.mov', 'video/quicktime')
+#        :file => fixture_file_upload(@fixture_path + '/video-test.mov', 'video/quicktime')
 #      }
 #      Zencoder::Job.stub!(:create).and_return(mock(Zencoder::Response,:body=>{
 #        "id"=>1,

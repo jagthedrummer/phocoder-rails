@@ -9,7 +9,7 @@ include ActionDispatch::TestProcess
 #class TestMigration < ActiveRecord::Migration
 #  def self.up
 #    create_table :images, :force => true do |t|
-#      t.string   "filename"
+#      t.string   "filename
 #      t.datetime "created_at"
 #      t.datetime "updated_at"
 #      t.string   "content_type"
@@ -52,14 +52,15 @@ describe ActsAsPhocodable do
 #        ) 
 #        }
     ImageUpload.destroy_all
+    @fixture_path = ""
     @attr = {
-      :file => fixture_file_upload(fixture_path + '/big_eye_tiny.jpg','image/jpeg')
+      :file => fixture_file_upload(@fixture_path + '/big_eye_tiny.jpg','image/jpeg')
     }
     @vid_attr = {
-      :file => fixture_file_upload(fixture_path + '/video-test.mov', 'video/quicktime')
+      :file => fixture_file_upload(@fixture_path + '/video-test.mov', 'video/quicktime')
     }
     @txt_attr = {
-      :file => fixture_file_upload(fixture_path + '/test.txt', 'text/plain')
+      :file => fixture_file_upload(@fixture_path + '/test.txt', 'text/plain')
     }
   end
   
@@ -87,8 +88,9 @@ describe ActsAsPhocodable do
     ActsAsPhocodable.processing_mode = "automatic" 
   end
   
-  it "should default to the url in the config" do 
-    ActsAsPhocodable.base_url.should == "http://actsasphocodableexample.chaos.webapeel.com"
+  it "should default to the url in the config" do
+    ActsAsPhocodable.read_phocodable_configuration
+    ActsAsPhocodable.base_url.should == "http://thephotolabs-test.herokuapp.com"
   end
   
   it "should take a new base_url" do 
@@ -129,8 +131,8 @@ describe ActsAsPhocodable do
     # it is currently excluded from git since it contains an API key
     # this will fail for any one other than me.
     # what to do? 
-    iu.phocodable_config[:phocoder_url].should == "http://photoapi.chaos.webapeel.com"
-    iu.phocodable_config[:base_url].should == "http://actsasphocodableexample.chaos.webapeel.com"
+    iu.phocodable_config[:phocoder_url].should == "http://phocoder.herokuapp.com"
+    iu.phocodable_config[:base_url].should == "http://thephotolabs-test.herokuapp.com"
   end
   
   
@@ -172,11 +174,11 @@ describe ActsAsPhocodable do
   
   describe "automatically setting the content type" do
     it "should work for jpgs" do
-      iu = ImageUpload.new(:file => fixture_file_upload(fixture_path + '/big_eye_tiny.jpg'))
+      iu = ImageUpload.new(:file => fixture_file_upload(@fixture_path + '/big_eye_tiny.jpg'))
       iu.content_type.should == "image/jpeg"
     end
     it "should work for nefs" do
-      iu = ImageUpload.new(:file => fixture_file_upload(fixture_path + '/test_image.nef'))
+      iu = ImageUpload.new(:file => fixture_file_upload(@fixture_path + '/test_image.nef'))
       iu.content_type.should == "image/x-nikon-nef"
     end
   end
@@ -611,9 +613,9 @@ describe ActsAsPhocodable do
     # Now we should have a thumb
     #puts "@@@@@@@@@@@@@@@@@@@@@@@@@@@"
     #puts iu.thumbnails.map{|t| t.thumbnail }.to_json
-    iu.thumbnails.size.should == 1
+    iu.thumbnails.size.should == 2
     # Mock the AWS reqeust for deleting the file and it's thumbnail
-    AWS::S3::S3Object.should_receive(:delete).twice.and_return(nil)
+    AWS::S3::S3Object.should_receive(:delete).exactly(3).times.and_return(nil)
     iu.destroy
   end
   
@@ -640,7 +642,7 @@ describe ActsAsPhocodable do
     iu.save
     #puts "======================================="
     #puts iu.thumbnails.to_json
-    iu.thumbnails.size.should == 1 
+    iu.thumbnails.size.should == 2
     
     iu.destroy
   end
@@ -670,10 +672,23 @@ describe ActsAsPhocodable do
     
     #now store in S3 + phocode
     iu.save
-    iu.thumbnails.size.should == 1
+    iu.thumbnails.size.should == 2
     
     iu.destroy 
   end
   
+  describe "cloudfront_base_host" do
+    before(:each) do
+      @iu = ImageUpload.new(@attr)
+    end
+    it "should return a plain string" do
+      ActsAsPhocodable.cloudfront_host = "http://1234.cloudfront.net"
+      @iu.cloudfront_base_host.should == "http://1234.cloudfront.net"
+    end
+    it "should execute a Proc" do
+      ActsAsPhocodable.cloudfront_host = lambda{|path| "http://asset0.myhost.com" }
+      @iu.cloudfront_base_host.should == "http://asset0.myhost.com"
+    end
+  end
   
 end
