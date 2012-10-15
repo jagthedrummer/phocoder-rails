@@ -45,6 +45,10 @@ module ActsAsPhocodable
   mattr_accessor :s3_secret_access_key
   self.s3_secret_access_key = "your-secret-access-key"
   
+  # The cloudfront host or a Proc that returns a cloud front host
+  mattr_accessor :cloudfront_host
+  self.cloudfront_host = nil
+
   # The javascript library to use for updates
   # either 'prototype' or 'jquery'
   mattr_accessor :javascript_library
@@ -62,7 +66,7 @@ module ActsAsPhocodable
   # The actual configuration parameters
   mattr_accessor :config
   self.config = nil
-  
+
   def self.phocodable_config
     #puts "checking phocodable_config for #{self.config}"
     self.read_phocodable_configuration if self.config.nil?
@@ -76,7 +80,8 @@ module ActsAsPhocodable
     self.config =  YAML.load(ERB.new(File.read(config_path)).result)[::Rails.env.to_s].symbolize_keys
     #self.apply_phocodable_configuration
   end
-  
+ 
+
   # The list of image content types that are considered web safe
   # These can be displayed directly, skipping processing if in offline mode
   mattr_accessor :web_safe_image_types
@@ -1040,7 +1045,7 @@ module ActsAsPhocodable
       if ActsAsPhocodable.storeage_mode == "local" or ActsAsPhocodable.storeage_mode == "offline" 
         base_url + local_url
       else
-        s3_url
+        self.class.cloudfront_host.present? ? cloudfront_url : s3_url
       end
     end
     
@@ -1097,6 +1102,15 @@ module ActsAsPhocodable
       self.class.s3_bucket_name
     end
     
+    def cloudfront_base_host
+      host = self.class.cloudfront_host
+      host.instance_of?(Proc) ? host.call(s3_key) : host
+    end 
+
+    def cloudfront_url
+      "#{cloudfront_base_host}/#{s3_key}"
+    end
+ 
     def save_s3_file
       #I don't think we need this return check anymore.  
       #return if !@saved_a_new_file
