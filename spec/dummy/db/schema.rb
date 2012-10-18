@@ -1,3 +1,4 @@
+# encoding: UTF-8
 # This file is auto-generated from the current state of the database. Instead
 # of editing this file, please use the migrations feature of Active Record to
 # incrementally modify your database, and then regenerate this schema definition.
@@ -24,8 +25,8 @@ ActiveRecord::Schema.define(:version => 20120423030345) do
     t.integer  "zencoder_output_id"
     t.string   "zencoder_status"
     t.string   "zencoder_url"
-    t.datetime "created_at"
-    t.datetime "updated_at"
+    t.datetime "created_at",         :null => false
+    t.datetime "updated_at",         :null => false
   end
 
   add_index "encodable_jobs", ["encodable_type", "encodable_id"], :name => "index_encodable_jobs_on_encodable_type_and_encodable_id"
@@ -39,8 +40,8 @@ ActiveRecord::Schema.define(:version => 20120423030345) do
     t.integer  "height"
     t.integer  "file_size"
     t.string   "upload_host"
-    t.datetime "created_at"
-    t.datetime "updated_at"
+    t.datetime "created_at",       :null => false
+    t.datetime "updated_at",       :null => false
     t.datetime "taken_at"
     t.float    "lat"
     t.float    "lng"
@@ -97,8 +98,8 @@ ActiveRecord::Schema.define(:version => 20120423030345) do
     t.integer  "height"
     t.integer  "file_size"
     t.string   "upload_host"
-    t.datetime "created_at"
-    t.datetime "updated_at"
+    t.datetime "created_at",       :null => false
+    t.datetime "updated_at",       :null => false
     t.datetime "taken_at"
     t.float    "lat"
     t.float    "lng"
