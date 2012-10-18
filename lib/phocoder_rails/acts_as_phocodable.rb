@@ -1117,9 +1117,10 @@ module ActsAsPhocodable
       #@saved_a_new_file = false
       AWS::S3::S3Object.store(
                               s3_key, 
-                              open(local_path), 
+                              open(local_path),
       s3_bucket_name,
-      :access => :public_read
+      :access => :public_read,
+      "Cache-Control" => 'max-age=315360000'
       )
       self.encodable_status = "s3"
       self.save
