@@ -94,10 +94,13 @@ class EncodableJob < ActiveRecord::Base
     end
     [:file_size,:width,:height,:taken_at,:lat,:lng,:saturated_pixels,:gauss,:bits_per_pixel,:camera_make, 
      :camera_model, :orientation, :exposure_time, :f_number, :iso_speed_rating, :exposure_bias_value, 
-     :focal_length, :focal_length_in_35mm_film, :subsec_time].each do |att|
+     :focal_length, :focal_length_in_35mm_film, :subsec_time, :pixels, :processing_time].each do |att|
       setter = att.to_s + "="
       if encodable.respond_to? setter and !img_params[att].blank?
         encodable.send setter, img_params[att]
+      end
+      if job.respond_to? setter and !img_params[att].blank?
+        job.send setter, img_params[att]
       end
     end
     
