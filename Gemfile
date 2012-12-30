@@ -24,6 +24,8 @@ gem "spawn", :git => 'git://github.com/tra/spawn', :branch => "edge"
  
 #gem "rspec", "~> 2.1.0"
 #gem "rspec-rails", ">= 2.0.0.beta"
+
+gem 'simplecov', :require => false, :group => :test
  
 group :development do
   gem 'rspec-rails', '2.4.1'
