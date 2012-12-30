@@ -97,6 +97,26 @@ describe ActsAsPhocodable do
     ActsAsPhocodable.base_url = "http://new-domain.com"
     ActsAsPhocodable.base_url.should == "http://new-domain.com"
   end
+
+  it "should default to tracking jobs" do
+    ActsAsPhocodable.track_jobs.should be_true
+  end
+
+  it "should be able to be set to not track jobs" do
+    ActsAsPhocodable.track_jobs = false
+    ActsAsPhocodable.track_jobs.should_not be_true
+  end
+
+  it "should default to not tracking components" do
+    ActsAsPhocodable.track_components.should_not be_true
+  end
+
+  it "should be able to be set to to track components" do
+    ActsAsPhocodable.track_components = true
+    ActsAsPhocodable.track_components.should be_true
+  end
+
+
     
   it "should default to the normal config file" do 
     ActsAsPhocodable.config_file.should == "config/phocodable.yml"

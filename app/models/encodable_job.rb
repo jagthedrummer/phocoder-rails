@@ -3,6 +3,13 @@ class EncodableJob < ActiveRecord::Base
   belongs_to :encodable, :polymorphic=>true
   
   scope :pending, :conditions => "phocoder_status != 'ready'"
+  scope :for_components, :conditions => "tracking_mode = 'component'"
+  scope :for_jobs, :conditions => "tracking_mode = 'job'"
+
+  def initialize(params = {}, options={})
+    super
+    self.tracking_mode = "component" unless self.tracking_mode
+  end
   
   def update_status
     job_data = Phocoder::Job.details(phocoder_job_id).body
