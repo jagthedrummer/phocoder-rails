@@ -558,6 +558,7 @@ module ActsAsPhocodable
         job.phocoder_input_id = response.body["job"]["inputs"].first["id"]
         job.phocoder_job_id = response.body["job"]["id"]
         job.phocoder_status = "phocoding"
+        job.user_id = self.user_id if (self.respond_to?(:user_id) && self.user_id)
         self.encodable_jobs << job
       end
       if ActsAsPhocodable.track_jobs
@@ -566,6 +567,7 @@ module ActsAsPhocodable
         job.phocoder_input_id = response.body["job"]["inputs"].first["id"]
         job.phocoder_job_id = response.body["job"]["id"]
         job.phocoder_status = "phocoding"
+        job.user_id = self.user_id if (self.respond_to?(:user_id) && self.user_id)
         self.encodable_jobs << job
       end
 
@@ -597,6 +599,7 @@ module ActsAsPhocodable
           job.phocoder_output_id = response.body["job"]["hdr"]["id"]
           job.phocoder_job_id = response.body["job"]["id"]
           job.phocoder_status = "phocoding"
+          job.user_id = self.user_id if (self.respond_to?(:user_id) && self.user_id)
           self.encodable_jobs << job
         end
         if ActsAsPhocodable.track_jobs
@@ -605,6 +608,7 @@ module ActsAsPhocodable
           job.phocoder_output_id = response.body["job"]["hdr"]["id"]
           job.phocoder_job_id = response.body["job"]["id"]
           job.phocoder_status = "phocoding"
+          job.user_id = self.user_id if (self.respond_to?(:user_id) && self.user_id)
           self.encodable_jobs << job
         end
         self.encodable_status = "phocoding"
@@ -634,6 +638,7 @@ module ActsAsPhocodable
           job.phocoder_output_id = response.body["job"]["hdrhtml"]["id"]
           job.phocoder_job_id = response.body["job"]["id"]
           job.phocoder_status = "phocoding"
+          job.user_id = self.user_id if (self.respond_to?(:user_id) && self.user_id)
           self.encodable_jobs << job
         end
         if ActsAsPhocodable.track_jobs
@@ -642,6 +647,7 @@ module ActsAsPhocodable
           job.phocoder_output_id = response.body["job"]["hdrhtml"]["id"]
           job.phocoder_job_id = response.body["job"]["id"]
           job.phocoder_status = "phocoding"
+          job.user_id = self.user_id if (self.respond_to?(:user_id) && self.user_id)
           self.encodable_jobs << job
         end
         self.encodable_status = "phocoding"
@@ -673,6 +679,7 @@ module ActsAsPhocodable
           job.phocoder_output_id = response.body["job"]["tone_mapping"]["id"]
           job.phocoder_job_id = response.body["job"]["id"]
           job.phocoder_status = "phocoding"
+          job.user_id = self.user_id if (self.respond_to?(:user_id) && self.user_id)
           self.encodable_jobs << job
         end
         if ActsAsPhocodable.track_jobs
@@ -681,6 +688,7 @@ module ActsAsPhocodable
           job.phocoder_output_id = response.body["job"]["tone_mapping"]["id"]
           job.phocoder_job_id = response.body["job"]["id"]
           job.phocoder_status = "phocoding"
+          job.user_id = self.user_id if (self.respond_to?(:user_id) && self.user_id)
           self.encodable_jobs << job
         end
         self.encodable_status = "phocoding"
@@ -714,6 +722,7 @@ module ActsAsPhocodable
           job.phocoder_output_id = response.body["job"]["composite"]["id"]
           job.phocoder_job_id = response.body["job"]["id"]
           job.phocoder_status = "phocoding"
+          job.user_id = self.user_id if (self.respond_to?(:user_id) && self.user_id)
           self.encodable_jobs << job
         end
         if ActsAsPhocodable.track_jobs
@@ -722,6 +731,7 @@ module ActsAsPhocodable
           job.phocoder_output_id = response.body["job"]["composite"]["id"]
           job.phocoder_job_id = response.body["job"]["id"]
           job.phocoder_status = "phocoding"
+          job.user_id = self.user_id if (self.respond_to?(:user_id) && self.user_id)
           self.encodable_jobs << job
         end
         self.encodable_status = "phocoding"
@@ -747,12 +757,14 @@ module ActsAsPhocodable
       if ActsAsPhocodable.track_components
         job = self.encodable_jobs.new
         job.zencoder_job_id = response.body["id"]
+        job.user_id = self.user_id if (self.respond_to?(:user_id) && self.user_id)
         self.encodable_jobs << job
       end
       if ActsAsPhocodable.track_jobs
         job = self.encodable_jobs.new
         job.tracking_mode = 'job'
         job.zencoder_job_id = response.body["id"]
+        job.user_id = self.user_id if (self.respond_to?(:user_id) && self.user_id)
         self.encodable_jobs << job
       end
 
@@ -766,6 +778,7 @@ module ActsAsPhocodable
           tjob.zencoder_url = output_params["url"]
           tjob.zencoder_job_id = response.body["id"]
           tjob.zencoder_status  =  "zencoding"
+          tjob.user_id = self.user_id if (self.respond_to?(:user_id) && self.user_id)
           thumb.encodable_jobs << tjob
         end
         self.thumbnails << thumb
