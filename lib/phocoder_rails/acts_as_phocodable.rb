@@ -560,6 +560,15 @@ module ActsAsPhocodable
         job.phocoder_status = "phocoding"
         self.encodable_jobs << job
       end
+      if ActsAsPhocodable.track_jobs
+        job = self.encodable_jobs.new
+        job.tracking_mode = 'job'
+        job.phocoder_input_id = response.body["job"]["inputs"].first["id"]
+        job.phocoder_job_id = response.body["job"]["id"]
+        job.phocoder_status = "phocoding"
+        self.encodable_jobs << job
+      end
+
       self.encodable_status = "phocoding" unless self.encodable_status == "ready" # the unless clause allows new thumbs to be created on the fly without jacking with the status
       self.save #false need to do save(false) here if we're calling phocode on after_save
       response_thumbs = response.body["job"]["thumbnails"]
@@ -585,6 +594,14 @@ module ActsAsPhocodable
         Rails.logger.debug "the response from phocode_hdr = #{response.body.to_json}"
         if ActsAsPhocodable.track_components
           job = self.encodable_jobs.new
+          job.phocoder_output_id = response.body["job"]["hdr"]["id"]
+          job.phocoder_job_id = response.body["job"]["id"]
+          job.phocoder_status = "phocoding"
+          self.encodable_jobs << job
+        end
+        if ActsAsPhocodable.track_jobs
+          job = self.encodable_jobs.new
+          job.tracking_mode = 'job'
           job.phocoder_output_id = response.body["job"]["hdr"]["id"]
           job.phocoder_job_id = response.body["job"]["id"]
           job.phocoder_status = "phocoding"
@@ -619,6 +636,14 @@ module ActsAsPhocodable
           job.phocoder_status = "phocoding"
           self.encodable_jobs << job
         end
+        if ActsAsPhocodable.track_jobs
+          job = self.encodable_jobs.new
+          job.tracking_mode = 'job'
+          job.phocoder_output_id = response.body["job"]["hdrhtml"]["id"]
+          job.phocoder_job_id = response.body["job"]["id"]
+          job.phocoder_status = "phocoding"
+          self.encodable_jobs << job
+        end
         self.encodable_status = "phocoding"
         self.save #false need to do save(false) here if we're calling phocode on after_save
       end
@@ -645,6 +670,14 @@ module ActsAsPhocodable
         #puts "tone_mapping response = #{response.body.to_json}"
         if ActsAsPhocodable.track_components
           job = self.encodable_jobs.new
+          job.phocoder_output_id = response.body["job"]["tone_mapping"]["id"]
+          job.phocoder_job_id = response.body["job"]["id"]
+          job.phocoder_status = "phocoding"
+          self.encodable_jobs << job
+        end
+        if ActsAsPhocodable.track_jobs
+          job = self.encodable_jobs.new
+          job.tracking_mode = 'job'
           job.phocoder_output_id = response.body["job"]["tone_mapping"]["id"]
           job.phocoder_job_id = response.body["job"]["id"]
           job.phocoder_status = "phocoding"
@@ -683,6 +716,14 @@ module ActsAsPhocodable
           job.phocoder_status = "phocoding"
           self.encodable_jobs << job
         end
+        if ActsAsPhocodable.track_jobs
+          job = self.encodable_jobs.new
+          job.tracking_mode = 'job'
+          job.phocoder_output_id = response.body["job"]["composite"]["id"]
+          job.phocoder_job_id = response.body["job"]["id"]
+          job.phocoder_status = "phocoding"
+          self.encodable_jobs << job
+        end
         self.encodable_status = "phocoding"
         self.save #false need to do save(false) here if we're calling phocode on after_save
         response_thumbs = response.body["job"]["thumbnails"]
@@ -705,6 +746,12 @@ module ActsAsPhocodable
       Rails.logger.debug "response from Zencoder = #{response.body.to_json}"
       if ActsAsPhocodable.track_components
         job = self.encodable_jobs.new
+        job.zencoder_job_id = response.body["id"]
+        self.encodable_jobs << job
+      end
+      if ActsAsPhocodable.track_jobs
+        job = self.encodable_jobs.new
+        job.tracking_mode = 'job'
         job.zencoder_job_id = response.body["id"]
         self.encodable_jobs << job
       end
