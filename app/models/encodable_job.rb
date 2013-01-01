@@ -68,7 +68,101 @@ class EncodableJob < ActiveRecord::Base
     end
   end
   
+
   def self.update_from_phocoder(params)
+    if params[:outputs] && params[:inputs]
+      update_from_phocoder_job_style(params)
+    else
+      update_from_phocoder_component_style(params)
+    end
+  end
+
+  def self.update_from_phocoder_job_style(params)
+    if params[:job][:type] == 'ThumbnailJob'
+      update_from_phocoder_thumbnail_job(params)
+    elsif params[:job][:type] == 'CompositeJob' || params[:job][:type] == 'ToneMappingJob'
+      update_from_phocoder_generic_job_with_thumbnails(params)
+    else
+      update_from_phocoder_generic_job(params)
+    end
+  end
+
+  def self.update_from_phocoder_thumbnail_job(params)
+    #debugger
+    job = self.for_jobs.find_by_phocoder_job_id params[:job][:id]
+    encodable = job.encodable
+    
+    img_params = params[:inputs].first
+    update_encodable_and_job_from_img_params(encodable,job,img_params)
+
+    params[:outputs].each do |thumb_params|
+      thumbnail = encodable.thumbnail_for(thumb_params[:label])
+      update_encodable_and_job_from_img_params(thumbnail,job,thumb_params)
+      thumbnail.encodable_status = "ready" if thumbnail.respond_to?(:encodable_status=)
+      thumbnail.phocoder_status = "ready" if thumbnail.respond_to?(:phocoder_status=)
+      thumbnail.save!
+    end
+
+    encodable.encodable_status = "ready" if encodable.respond_to?(:encodable_status=)
+    encodable.phocoder_status = "ready" if encodable.respond_to?(:phocoder_status=)
+    encodable.save!
+    encodable.fire_ready_callback
+    
+    job.phocoder_status = "ready"
+    job.save
+    job
+  end
+
+  def self.update_from_phocoder_generic_job(params)
+    #debugger
+    job = self.for_jobs.find_by_phocoder_job_id params[:job][:id]
+    encodable = job.encodable
+    
+    img_params = params[:outputs].first
+    update_encodable_and_job_from_img_params(encodable,job,img_params)
+
+    encodable.encodable_status = "ready" if encodable.respond_to?(:encodable_status=)
+    encodable.phocoder_status = "ready" if encodable.respond_to?(:phocoder_status=)
+    encodable.save!
+    encodable.fire_ready_callback
+
+    job.phocoder_status = "ready"
+    job.save
+    job
+  end
+
+  def self.update_from_phocoder_generic_job_with_thumbnails(params)
+    #debugger
+    job = self.for_jobs.find_by_phocoder_job_id params[:job][:id]
+    encodable = job.encodable
+    
+    img_params = {}
+    
+
+    params[:outputs].each do |thumb_params|
+      if thumb_params[:label].blank?
+        img_params = thumb_params
+        next
+      end
+      thumbnail = encodable.thumbnail_for(thumb_params[:label])
+      update_encodable_and_job_from_img_params(thumbnail,job,thumb_params)
+      thumbnail.encodable_status = "ready" if thumbnail.respond_to?(:encodable_status=)
+      thumbnail.phocoder_status = "ready" if thumbnail.respond_to?(:phocoder_status=)
+      thumbnail.save!
+    end
+
+    update_encodable_and_job_from_img_params(encodable,job,img_params)
+    encodable.encodable_status = "ready" if encodable.respond_to?(:encodable_status=)
+    encodable.phocoder_status = "ready" if encodable.respond_to?(:phocoder_status=)
+    encodable.save!
+    encodable.fire_ready_callback
+    
+    job.phocoder_status = "ready"
+    job.save
+    job
+  end
+
+  def self.update_from_phocoder_component_style(params)
     Rails.logger.debug "tying to call update from phocoder for params = #{params.to_json}"
     puts "tying to call update from phocoder for params = #{params.to_json}"
     if !params[:output].blank?
@@ -99,24 +193,21 @@ class EncodableJob < ActiveRecord::Base
       img_params = params[:input]
       encodable = job.encodable
     end
-    [:file_size,:width,:height,:taken_at,:lat,:lng,:saturated_pixels,:gauss,:bits_per_pixel,:camera_make, 
-     :camera_model, :orientation, :exposure_time, :f_number, :iso_speed_rating, :exposure_bias_value, 
-     :focal_length, :focal_length_in_35mm_film, :subsec_time, :pixels, :processing_time].each do |att|
-      setter = att.to_s + "="
-      if encodable.respond_to? setter and !img_params[att].blank?
-        encodable.send setter, img_params[att]
-      end
-      if job.respond_to? setter and !img_params[att].blank?
-        job.send setter, img_params[att]
-      end
-    end
-    
+      
+    update_encodable_and_job_from_img_params(encodable,job,img_params)
     #job.file_size = img_params[:file_size]
     #job.width = img_params[:width]
     #job.height = img_params[:height]
     encodable.encodable_status = "ready"
+    
     encodable.save
-    encodable.fire_ready_callback
+
+    if params[:output].blank? && params[:input].blank?
+      # Do nothing?  Only for tracking job status, not components...
+    else
+      encodable.fire_ready_callback
+    end
+    
     # may not have a job if the EncodableJob didn't get created for some reason
     if job
       job.phocoder_status = "ready"
@@ -125,6 +216,20 @@ class EncodableJob < ActiveRecord::Base
     end
   end
   
+
+  def self.update_encodable_and_job_from_img_params(encodable,job,img_params)
+    [ :file_size,:width,:height,:taken_at,:lat,:lng,:saturated_pixels,:gauss,:bits_per_pixel,:camera_make, 
+      :camera_model, :orientation, :exposure_time, :f_number, :iso_speed_rating, :exposure_bias_value, 
+      :focal_length, :focal_length_in_35mm_film, :subsec_time, :pixels, :processing_time].each do |att|
+      setter = att.to_s + "="
+      if encodable.respond_to? setter and !img_params[att].blank?
+        encodable.send setter, img_params[att]
+      end
+      if job.respond_to? setter and !img_params[att].blank?
+        job.send setter, img_params[att]
+      end
+    end
+  end
   
   
   # Updating from zencoder is a two pass operation.
