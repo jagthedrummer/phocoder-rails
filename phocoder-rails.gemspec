@@ -4,17 +4,17 @@
 # -*- encoding: utf-8 -*-
 
 Gem::Specification.new do |s|
-  s.name = %q{phocoder-rails}
-  s.version = "0.0.42"
+  s.name = "phocoder-rails"
+  s.version = "0.0.49"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
-  s.authors = [%q{Jeremy Green}]
-  s.date = %q{2012-04-23}
-  s.description = %q{Rails engine for easy integration with phocoder.com}
-  s.email = %q{jagthedrummer@gmail.com}
+  s.authors = ["Jeremy Green"]
+  s.date = "2013-01-01"
+  s.description = "Rails engine for easy integration with phocoder.com"
+  s.email = "jagthedrummer@gmail.com"
   s.extra_rdoc_files = [
     "LICENSE.txt",
-    "README.rdoc"
+    "README.md"
   ]
   s.files = [
     ".autotest",
@@ -23,7 +23,7 @@ Gem::Specification.new do |s|
     "Gemfile",
     "LICENSE.txt",
     "MIT-LICENSE",
-    "README.rdoc",
+    "README.md",
     "Rakefile",
     "VERSION",
     "app/controllers/phocoder_controller.rb",
@@ -54,6 +54,7 @@ Gem::Specification.new do |s|
     "lib/phocoder_rails/acts_as_phocodable.rb",
     "lib/phocoder_rails/engine.rb",
     "lib/phocoder_rails/errors.rb",
+    "lib/tasks/phocoder_rails/phocoder_rails.rake",
     "phocoder-rails.gemspec",
     "public/images/building.gif",
     "public/images/error.png",
@@ -97,6 +98,7 @@ Gem::Specification.new do |s|
     "spec/dummy/config/initializers/backtrace_silencers.rb",
     "spec/dummy/config/initializers/inflections.rb",
     "spec/dummy/config/initializers/mime_types.rb",
+    "spec/dummy/config/initializers/phocodable.rb",
     "spec/dummy/config/initializers/secret_token.rb",
     "spec/dummy/config/initializers/session_store.rb",
     "spec/dummy/config/locales/en.yml",
@@ -106,6 +108,7 @@ Gem::Specification.new do |s|
     "spec/dummy/db/migrate/20110523165522_create_encodable_jobs.rb",
     "spec/dummy/db/migrate/20111101024507_create_images.rb",
     "spec/dummy/db/migrate/20120423030345_add_exif_data_to_image_uploads.rb",
+    "spec/dummy/db/migrate/20121230165930_add_tracking_mode_to_encodable_jobs.rb",
     "spec/dummy/db/schema.rb",
     "spec/dummy/public/404.html",
     "spec/dummy/public/422.html",
@@ -125,6 +128,7 @@ Gem::Specification.new do |s|
     "spec/fixtures/big_eye_tiny.jpg",
     "spec/fixtures/octologo.png",
     "spec/fixtures/test.txt",
+    "spec/fixtures/test_image.nef",
     "spec/fixtures/video-test.mov",
     "spec/helpers/phocoder_helper_spec.rb",
     "spec/integration/navigation_spec.rb",
@@ -134,47 +138,11 @@ Gem::Specification.new do |s|
     "spec/routing/phocoder_routing_spec.rb",
     "spec/spec_helper.rb"
   ]
-  s.homepage = %q{http://github.com/jagthedrummer/phocoder-rails}
-  s.licenses = [%q{MIT}]
-  s.require_paths = [%q{lib}]
-  s.rubygems_version = %q{1.8.5}
-  s.summary = %q{Rails engine for easy integration with phocoder.com}
-  s.test_files = [
-    "spec/controllers/phocoder_controller_spec.rb",
-    "spec/dummy/app/controllers/application_controller.rb",
-    "spec/dummy/app/controllers/images_controller.rb",
-    "spec/dummy/app/helpers/application_helper.rb",
-    "spec/dummy/app/helpers/images_helper.rb",
-    "spec/dummy/app/models/image.rb",
-    "spec/dummy/app/models/image_thumbnail.rb",
-    "spec/dummy/app/models/image_upload.rb",
-    "spec/dummy/config/application.rb",
-    "spec/dummy/config/boot.rb",
-    "spec/dummy/config/environment.rb",
-    "spec/dummy/config/environments/development.rb",
-    "spec/dummy/config/environments/production.rb",
-    "spec/dummy/config/environments/test.rb",
-    "spec/dummy/config/initializers/backtrace_silencers.rb",
-    "spec/dummy/config/initializers/inflections.rb",
-    "spec/dummy/config/initializers/mime_types.rb",
-    "spec/dummy/config/initializers/secret_token.rb",
-    "spec/dummy/config/initializers/session_store.rb",
-    "spec/dummy/config/routes.rb",
-    "spec/dummy/db/migrate/001_create_image_uploads.rb",
-    "spec/dummy/db/migrate/20110523165213_add_parent_type_to_image_uploads.rb",
-    "spec/dummy/db/migrate/20110523165522_create_encodable_jobs.rb",
-    "spec/dummy/db/migrate/20111101024507_create_images.rb",
-    "spec/dummy/db/migrate/20120423030345_add_exif_data_to_image_uploads.rb",
-    "spec/dummy/db/schema.rb",
-    "spec/engine_spec.rb",
-    "spec/helpers/phocoder_helper_spec.rb",
-    "spec/integration/navigation_spec.rb",
-    "spec/models/acts_as_phocodable_spec.rb",
-    "spec/models/encodable_job_spec.rb",
-    "spec/phocoder_rails_spec.rb",
-    "spec/routing/phocoder_routing_spec.rb",
-    "spec/spec_helper.rb"
-  ]
+  s.homepage = "http://github.com/jagthedrummer/phocoder-rails"
+  s.licenses = ["MIT"]
+  s.require_paths = ["lib"]
+  s.rubygems_version = "1.8.24"
+  s.summary = "Rails engine for easy integration with phocoder.com"
 
   if s.respond_to? :specification_version then
     s.specification_version = 3
@@ -183,33 +151,33 @@ Gem::Specification.new do |s|
       s.add_runtime_dependency(%q<rails>, [">= 3.0.0"])
       s.add_runtime_dependency(%q<phocoder-rb>, [">= 0"])
       s.add_runtime_dependency(%q<zencoder>, [">= 0"])
+      s.add_runtime_dependency(%q<mimetype-fu>, ["~> 0.1.2"])
       s.add_runtime_dependency(%q<aws-s3>, [">= 0"])
       s.add_runtime_dependency(%q<spawn>, [">= 0"])
       s.add_development_dependency(%q<rspec-rails>, ["= 2.4.1"])
-      s.add_development_dependency(%q<bundler>, ["~> 1.0.0"])
-      s.add_development_dependency(%q<jeweler>, ["~> 1.5.1"])
-      s.add_development_dependency(%q<rcov>, [">= 0"])
+      s.add_development_dependency(%q<bundler>, [">= 0"])
+      s.add_development_dependency(%q<jeweler>, [">= 0"])
     else
       s.add_dependency(%q<rails>, [">= 3.0.0"])
       s.add_dependency(%q<phocoder-rb>, [">= 0"])
       s.add_dependency(%q<zencoder>, [">= 0"])
+      s.add_dependency(%q<mimetype-fu>, ["~> 0.1.2"])
       s.add_dependency(%q<aws-s3>, [">= 0"])
       s.add_dependency(%q<spawn>, [">= 0"])
       s.add_dependency(%q<rspec-rails>, ["= 2.4.1"])
-      s.add_dependency(%q<bundler>, ["~> 1.0.0"])
-      s.add_dependency(%q<jeweler>, ["~> 1.5.1"])
-      s.add_dependency(%q<rcov>, [">= 0"])
+      s.add_dependency(%q<bundler>, [">= 0"])
+      s.add_dependency(%q<jeweler>, [">= 0"])
     end
   else
     s.add_dependency(%q<rails>, [">= 3.0.0"])
     s.add_dependency(%q<phocoder-rb>, [">= 0"])
     s.add_dependency(%q<zencoder>, [">= 0"])
+    s.add_dependency(%q<mimetype-fu>, ["~> 0.1.2"])
     s.add_dependency(%q<aws-s3>, [">= 0"])
     s.add_dependency(%q<spawn>, [">= 0"])
     s.add_dependency(%q<rspec-rails>, ["= 2.4.1"])
-    s.add_dependency(%q<bundler>, ["~> 1.0.0"])
-    s.add_dependency(%q<jeweler>, ["~> 1.5.1"])
-    s.add_dependency(%q<rcov>, [">= 0"])
+    s.add_dependency(%q<bundler>, [">= 0"])
+    s.add_dependency(%q<jeweler>, [">= 0"])
   end
 end
 
