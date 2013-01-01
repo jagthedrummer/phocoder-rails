@@ -62,7 +62,6 @@ Gem::Specification.new do |s|
     "public/images/storing.gif",
     "public/images/waiting.gif",
     "public/javascripts/phocodable.js",
-    "public/javascripts/video-js-2.0.2/.DS_Store",
     "public/javascripts/video-js-2.0.2/LICENSE.txt",
     "public/javascripts/video-js-2.0.2/README.markdown",
     "public/javascripts/video-js-2.0.2/demo-subtitles.srt",
