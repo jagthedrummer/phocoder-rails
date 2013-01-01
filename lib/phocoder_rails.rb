@@ -5,6 +5,7 @@ module PhocoderRails
   #require 'action_pack'
   #require 'active_support'
   require 'aws/s3'
+  require 'mimetype_fu'
   require 'phocoder_rails/acts_as_phocodable'
   require 'phocoder_rails/errors'
   #require 'phocoder_rails/base'
