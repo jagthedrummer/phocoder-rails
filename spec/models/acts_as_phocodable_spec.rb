@@ -52,6 +52,7 @@ describe ActsAsPhocodable do
 #        ) 
 #        }
     ImageUpload.destroy_all
+    EncodableJob.destroy_all
     @fixture_path = ""
     @attr = {
       :file => fixture_file_upload(@fixture_path + '/big_eye_tiny.jpg','image/jpeg')
@@ -62,6 +63,8 @@ describe ActsAsPhocodable do
     @txt_attr = {
       :file => fixture_file_upload(@fixture_path + '/test.txt', 'text/plain')
     }
+    ActsAsPhocodable.track_jobs = true
+    ActsAsPhocodable.track_components = false
   end
   
   
@@ -97,6 +100,27 @@ describe ActsAsPhocodable do
     ActsAsPhocodable.base_url = "http://new-domain.com"
     ActsAsPhocodable.base_url.should == "http://new-domain.com"
   end
+
+  it "should default to tracking jobs" do
+    ActsAsPhocodable.track_jobs.should be_true
+  end
+
+  it "should be able to be set to not track jobs" do
+    ActsAsPhocodable.track_jobs = false
+    ActsAsPhocodable.track_jobs.should_not be_true
+  end
+
+  it "should default to not tracking components" do
+    ActsAsPhocodable.track_components.should_not be_true
+  end
+
+  it "should be able to be set to to track components" do
+    ActsAsPhocodable.track_components = true
+    ActsAsPhocodable.track_components.should be_true
+    ActsAsPhocodable.track_components = false
+  end
+
+
     
   it "should default to the normal config file" do 
     ActsAsPhocodable.config_file.should == "config/phocodable.yml"
@@ -255,6 +279,7 @@ describe ActsAsPhocodable do
   end
 #  
   it "should call phocoder for images" do
+    ActsAsPhocodable.track_components = true
     iu = ImageUpload.new(@attr)
     
     Phocoder::Job.should_receive(:create).and_return(mock(Phocoder::Response,:body=>{
@@ -269,9 +294,39 @@ describe ActsAsPhocodable do
     File.exists?(expected_local_path).should be_true
     #iu.phocode
     ImageUpload.count.should == 2 #it should have created a thumbnail record
+    EncodableJob.count.should == 3
     iu.destroy
     ImageUpload.count.should == 0
+    EncodableJob.count.should == 3
+    EncodableJob.for_jobs.count.should == 1
+    EncodableJob.for_components.count.should == 2
     File.exists?(expected_local_path).should_not be_true
+    ActsAsPhocodable.track_components = false
+  end
+
+
+  it "should call phocoder for images and not create encodable_jobs if we're not tracking components" do
+    ActsAsPhocodable.track_components = false
+    iu = ImageUpload.new(@attr)
+    
+    Phocoder::Job.should_receive(:create).and_return(mock(Phocoder::Response,:body=>{
+      "job"=>{
+        "id"=>1,
+        "inputs"=>["id"=>1],
+        "thumbnails"=>[{"label"=>"small","filename"=>"small-test-file.jpg","id"=>1}]
+      }
+    }))
+    iu.save
+    expected_local_path = File.join('/tmp','image_uploads',iu.id.to_s,iu.filename)
+    File.exists?(expected_local_path).should be_true
+    #iu.phocode
+    ImageUpload.count.should == 2 #it should have created a thumbnail record
+    EncodableJob.count.should == 1
+    iu.destroy
+    ImageUpload.count.should == 0
+    EncodableJob.count.should == 1
+    File.exists?(expected_local_path).should_not be_true
+    ActsAsPhocodable.track_components = false
   end
     
     

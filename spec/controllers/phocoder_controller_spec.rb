@@ -57,6 +57,35 @@ describe PhocoderController do
       #@image_upload.file_size.should == 2
     end
     
+
+    it "should handle job tracking updates" do
+      @encodable_job.tracking_mode = 'job'
+      @encodable_job.save
+      post 'phocoder_notification_update', {:class=>"ImageUpload",:id=>1, :job=>{:id => 1,:type=>"ThumbnailJob"},:format=>"json", :inputs => [{}], :outputs => []}
+      response.should be_success
+    end
+
+    it "should update all the things for job tracking updates" do
+      @encodable_job.tracking_mode = 'job'
+      @encodable_job.save
+      @thumbnail = @image_upload.thumbnails.create!(:thumbnail => "small")
+      params = {
+        :class=>@image_upload.class.name.to_s,:id=>@image_upload.id,
+        "job"=>{"state"=>"complete", "id"=>1, "type"=>"ThumbnailJob", "pixels"=>26379158, "processing_time"=>43.0}, 
+        "inputs"=>[{"id"=>50, "state"=>"complete", "file_size"=>4742478, "width"=>4288, "height"=>2848, "pixels"=>12212224, "processing_time"=>5.0, "url"=>"http://development.thephotolabs.com.s3.amazonaws.com/photos/150/dsc_8400.jpg", "lat"=>nil, "lng"=>nil, "taken_at"=>"2010-03-08T17:04:29Z", "camera_make"=>0, "camera_model"=>0, "bits_per_pixel"=>8, "exposure_time"=>"0.008000000", "f_number"=>"13.000000000", "iso_speed_rating"=>"1000", "exposure_bias_value"=>"-1.000000000", "focal_length"=>"10.000000000", "focal_length_in_35mm_film"=>"15", "subsec_time"=>74}], 
+        "outputs"=>[{"id"=>85, "state"=>"complete", "file_size"=>69735, "label"=>"small", "url"=>"s3://development.thephotolabs.com/photo_thumbnails/150/small_dsc_8400.jpg", "pixels"=>6600, "processing_time"=>2.0, "width"=>100, "height"=>66}]
+      }
+      post 'phocoder_notification_update', params.symbolize_keys
+      @encodable_job.reload
+      @image_upload.reload
+      @thumbnail.reload
+      puts @image_upload.to_json
+      @encodable_job.phocoder_status.should == 'ready'
+      @image_upload.phocoder_status.should == 'ready'
+      @image_upload.width.should == 4288
+      @thumbnail.phocoder_status.should == 'ready'
+    end
+
   end
   
  

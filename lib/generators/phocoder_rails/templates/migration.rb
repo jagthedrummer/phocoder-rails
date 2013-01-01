@@ -12,6 +12,8 @@ class CreateEncodableJobs < ActiveRecord::Migration
       t.integer  "zencoder_output_id"
       t.string   "zencoder_status"
       t.string   "zencoder_url"
+      t.string   "tracking_mode"
+      t.integer  "user_id"
       t.timestamps
     end
     add_index :encodable_jobs, [:encodable_type, :encodable_id]

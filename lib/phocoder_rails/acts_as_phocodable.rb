@@ -58,6 +58,14 @@ module ActsAsPhocodable
   mattr_accessor :local_base_dir
   self.local_base_dir = '/tmp'
   
+  # Whether to track progress at the job level
+  mattr_accessor :track_jobs
+  self.track_jobs = true
+
+  # Whether to track progress at the component level
+  mattr_accessor :track_components
+  self.track_components = false
+
   # The config file that tells phocoder where to find
   # config options.
   mattr_accessor :config_file
@@ -376,6 +384,12 @@ module ActsAsPhocodable
     if self.phocodable_configuration[:local_base_dir]
       ActsAsPhocodable.local_base_dir = phocodable_configuration[:local_base_dir]
     end
+    if self.phocodable_configuration[:track_jobs]
+      ActsAsPhocodable.track_jobs = phocodable_configuration[:track_jobs]
+    end
+    if self.phocodable_configuration[:track_components]
+      ActsAsPhocodable.track_components = phocodable_configuration[:track_components]
+    end
     
     
     if self.phocodable_configuration[:phocoder_url]
@@ -387,6 +401,8 @@ module ActsAsPhocodable
     if self.phocodable_configuration[:zencoder_api_key]
       ::Zencoder.api_key = phocodable_configuration[:zencoder_api_key]
     end
+
+
     if ActsAsPhocodable.storeage_mode == "s3"
       self.establish_aws_connection
     end
@@ -485,13 +501,14 @@ module ActsAsPhocodable
         thumb.filename = thumb_params["filename"]
         thumb.width = thumb_params["width"]
         thumb.height = thumb_params["height"]
-        tjob = thumb.encodable_jobs.new
-        
-        tjob.phocoder_output_id = thumb_params["id"]
-        tjob.phocoder_job_id = job_id
-        #thumb.parent_id = self.id
-        tjob.phocoder_status  =  "phocoding"
-        thumb.encodable_jobs << tjob
+        if ActsAsPhocodable.track_components
+          tjob = thumb.encodable_jobs.new
+          tjob.phocoder_output_id = thumb_params["id"]
+          tjob.phocoder_job_id = job_id
+          #thumb.parent_id = self.id
+          tjob.phocoder_status  =  "phocoding"
+          thumb.encodable_jobs << tjob
+        end
         thumb.encodable_status = "phocoding"
         thumb.save
         new_thumbs << thumb
@@ -536,11 +553,24 @@ module ActsAsPhocodable
       response = Phocoder::Job.create(phocoder_params(input_thumbs))
       Rails.logger.debug "the phocode response = #{response.to_json}" if Rails.env != "test"
       #puts "the phocode response = #{response.to_json}" if Rails.env != "test"
-      job = self.encodable_jobs.new
-      job.phocoder_input_id = response.body["job"]["inputs"].first["id"]
-      job.phocoder_job_id = response.body["job"]["id"]
-      job.phocoder_status = "phocoding"
-      self.encodable_jobs << job
+      if ActsAsPhocodable.track_components
+        job = self.encodable_jobs.new
+        job.phocoder_input_id = response.body["job"]["inputs"].first["id"]
+        job.phocoder_job_id = response.body["job"]["id"]
+        job.phocoder_status = "phocoding"
+        job.user_id = self.user_id if (self.respond_to?(:user_id) && self.user_id)
+        self.encodable_jobs << job
+      end
+      if ActsAsPhocodable.track_jobs
+        job = self.encodable_jobs.new
+        job.tracking_mode = 'job'
+        job.phocoder_input_id = response.body["job"]["inputs"].first["id"]
+        job.phocoder_job_id = response.body["job"]["id"]
+        job.phocoder_status = "phocoding"
+        job.user_id = self.user_id if (self.respond_to?(:user_id) && self.user_id)
+        self.encodable_jobs << job
+      end
+
       self.encodable_status = "phocoding" unless self.encodable_status == "ready" # the unless clause allows new thumbs to be created on the fly without jacking with the status
       self.save #false need to do save(false) here if we're calling phocode on after_save
       response_thumbs = response.body["job"]["thumbnails"]
@@ -564,11 +594,23 @@ module ActsAsPhocodable
         Rails.logger.debug "callback url = #{callback_url}"
         response = Phocoder::Job.create(phocoder_hdr_params)
         Rails.logger.debug "the response from phocode_hdr = #{response.body.to_json}"
-        job = self.encodable_jobs.new
-        job.phocoder_output_id = response.body["job"]["hdr"]["id"]
-        job.phocoder_job_id = response.body["job"]["id"]
-        job.phocoder_status = "phocoding"
-        self.encodable_jobs << job
+        if ActsAsPhocodable.track_components
+          job = self.encodable_jobs.new
+          job.phocoder_output_id = response.body["job"]["hdr"]["id"]
+          job.phocoder_job_id = response.body["job"]["id"]
+          job.phocoder_status = "phocoding"
+          job.user_id = self.user_id if (self.respond_to?(:user_id) && self.user_id)
+          self.encodable_jobs << job
+        end
+        if ActsAsPhocodable.track_jobs
+          job = self.encodable_jobs.new
+          job.tracking_mode = 'job'
+          job.phocoder_output_id = response.body["job"]["hdr"]["id"]
+          job.phocoder_job_id = response.body["job"]["id"]
+          job.phocoder_status = "phocoding"
+          job.user_id = self.user_id if (self.respond_to?(:user_id) && self.user_id)
+          self.encodable_jobs << job
+        end
         self.encodable_status = "phocoding"
         self.save #false need to do save(false) here if we're calling phocode on after_save
       end
@@ -591,11 +633,23 @@ module ActsAsPhocodable
         Rails.logger.debug "callback url = #{callback_url}"
         response = Phocoder::Job.create(phocoder_hdrhtml_params)
         Rails.logger.debug "the response from phocode_hdrhtml = #{response.body.to_json}"
-        job = self.encodable_jobs.new
-        job.phocoder_output_id = response.body["job"]["hdrhtml"]["id"]
-        job.phocoder_job_id = response.body["job"]["id"]
-        job.phocoder_status = "phocoding"
-        self.encodable_jobs << job
+        if ActsAsPhocodable.track_components
+          job = self.encodable_jobs.new
+          job.phocoder_output_id = response.body["job"]["hdrhtml"]["id"]
+          job.phocoder_job_id = response.body["job"]["id"]
+          job.phocoder_status = "phocoding"
+          job.user_id = self.user_id if (self.respond_to?(:user_id) && self.user_id)
+          self.encodable_jobs << job
+        end
+        if ActsAsPhocodable.track_jobs
+          job = self.encodable_jobs.new
+          job.tracking_mode = 'job'
+          job.phocoder_output_id = response.body["job"]["hdrhtml"]["id"]
+          job.phocoder_job_id = response.body["job"]["id"]
+          job.phocoder_status = "phocoding"
+          job.user_id = self.user_id if (self.respond_to?(:user_id) && self.user_id)
+          self.encodable_jobs << job
+        end
         self.encodable_status = "phocoding"
         self.save #false need to do save(false) here if we're calling phocode on after_save
       end
@@ -620,11 +674,23 @@ module ActsAsPhocodable
         response = Phocoder::Job.create(phocoder_tone_mapping_params)
         Rails.logger.debug "tone_mapping response = #{response.body.to_json}"
         #puts "tone_mapping response = #{response.body.to_json}"
-        job = self.encodable_jobs.new
-        job.phocoder_output_id = response.body["job"]["tone_mapping"]["id"]
-        job.phocoder_job_id = response.body["job"]["id"]
-        job.phocoder_status = "phocoding"
-        self.encodable_jobs << job
+        if ActsAsPhocodable.track_components
+          job = self.encodable_jobs.new
+          job.phocoder_output_id = response.body["job"]["tone_mapping"]["id"]
+          job.phocoder_job_id = response.body["job"]["id"]
+          job.phocoder_status = "phocoding"
+          job.user_id = self.user_id if (self.respond_to?(:user_id) && self.user_id)
+          self.encodable_jobs << job
+        end
+        if ActsAsPhocodable.track_jobs
+          job = self.encodable_jobs.new
+          job.tracking_mode = 'job'
+          job.phocoder_output_id = response.body["job"]["tone_mapping"]["id"]
+          job.phocoder_job_id = response.body["job"]["id"]
+          job.phocoder_status = "phocoding"
+          job.user_id = self.user_id if (self.respond_to?(:user_id) && self.user_id)
+          self.encodable_jobs << job
+        end
         self.encodable_status = "phocoding"
         self.save #false need to do save(false) here if we're calling phocode on after_save
         response_thumbs = response.body["job"]["thumbnails"]
@@ -651,11 +717,23 @@ module ActsAsPhocodable
         response = Phocoder::Job.create(phocoder_composite_params)
         Rails.logger.debug "composite response = #{response.body.to_json}"
         #puts "composite response = #{response.body.to_json}"
-        job = self.encodable_jobs.new
-        job.phocoder_output_id = response.body["job"]["composite"]["id"]
-        job.phocoder_job_id = response.body["job"]["id"]
-        job.phocoder_status = "phocoding"
-        self.encodable_jobs << job
+        if ActsAsPhocodable.track_components
+          job = self.encodable_jobs.new
+          job.phocoder_output_id = response.body["job"]["composite"]["id"]
+          job.phocoder_job_id = response.body["job"]["id"]
+          job.phocoder_status = "phocoding"
+          job.user_id = self.user_id if (self.respond_to?(:user_id) && self.user_id)
+          self.encodable_jobs << job
+        end
+        if ActsAsPhocodable.track_jobs
+          job = self.encodable_jobs.new
+          job.tracking_mode = 'job'
+          job.phocoder_output_id = response.body["job"]["composite"]["id"]
+          job.phocoder_job_id = response.body["job"]["id"]
+          job.phocoder_status = "phocoding"
+          job.user_id = self.user_id if (self.respond_to?(:user_id) && self.user_id)
+          self.encodable_jobs << job
+        end
         self.encodable_status = "phocoding"
         self.save #false need to do save(false) here if we're calling phocode on after_save
         response_thumbs = response.body["job"]["thumbnails"]
@@ -676,21 +754,33 @@ module ActsAsPhocodable
       Rails.logger.debug "callback url = #{callback_url}"
       response = Zencoder::Job.create(zencoder_params)
       Rails.logger.debug "response from Zencoder = #{response.body.to_json}"
-      job = self.encodable_jobs.new
-      job.zencoder_job_id = response.body["id"]
-      self.encodable_jobs << job
-      
+      if ActsAsPhocodable.track_components
+        job = self.encodable_jobs.new
+        job.zencoder_job_id = response.body["id"]
+        job.user_id = self.user_id if (self.respond_to?(:user_id) && self.user_id)
+        self.encodable_jobs << job
+      end
+      if ActsAsPhocodable.track_jobs
+        job = self.encodable_jobs.new
+        job.tracking_mode = 'job'
+        job.zencoder_job_id = response.body["id"]
+        job.user_id = self.user_id if (self.respond_to?(:user_id) && self.user_id)
+        self.encodable_jobs << job
+      end
+
       response.body["outputs"].each do |output_params|
         thumb = self.thumbnails.new()
         thumb.thumbnail = output_params["label"]
         
-        tjob = thumb.encodable_jobs.new
-        tjob.zencoder_output_id = output_params["id"]
-        tjob.zencoder_url = output_params["url"]
-        tjob.zencoder_job_id = response.body["id"]
-        tjob.zencoder_status  =  "zencoding"
-        thumb.encodable_jobs << tjob
-        
+        if ActsAsPhocodable.track_components
+          tjob = thumb.encodable_jobs.new
+          tjob.zencoder_output_id = output_params["id"]
+          tjob.zencoder_url = output_params["url"]
+          tjob.zencoder_job_id = response.body["id"]
+          tjob.zencoder_status  =  "zencoding"
+          tjob.user_id = self.user_id if (self.respond_to?(:user_id) && self.user_id)
+          thumb.encodable_jobs << tjob
+        end
         self.thumbnails << thumb
         thumb.encodable_status = "zencoding"
         thumb.save
