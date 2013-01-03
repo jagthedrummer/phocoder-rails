@@ -745,5 +745,20 @@ describe ActsAsPhocodable do
       @iu.cloudfront_base_host.should == "http://asset0.myhost.com"
     end
   end
+
+  describe "create_phocoder_job" do
+    before(:each) do
+      @iu = ImageUpload.new(@attr)
+    end
+    it "should try to create a job" do
+      Phocoder::Job.should_receive(:create).and_return(mock)
+      @iu.create_phocoder_job({})
+    end
+    it "should try again if the first one fails" do
+      Phocoder::Job.should_receive(:create).and_raise("error")
+      Phocoder::Job.should_receive(:create).and_return(mock)
+      @iu.create_phocoder_job({})
+    end
+  end
   
 end
