@@ -533,6 +533,27 @@ module ActsAsPhocodable
       needed_thumbs
     end
     
+    def create_phocoder_job(params)
+      response = nil
+      tries = 0
+      max_tries = 3
+      sleeps = [2,4,8]
+      while response.blank? do
+        begin
+          response = Phocoder::Job.create(params)
+        rescue Exception => e
+          if tries < max_tries
+            sleep sleeps[tries]
+            tries += 1
+            response = nil
+          else
+            raise
+          end
+        end
+      end
+      response
+    end
+
     def phocode(input_thumbs = self.parent_class.phocoder_thumbnails)
       #puts " input_thumbs.count = #{input_thumbs.size}"
       input_thumbs = dedupe_input_thumbs(input_thumbs)
@@ -550,7 +571,7 @@ module ActsAsPhocodable
       
       Rails.logger.debug "trying to phocode for #{Phocoder.base_url} "
       Rails.logger.debug "callback url = #{callback_url}"
-      response = Phocoder::Job.create(phocoder_params(input_thumbs))
+      response = create_phocoder_job(phocoder_params(input_thumbs))
       Rails.logger.debug "the phocode response = #{response.to_json}" if Rails.env != "test"
       #puts "the phocode response = #{response.to_json}" if Rails.env != "test"
       if ActsAsPhocodable.track_components
@@ -592,7 +613,7 @@ module ActsAsPhocodable
       run_callbacks :phocode_hdr do
         Rails.logger.debug "trying to phocode for #{Phocoder.base_url} "
         Rails.logger.debug "callback url = #{callback_url}"
-        response = Phocoder::Job.create(phocoder_hdr_params)
+        response = create_phocoder_job(phocoder_hdr_params)
         Rails.logger.debug "the response from phocode_hdr = #{response.body.to_json}"
         if ActsAsPhocodable.track_components
           job = self.encodable_jobs.new
@@ -631,7 +652,7 @@ module ActsAsPhocodable
       run_callbacks :phocode_hdrhtml do
         Rails.logger.debug "trying to phocode for #{Phocoder.base_url} "
         Rails.logger.debug "callback url = #{callback_url}"
-        response = Phocoder::Job.create(phocoder_hdrhtml_params)
+        response = create_phocoder_job(phocoder_hdrhtml_params)
         Rails.logger.debug "the response from phocode_hdrhtml = #{response.body.to_json}"
         if ActsAsPhocodable.track_components
           job = self.encodable_jobs.new
@@ -671,7 +692,7 @@ module ActsAsPhocodable
         destroy_thumbnails
         Rails.logger.debug "trying to phocode for #{Phocoder.base_url} "
         Rails.logger.debug "callback url = #{callback_url}"
-        response = Phocoder::Job.create(phocoder_tone_mapping_params)
+        response = create_phocoder_job(phocoder_tone_mapping_params)
         Rails.logger.debug "tone_mapping response = #{response.body.to_json}"
         #puts "tone_mapping response = #{response.body.to_json}"
         if ActsAsPhocodable.track_components
@@ -714,7 +735,7 @@ module ActsAsPhocodable
         destroy_thumbnails
         Rails.logger.debug "trying to phocode for #{Phocoder.base_url} "
         Rails.logger.debug "callback url = #{callback_url}"
-        response = Phocoder::Job.create(phocoder_composite_params)
+        response = create_phocoder_job(phocoder_composite_params)
         Rails.logger.debug "composite response = #{response.body.to_json}"
         #puts "composite response = #{response.body.to_json}"
         if ActsAsPhocodable.track_components
