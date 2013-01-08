@@ -181,7 +181,9 @@ class EncodableJob < ActiveRecord::Base
         encodable = params[:class].constantize.find params[:id]
       end       
       puts "encodable = #{encodable.to_json}"
-      encodable.filename = File.basename(params[:output][:url]) if encodable.filename.blank?
+      if encodable.respond_to?(:filename) && encodable.filename.blank?
+        encodable.filename = File.basename(params[:output][:url])
+      end
       if ActsAsPhocodable.storeage_mode == "local"
         encodable.save_url(params[:output][:url])
       end
