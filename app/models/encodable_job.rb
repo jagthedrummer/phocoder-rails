@@ -70,7 +70,7 @@ class EncodableJob < ActiveRecord::Base
   
 
   def self.update_from_phocoder(params)
-    if params[:outputs] && params[:inputs]
+    if params.keys.include?(:inputs) && params.keys.include?(:outputs)
       update_from_phocoder_job_style(params)
     else
       update_from_phocoder_component_style(params)
