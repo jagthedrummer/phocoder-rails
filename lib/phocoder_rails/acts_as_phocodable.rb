@@ -200,7 +200,9 @@ module ActsAsPhocodable
   def acts_as_phocodable(options = { })
     
     include InstanceMethods
-    include Spawn
+    if defined? Spawn
+      include Spawn
+    end
     attr_reader :saved_file
     attr_accessor :phocoding
     after_save :save_local_file
@@ -1075,10 +1077,10 @@ module ActsAsPhocodable
           @saved_a_new_file = true
           self.save
         end
-        if ActsAsPhocodable.storeage_mode == "s3" and ActsAsPhocodable.processing_mode == "automatic"
+        if ActsAsPhocodable.storeage_mode == "s3" && ActsAsPhocodable.processing_mode == "automatic"
           self.save_s3_file
         end
-        if ActsAsPhocodable.storeage_mode == "s3" and ActsAsPhocodable.processing_mode == "spawn"
+        if ActsAsPhocodable.storeage_mode == "s3" && ActsAsPhocodable.processing_mode == "spawn" && defined?(Spawn)
           spawn do # :method => :thread # <-- I think that should be set at the config/environment level
             Rails.logger.debug "------------beginning of spawn block"
             #puts               "------------beginning of spawn block"
@@ -1087,7 +1089,7 @@ module ActsAsPhocodable
             #puts               "------------end of spawn block"
           end
         end
-        if ActsAsPhocodable.storeage_mode == "local" and ActsAsPhocodable.processing_mode == "automatic" 
+        if ActsAsPhocodable.storeage_mode == "local" && ActsAsPhocodable.processing_mode == "automatic" 
           self.encode
         end
         

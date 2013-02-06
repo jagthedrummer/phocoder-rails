@@ -9,7 +9,7 @@ with the [Phocoder](http://www.phocoder.com/) image processing service.
 Add this to your Gemfile:
 
 ```ruby
-gem "phocoder-rails"
+gem "phocoder-rails", :require => 'phocoder_rails'
 ```
 
 And then run:
@@ -54,13 +54,28 @@ create  app/views/image_uploads/show.html.erb
  route  resources :image_uploads, :except=>[:edit,:update]
 ```
 
+Then run
+
+```term
+rake db:migrate
+```
+
 ## Updating an existing model
 
-First generate a migration that will add some extra columns to your table.  You should red the migration
-after it is generated to make sure that it makes sense within the context of your model.
+You can also update an existing model.  First generate a migration that will add some extra columns to your
+table.  
 
 ```term
 rails g phocoder_rails:model_update my_model
+```
+
+You should read the migration after it is generated to make 
+sure that it makes sense within the context of your model.
+
+Then run
+
+```term
+rake db:migrate
 ```
 
 Then you should make sure that your form is set up for multi part encoding, and that you have a `file_field`
@@ -88,9 +103,9 @@ class ImageUpload < ActiveRecord::Base
       {:label=>"medium", :width=>400, :height=>400, :aspect_mode => 'preserve',
         :frame=>{ :width=>20, :bottom=>50, :color=>'003' },
         :annotations=>[
-                        {:text=>"Annotation Testing",:pointsize=>30,:fill_color=>'fff',:gravity=>"South",:y=>10},
-                        {:text=>"Howdy!",:pointsize=>10,:fill_color=>'ccc',:gravity=>"North",:y=>5}
-                      ]
+          {:text=>"Annotation Testing",:pointsize=>30,:fill_color=>'fff',:gravity=>"South",:y=>10},
+          {:text=>"Howdy!",:pointsize=>10,:fill_color=>'ccc',:gravity=>"North",:y=>5}
+        ]
       }
     ]
 

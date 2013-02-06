@@ -8,7 +8,7 @@
 
   </tr>
 
-<%% @<%= file_name %>.each do |<%= file_name.singularize %>| %>
+<%% @<%= file_name.pluralize %>.each do |<%= file_name.singularize %>| %>
   <tr>
     <td>
     	<%%= phocoder_thumbnail <%= file_name.singularize %>,"small",false %><br/>
