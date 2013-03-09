@@ -65,6 +65,9 @@ describe ActsAsPhocodable do
     }
     ActsAsPhocodable.track_jobs = true
     ActsAsPhocodable.track_components = false
+
+    @obj = mock(AWS::S3::S3Object)
+    AWS::S3.any_instance.stub_chain(:buckets,:[],:objects,:[]){ @obj }
   end
   
   
@@ -644,7 +647,7 @@ describe ActsAsPhocodable do
   it "in delayed s3 mode it should save the file to an AWS S3 storage location, call phocoder, then destroy" do
     ActsAsPhocodable.storeage_mode = "s3"
     ActsAsPhocodable.processing_mode = "delayed"
-    ImageUpload.establish_aws_connection
+    #ImageUpload.establish_aws_connection
     
     iu = ImageUpload.new(@attr)
     Phocoder::Job.stub!(:create).and_return(mock(Phocoder::Response,:body=>{
@@ -660,9 +663,10 @@ describe ActsAsPhocodable do
     # No thumbnail should be created yet
     iu.thumbnails.size.should == 0
     # Mock the AWS reqeust for storing 
-    AWS::S3::S3Object.should_receive(:store).and_return(nil)
+    @obj.should_receive(:write).and_return(nil)
+    @obj.should_receive(:content_length).and_return(19494)
     # Mock the AWS request for checking file size
-    AWS::S3::S3Object.should_receive(:find).and_return( mock(:size => 19494) )
+    #AWS::S3::S3Object.should_receive(:find).and_return( mock(:size => 19494) )
     
     iu.save_s3_file
     # Now we should have a thumb
@@ -670,7 +674,7 @@ describe ActsAsPhocodable do
     #puts iu.thumbnails.map{|t| t.thumbnail }.to_json
     iu.thumbnails.size.should == 2
     # Mock the AWS reqeust for deleting the file and it's thumbnail
-    AWS::S3::S3Object.should_receive(:delete).exactly(3).times.and_return(nil)
+    @obj.should_receive(:delete).exactly(3).times.and_return(nil)
     iu.destroy
   end
   
@@ -678,7 +682,7 @@ describe ActsAsPhocodable do
   it "in automatic s3 mode it should save the file to an AWS S3 storage location, call phocoder, then destroy" do
     ActsAsPhocodable.storeage_mode = "s3"
     ActsAsPhocodable.processing_mode = "automatic"
-    ImageUpload.establish_aws_connection
+    #ImageUpload.establish_aws_connection
     #puts "======================================="
     iu = ImageUpload.new(@attr)
     Phocoder::Job.stub!(:create).and_return(mock(Phocoder::Response,:body=>{
@@ -690,9 +694,9 @@ describe ActsAsPhocodable do
     }))
     
     # Mock the AWS reqeust for storing 
-    AWS::S3::S3Object.should_receive(:store).and_return(nil)
+    @obj.should_receive(:write).and_return(nil)
     # Mock the AWS request for checking file size
-    AWS::S3::S3Object.should_receive(:find).and_return( mock(:size => 19494) )
+    @obj.should_receive(:content_length).and_return( 19494 )
     #now store in S3 + phocode
     iu.save
     #puts "======================================="
@@ -709,7 +713,7 @@ describe ActsAsPhocodable do
     # Hopefully...
     ActsAsPhocodable.storeage_mode = "s3"
     ActsAsPhocodable.processing_mode = "spawn"
-    ImageUpload.establish_aws_connection
+    #ImageUpload.establish_aws_connection
     
     iu = ImageUpload.new(@attr)
     Phocoder::Job.stub!(:create).and_return(mock(Phocoder::Response,:body=>{
@@ -721,9 +725,9 @@ describe ActsAsPhocodable do
     }))
     
     # Mock the AWS reqeust for storing 
-    AWS::S3::S3Object.should_receive(:store).and_return(nil)
+    @obj.should_receive(:write).and_return(nil)
     # Mock the AWS request for checking file size
-    AWS::S3::S3Object.should_receive(:find).and_return( mock(:size => 19494) )
+    @obj.should_receive(:content_length).and_return( 19494 )
     
     #now store in S3 + phocode
     iu.save
