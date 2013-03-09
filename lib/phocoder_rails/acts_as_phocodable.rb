@@ -411,10 +411,14 @@ module ActsAsPhocodable
   end
   
   def establish_aws_connection
-    AWS::S3::Base.establish_connection!(
-                                        :access_key_id     => ActsAsPhocodable.s3_access_key_id,
-                                        :secret_access_key => ActsAsPhocodable.s3_secret_access_key
-    )
+    AWS.config({
+      :access_key_id     => ActsAsPhocodable.s3_access_key_id,
+      :secret_access_key => ActsAsPhocodable.s3_secret_access_key
+    })
+  #  AWS::S3::Base.establish_connection!(
+  #                                      :access_key_id     => ActsAsPhocodable.s3_access_key_id,
+  #                                      :secret_access_key => ActsAsPhocodable.s3_secret_access_key
+  #  )
   end
   
   
@@ -1224,22 +1228,38 @@ module ActsAsPhocodable
       "#{cloudfront_base_host}/#{s3_key}"
     end
  
+    def unused_s3_demo_stuff
+      s3 = AWS::S3.new
+      key,bucket = get_s3_key_and_bucket
+      obj = s3.buckets[bucket].objects[key]
+      obj.write(Pathname.new(tmpFile),{:acl=>:public_read,"Cache-Control"=>'max-age=315360000'})
+    end
+
+    def s3
+      @s3 ||= AWS::S3.new
+    end
+
+    def s3_obj
+      s3.buckets[s3_bucket_name].objects[s3_key]
+    end
+
     def save_s3_file
       #I don't think we need this return check anymore.  
       #return if !@saved_a_new_file
       #@saved_a_new_file = false
-      AWS::S3::S3Object.store(
-                              s3_key, 
-                              open(local_path),
-      s3_bucket_name,
-      :access => :public_read,
-      "Cache-Control" => 'max-age=315360000'
-      )
+      #AWS::S3::S3Object.store(
+                              #s3_key, 
+                              #open(local_path),
+      #s3_bucket_name,
+      #:access => :public_read,
+      #"Cache-Control" => 'max-age=315360000'
+      #)
+      s3_obj.write(Pathname.new(local_path),{:acl=>:public_read,"Cache-Control"=>'max-age=315360000'})
       self.encodable_status = "s3"
       self.save
-      obj_data = AWS::S3::S3Object.find(s3_key,s3_bucket_name)
+      #obj_data = AWS::S3::S3Object.find(s3_key,s3_bucket_name)
       Rails.logger.debug "----------------------------------------------------------------------------------------------------"
-      if obj_data.size == file_size # it made it into s3 safely
+      if s3_obj.content_length == file_size # it made it into s3 safely
         Rails.logger.debug " we are about to remove local file!"
         remove_local_file
       else
@@ -1254,8 +1274,9 @@ module ActsAsPhocodable
     def remove_s3_file
       #puts "trying to delete #{s3_key} #{s3_bucket_name}"
       #if ActsAsPhocodable.storeage_mode == "s3"
-        AWS::S3::S3Object.delete s3_key, s3_bucket_name
+        #AWS::S3::S3Object.delete s3_key, s3_bucket_name
       #end
+      s3_obj.delete
     rescue Exception => e
       #this probably means that the file never made it to S3
     end

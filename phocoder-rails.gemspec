@@ -21,7 +21,8 @@ Gem::Specification.new do |gem|
   gem.add_dependency 'phocoder-rb'
   gem.add_dependency 'zencoder'
   gem.add_dependency "mimetype-fu", "~> 0.1.2"#, :require => 'mimetype_fu'
-  gem.add_dependency 'aws-s3'#, :require => 'aws/s3'
+  #gem.add_dependency 'aws-s3'#, :require => 'aws/s3'
+  gem.add_dependency "aws-sdk", "~> 1.8.3.1"
   gem.add_dependency "spawn"#, :git => 'git://github.com/tra/spawn', :branch => "edge"
 
   gem.add_development_dependency "sqlite3"
@@ -29,8 +30,8 @@ Gem::Specification.new do |gem|
   gem.add_development_dependency "webrat"
   gem.add_development_dependency "capybara", ">= 0.3.9"
   gem.add_development_dependency "sqlite3-ruby"#, :require => "sqlite3"
-  gem.add_development_dependency 'rspec', '2.4.0'
-  gem.add_development_dependency 'rspec-rails', '2.4.1'
+  #gem.add_development_dependency 'rspec', '2.4.0'
+  gem.add_development_dependency 'rspec-rails', '2.13.0'
   gem.add_development_dependency 'autotest', '4.4.4'
   gem.add_development_dependency 'redgreen', '1.2.2'
   gem.add_development_dependency "webmock"
