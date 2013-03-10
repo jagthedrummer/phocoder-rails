@@ -132,7 +132,8 @@ module ActsAsPhocodable
     'image/x-nikon-nef',
     'image/tiff',
     'image/x-olympus-orf',
-    'image/x-dcraw'
+    'image/x-dcraw',
+    'image/x-adobe-dng'
   ]
   
   # The list of content types that will trigger image handling.
